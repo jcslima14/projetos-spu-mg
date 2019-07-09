@@ -1,15 +1,11 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -216,14 +212,14 @@ public class InclusaoSPUNet extends JInternalFrame {
         MyUtils.appendLogArea(logArea, "Iniciando a sequência para entrar na tela de cadastro...");
         
         // clica na aba de ofícios
-        WebElement btnMenuAplicacao = encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
+        WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
         waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
         btnMenuAplicacao.click();
 
-        WebElement btnGeoinformação = encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
+        WebElement btnGeoinformação = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
         btnGeoinformação.click();
 
-        WebElement btnGeoinformaçãoCadastrar = encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
+        WebElement btnGeoinformaçãoCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
         passarMouse.moveToElement(btnGeoinformaçãoCadastrar).click().build().perform();
         // btnGeoinformaçãoCadastrar.click();
 //        String pastaDespachosSalvos = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
@@ -330,56 +326,8 @@ public class InclusaoSPUNet extends JInternalFrame {
 //        driver.quit();
 	}
 
-	private void criarDiretorioBackup(String caminho) {
-		File diretorio = new File(caminho + "\\bkp");
-		if (!diretorio.exists()) {
-			diretorio.mkdir();
-		}
-	}
-	
-	private static WebElement encontrarElemento(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, WebElement>() {
-			@Override
-			public WebElement apply(WebDriver t) {
-				WebElement element = t.findElement(by);
-				if (element == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return element;
-			}
-		});
-	}
-
-	private static List<WebElement> encontrarElementos(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, List<WebElement>>() {
-			@Override
-			public List<WebElement> apply(WebDriver t) {
-				List<WebElement> elements = t.findElements(by);
-				if (elements == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return elements;
-			}
-		});
-	}
-
-	private void delayInSeconds(int tempo) throws Exception {
-		TimeUnit.SECONDS.sleep(tempo);
-	}
-
 	private void appendLogArea(JTextArea logArea, String msg) {
 		logArea.append(msg + "\n");
 		logArea.setCaretPosition(logArea.getDocument().getLength());
-	}
-
-	private ArrayList<File> obterArquivos(String nomeDiretorio) {
-		ArrayList<File> retorno = new ArrayList<File>();
-		File diretorio = new File(nomeDiretorio);
-		for (File arquivo : diretorio.listFiles()) {
-			if (!arquivo.isDirectory() && arquivo.getName().toLowerCase().endsWith("pdf")) {
-				retorno.add(arquivo);
-			}
-		}
-		return retorno;
 	}
 }
