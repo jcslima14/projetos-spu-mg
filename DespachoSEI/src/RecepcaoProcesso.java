@@ -389,7 +389,9 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        	} while (!encontrouRemessaDocumentos);
 
 		        	// se não encontrou a remessa de documentos, grava log com esta informação
-		        	if (!encontrouRemessaDocumentos) // TODO:
+		        	if (!encontrouRemessaDocumentos) {
+		        		atualizarProcessoRecebido(numeroProcessoJudicial, dataHora, "Não foram encontrados os documentos da remessa do processo.");
+		        	}
 		        	
 		        	driver.close();
 		        	driver.switchTo().window(janelaAtual);
