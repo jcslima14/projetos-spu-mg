@@ -213,12 +213,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						}
 	
 						gerarProcessoIndividual(driver, wait, despachoAGerar, pastaProcessosIndividuais);
-						despachoAGerar.setBlocoAssinatura(obterBlocoAssinatura(despachoAGerar.getAssinante(), despachoAGerar.getTipoDespacho()));
 					}
 	
 					if (!despachoAGerar.getArquivosAnexados()) {
 						anexarArquivosProcesso(despachoAGerar, anexos, driver, wait);
 					}
+
+					despachoAGerar.setBlocoAssinatura(obterBlocoAssinatura(despachoAGerar.getAssinante(), despachoAGerar.getTipoDespacho()));
 				} else {
 					despachoAGerar.setNumeroProcessoSEI(despachoAGerar.getAssinante().getNumeroProcesso());
 					despachoAGerar.setBlocoAssinatura(despachoAGerar.getAssinante().getBlocoAssinatura());

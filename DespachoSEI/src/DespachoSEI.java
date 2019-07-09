@@ -154,7 +154,7 @@ public class DespachoSEI extends JFrame {
 		sbmAssinanteTipoDespacho.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				AssinanteTipoDespachoCadastro janela = new AssinanteTipoDespachoCadastro("Tipo de Despacho por Assinante", conexao);
+				AssinanteTipoDespachoCadastro janela = new AssinanteTipoDespachoCadastro("Tipo de Despacho x Assinante", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}

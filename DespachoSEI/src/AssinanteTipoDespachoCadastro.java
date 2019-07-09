@@ -71,7 +71,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 				+  "   set assinanteid = " + MyUtils.idItemSelecionado(cbbAssinante)
 				+  "     , tipodespachoid = " + MyUtils.idItemSelecionado(cbbTipoDespacho)
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
-				+  " where assinanteid = " + txtAssinanteTipoDespachoId.getText();
+				+  " where assinantetipodespachoid = " + txtAssinanteTipoDespachoId.getText();
 		} else {
 			sql += "insert into assinantetipodespacho (assinanteid, tipodespachoid, blocoassinatura) values ("
 				+  MyUtils.idItemSelecionado(cbbAssinante) + ", "
