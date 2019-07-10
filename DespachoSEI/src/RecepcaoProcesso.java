@@ -411,19 +411,12 @@ public class RecepcaoProcesso extends JInternalFrame {
 	}
 
 	private boolean processoJaRecebido(JTextArea logArea, String numeroProcessoJudicial, String dataHoraMovimentacao) throws Exception {
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(numeroProcessoJudicial, null, false);
+		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(numeroProcessoJudicial, null, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), false);
 		if (processos == null || processos.isEmpty()) {
 			MyUtils.appendLogArea(logArea, "Processo ainda não recebido...");
 			return false;
 		} else {
-			Date dataHoraFormatada = MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm");
-			Date dataRegistrada = MyUtils.obterData(processos.iterator().next().getDataHoraMovimentacao(), "yyyy-MM-dd HH:mm:ss");
-			if (dataHoraFormatada.equals(dataRegistrada)) {
-				return true;
-			} else {
-				MyUtils.appendLogArea(logArea, "Processo já recebido em outra data: lido (" + MyUtils.formatarData(dataHoraFormatada, "dd/MM/yyyy HH:mm") + "); registrada (" + MyUtils.formatarData(dataRegistrada, "dd/MM/yyyy HH:mm") + ")");
-				return false;
-			}
+			return true;
 		}
 	}
 
