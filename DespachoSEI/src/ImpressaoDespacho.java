@@ -155,7 +155,10 @@ public class ImpressaoDespacho extends JInternalFrame {
         botaoAcessar.click();
 
         // verifica se foi aberto popup indesejado (fechar o popup)
-        fecharPopup(driver);
+        MyUtils.fecharPopup(driver);
+
+        // selecionar a unidade default
+        MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
 
 		Map<String, List<Despacho>> despachosAImprimir = obterDespachos(1, assinanteId);
 		for (String numeroProcessoSEI : despachosAImprimir.keySet()) {
@@ -359,20 +362,6 @@ public class ImpressaoDespacho extends JInternalFrame {
 				 + " where despachoid = " + despacho.getDespachoId());
 
 		MyUtils.execute(conexao, sql.toString());
-	}
-
-	private void fecharPopup(WebDriver driver) {
-		String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
 	}
 
 	// método para obter despachos: tipos de filtro: 1 - despachos não impressos; 2 - despachos a serem retirados do bloco de assinatura

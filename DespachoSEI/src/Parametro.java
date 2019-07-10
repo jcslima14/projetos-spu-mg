@@ -11,6 +11,7 @@ public class Parametro {
 	static int DEFAULT_BROWSER = 7;
 	static int ENDERECO_SPUNET = 8;
 	static int PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS = 9;
+	static int UNIDADE_PADRAO_SEI = 10;
 
 	@SuppressWarnings("serial")
 	static Map<Integer, String> DESCRICOES = new LinkedHashMap<Integer, String>() {{ 
@@ -23,8 +24,9 @@ public class Parametro {
 		put(DEFAULT_BROWSER, "Navegador padrão");
 		put(ENDERECO_SPUNET, "Endereço do SPUNet");
 		put(PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS, "Pasta dos arquivos de processos individuais");
+		put(UNIDADE_PADRAO_SEI, "Unidade padrão ao acessar o SEI");
 	}};
-	
+
 	public static String obterDescricao(int parametroId) {
 		return DESCRICOES.get(parametroId);
 	}
