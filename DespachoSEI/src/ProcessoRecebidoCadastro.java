@@ -327,7 +327,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			return;
 		}
 
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(null, false, null, true);
+		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(null, false, true);
 		
 		for (ProcessoRecebido processo : processos) {
 			processamentoArquivosOk(processo, pastaDownload, pastaDestino);
@@ -336,34 +336,22 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		JOptionPane.showMessageDialog(null, "Processamento finalizado. Verifique o resultado filtrando os registros processados.");
 		this.executarAtualizar();
 	}
-
+	
 	private void processamentoArquivosOk(ProcessoRecebido processo, File pastaDownload, File pastaDestino) throws Exception {
-		String processoFormatado = processo.getNumeroUnico().replace("/", "").replace(".", "").replace("-", "");
-		String pastaProcesso = processoFormatado + " (" + MyUtils.formatarData(MyUtils.obterData(processo.getDataHoraMovimentacao(), "yyyy-MM-dd HH:mm:ss"), "yyyyMMdd_HHmm") + ")";
+		String pastaProcesso = processo.getNumeroUnico().replace("/", "").replace(".", "").replace("-", "");
 		File pastaOrigem = new File(pastaDownload, pastaProcesso);
 		String msgRetorno = "";
 		if (!pastaOrigem.exists() || !pastaOrigem.isDirectory()) {
 			msgRetorno = "A pasta com os arquivos do processo (" + pastaProcesso + ") não foi encontrada ou não é uma pasta válida.";
 		} else {
 			int arquivosCopiados = 0;
-			int seqCopia = 0;
 			
 			for (File arquivoOrigem : pastaOrigem.listFiles()) {
 				if (!arquivoOrigem.isDirectory()) {
 					String nomeArquivo = arquivoOrigem.getName().substring(0, arquivoOrigem.getName().lastIndexOf(".")) + " " + processo.getMunicipio().getNome();
 					String extensaoArquivo = arquivoOrigem.getName().substring(arquivoOrigem.getName().lastIndexOf(".") + 1);
 					MyUtils.appendLogArea(txtTexto, "Copiando o arquivo '" + arquivoOrigem.getName() + "'");
-					String novoNome = nomeArquivo + "." + extensaoArquivo;
-
-					// troca o nome do arquivo, caso já exista no destino
-					File arquivoDestino = null;
-					do {
-						arquivoDestino = new File(pastaDestino, novoNome);
-
-						if (arquivoDestino.exists()) {
-							novoNome = processoFormatado + " (" + (++seqCopia) + ") " + processo.getMunicipio().getNome() + "." + extensaoArquivo;
-						}
-					} while (arquivoDestino.exists());
+					File arquivoDestino = new File(pastaDestino, nomeArquivo + "." + extensaoArquivo);
 					Files.copy(arquivoOrigem, arquivoDestino);
 					do {
 						TimeUnit.MILLISECONDS.sleep(200);
