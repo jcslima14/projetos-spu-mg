@@ -185,20 +185,19 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         // Find the text input element by its name
         WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));
         botaoAcessar.click();
-
+        
         // verifica se foi aberto popup indesejado (fechar o popup)
-        MyUtils.fecharPopup(driver);
+        fecharPopup(driver);
         String janelaPrincipal = driver.getWindowHandle();
 
-        // selecionar a unidade default
-        MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
-        
 		Map<String, List<Despacho>> despachosAGerar = obterDespachosACadastrar();
 		for (String unidadeAberturaProcesso : despachosAGerar.keySet()) {
 			List<Despacho> despachosDaUnidade = despachosAGerar.get(unidadeAberturaProcesso);
 
 			if (!unidadeAberturaProcesso.trim().equals("")) {
-				MyUtils.selecionarUnidade(driver, wait, unidadeAberturaProcesso);
+				driver.switchTo().defaultContent();
+	        	Select cbxUnidade = new Select(MyUtils.encontrarElemento(wait, By.id("selInfraUnidades")));
+	        	cbxUnidade.selectByVisibleText(unidadeAberturaProcesso);
 			}
 
 			for (Despacho despachoAGerar : despachosDaUnidade) {
@@ -550,6 +549,20 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				 + " where despachoid = " + despacho.getDespachoId());
 
 		MyUtils.execute(conexao, sql.toString());
+	}
+
+	private void fecharPopup(WebDriver driver) {
+		String primeiraJanela = "";
+        for (String tituloJanela : driver.getWindowHandles()) {
+        	if (!primeiraJanela.equalsIgnoreCase("")) {
+        		driver.switchTo().window(tituloJanela);
+        		driver.close();
+        	} else {
+        		primeiraJanela = tituloJanela;
+        	}
+        }
+
+        driver.switchTo().window(primeiraJanela);
 	}
 
 	private Map<String, List<Despacho>> obterDespachosACadastrar() throws Exception {

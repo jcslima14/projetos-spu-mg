@@ -16,7 +16,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
 import com.sun.rowset.CachedRowSetImpl;
@@ -176,25 +175,5 @@ public class MyUtils {
 	public static String formatarData(Date data, String formato) {
 		SimpleDateFormat f = new SimpleDateFormat(formato);
 		return f.format(data);
-	}
-
-	public static void fecharPopup(WebDriver driver) {
-		String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
-	}
-
-	public static void selecionarUnidade(WebDriver driver, Wait<WebDriver> wait, String unidade) {
-		driver.switchTo().defaultContent();
-    	Select cbxUnidade = new Select(MyUtils.encontrarElemento(wait, By.id("selInfraUnidades")));
-    	cbxUnidade.selectByVisibleText(unidade);
 	}
 }
