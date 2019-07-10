@@ -327,7 +327,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			return;
 		}
 
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(null, false, true);
+		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(null, false, null, true);
 		
 		for (ProcessoRecebido processo : processos) {
 			processamentoArquivosOk(processo, pastaDownload, pastaDestino);
