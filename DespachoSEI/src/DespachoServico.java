@@ -108,7 +108,7 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public List<ProcessoRecebido> obterProcessoRecebido(String numeroUnico, Boolean arquivosProcessados, boolean somenteMunicipiosPreenchidos) throws Exception {
+	public List<ProcessoRecebido> obterProcessoRecebido(String numeroUnico, Boolean arquivosProcessados, String dataHoraMovimentacao, boolean somenteMunicipiosPreenchidos) throws Exception {
 		List<ProcessoRecebido> retorno = new ArrayList<ProcessoRecebido>();
 
 		StringBuilder sql = new StringBuilder("");

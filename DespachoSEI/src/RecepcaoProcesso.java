@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -309,8 +308,9 @@ public class RecepcaoProcesso extends JInternalFrame {
 			        	for (WebElement regDocumento : regDocumentos) {
 			        		// busca os dados a serem registrados
 			        		String movimento = regDocumento.findElement(By.xpath("./td[3]")).getText();
+			        		String dataHoraDocumento = regDocumento.findElement(By.xpath("./td[2]")).getText();
 	
-			        		if (movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (")) {
+			        		if (movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (") && dataHoraDocumento.startsWith(dataHoraDocumento)) {
 			        			encontrouRemessaDocumentos = true;
 				        		List<WebElement> lnkArquivos = regDocumento.findElements(By.xpath("./td[4]/*/a"));
 				        		boolean arquivosOk = false;
@@ -319,7 +319,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 				        		do {
 					        		int quantArquivos = 0;
 					        		int linkLido = 0;
-			        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao);
+			        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao, dataHora);
 					        		
 					        		for (WebElement lnkArquivo : lnkArquivos) {
 					        			linkLido ++;
@@ -368,7 +368,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 					        		}
 		
 					        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
-					        		arquivosOk = arquivosBaixadosERenomeados(logArea, quantArquivos, pastaDeDownload, numeroSemFormatacao);
+					        		arquivosOk = arquivosBaixadosERenomeados(logArea, quantArquivos, pastaDeDownload, numeroSemFormatacao, dataHora);
 				        		} while (!arquivosOk);
 	
 				        		atualizarProcessoRecebido(numeroProcessoJudicial, dataHora, resultadoDownload);
@@ -387,6 +387,11 @@ public class RecepcaoProcesso extends JInternalFrame {
 				        }
 		        	} while (!encontrouRemessaDocumentos);
 
+		        	// se não encontrou a remessa de documentos, grava log com esta informação
+		        	if (!encontrouRemessaDocumentos) {
+		        		atualizarProcessoRecebido(numeroProcessoJudicial, dataHora, "Não foram encontrados os documentos da remessa do processo.");
+		        	}
+		        	
 		        	driver.close();
 		        	driver.switchTo().window(janelaAtual);
 	        	}
@@ -405,45 +410,26 @@ public class RecepcaoProcesso extends JInternalFrame {
 	}
 
 	private boolean processoJaRecebido(JTextArea logArea, String numeroProcessoJudicial, String dataHoraMovimentacao) throws Exception {
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(numeroProcessoJudicial, null, false);
+		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(numeroProcessoJudicial, null, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), false);
 		if (processos == null || processos.isEmpty()) {
 			MyUtils.appendLogArea(logArea, "Processo ainda não recebido...");
 			return false;
 		} else {
-			Date dataHoraFormatada = MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm");
-			Date dataRegistrada = MyUtils.obterData(processos.iterator().next().getDataHoraMovimentacao(), "yyyy-MM-dd HH:mm:ss");
-			if (dataHoraFormatada.after(dataRegistrada)) {
-				MyUtils.appendLogArea(logArea, "Datas diferentes: lido (" + MyUtils.formatarData(dataHoraFormatada, "dd/MM/yyyy HH:mm") + "); registrada (" + MyUtils.formatarData(dataRegistrada, "dd/MM/yyyy HH:mm") + ")");
-				return false;
-			} else {
-				return true;
-			}
+			return true;
 		}
 	}
 
 	private void atualizarProcessoRecebido(String numeroProcessoJudicial, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
 		String sql = "";
-		sql += "insert into processorecebido (numerounico, datahoramovimentacao, arquivosprocessados, resultadodownload) ";
+		sql += "insert into processorecebido (numerounico, datahoramovimentacao, municipioid, arquivosprocessados, resultadodownload) ";
 		sql += "select '" + numeroProcessoJudicial + "'";
 		sql += "     , '" + dataHoraFormatada + "'";
+		sql += "     , (select municipioid from processorecebido where numerounico = '" + numeroProcessoJudicial + "' order by datahoramovimentacao desc limit 1) ";
 		sql += "	 , false ";
 		sql += "     , " + (resultadoDownload.equals("") ? "null" : "'" + resultadoDownload.replace("'", "") + "'");
-		sql += " where not exists (select 1 from processorecebido where numerounico = '" + numeroProcessoJudicial + "')";
+		sql += " where not exists (select 1 from processorecebido where numerounico = '" + numeroProcessoJudicial + "' and datahoramovimentacao = '" + dataHoraFormatada + "')";
 
-		MyUtils.execute(conexao, sql);
-
-		// atualiza o registro, se já existir com data diferente da atual de movimentação
-		
-		sql = "";
-		sql += "update processorecebido ";
-		sql += "   set datahoramovimentacao = '" + dataHoraFormatada + "'";
-		sql += "     , resultadodownload = " + (resultadoDownload.equals("") ? "null" : "'" + resultadoDownload.replace("'", "") + "'");
-		sql += "     , arquivosprocessados = false ";
-		sql += "     , resultadoprocessamento = null";
-		sql += " where numerounico = '" + numeroProcessoJudicial + "' ";
-		sql += "   and datahoramovimentacao <> '" + dataHoraFormatada + "'";
-		
 		MyUtils.execute(conexao, sql);
 	}
 
@@ -454,8 +440,8 @@ public class RecepcaoProcesso extends JInternalFrame {
 		}
 	}
 	
-	private void preparaPastaProcesso(String caminho, String processo) {
-		File diretorio = new File(caminho + "\\" + processo);
+	private void preparaPastaProcesso(String caminho, String processo, String dataHora) throws Exception {
+		File diretorio = new File(caminho + "\\" + processo + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")");
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		} else {
@@ -474,8 +460,9 @@ public class RecepcaoProcesso extends JInternalFrame {
 		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 
-	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso) throws Exception {
+	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora) throws Exception {
 		File pasta = null;
+		String pastaProcesso = caminho + "\\" + numeroProcesso + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")";
 		FilenameFilter filtro = new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
@@ -487,10 +474,10 @@ public class RecepcaoProcesso extends JInternalFrame {
 		int quantArquivosBaixados = 0;
 		int totalSegundos = 0;
 		MyUtils.appendLogArea(logArea, "Aguardando o download dos arquivos...");
-		
+
 		String ultimaChave = "";
 		int segundosDesdeUltimaAlteracao = 0;
-		
+
 		do {
 			segundosDesdeUltimaAlteracao++;
 			TimeUnit.SECONDS.sleep(1);
@@ -498,7 +485,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 			quantArquivosBaixados = pasta.listFiles(filtro).length;
 
 			String chaveAtual = chaveArquivos(caminho);
-			
+
 			if (!chaveAtual.equals(ultimaChave)) {
 				ultimaChave = chaveAtual;
 				segundosDesdeUltimaAlteracao = 0;
@@ -513,14 +500,14 @@ public class RecepcaoProcesso extends JInternalFrame {
 			apagaPastaDeDownloads(caminho);
 			return false;
 		}
-		
+
 		MyUtils.appendLogArea(logArea, "Todos os arquivos já baixados. Renomeando-os e alocando-os às suas pastas...");
 		quantArquivosBaixados = 0;
-		
+
 		for (File arquivoBaixado : pasta.listFiles(filtro)) {
-			arquivoBaixado.renameTo(new File(caminho + "\\" + numeroProcesso + "\\" + numeroProcesso + " (" + ++quantArquivosBaixados + ").pdf"));
+			arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + " (" + ++quantArquivosBaixados + ").pdf"));
 		}
-		
+
 		return true;
 	}
 	
