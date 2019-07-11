@@ -90,7 +90,8 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 		txtNumeroDocumentoSEI.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
 		chkGerarProcessoIndividual.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 4).toString().equalsIgnoreCase("Sim") ? true : false);
 		txtUnidadeAberturaProcesso.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 5).toString());
-		txtTipoProcesso.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 6).toString());
+		Object tipoProcesso = this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 6);
+		txtTipoProcesso.setText(tipoProcesso == null ? "" : tipoProcesso.toString());
 	}
 
 	public TableModel obterDados() throws Exception {
