@@ -18,6 +18,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -118,7 +119,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 							despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 							recepcionarProcessosSapiens(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), navegador);
 						} catch (Exception e) {
-							appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 							e.printStackTrace();
 						}
 					}
@@ -148,7 +149,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private void recepcionarProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		String pastaDeDownload = despachoServico.obterParametro(1, null).iterator().next().getConteudo();
-		appendLogArea(logArea, "Iniciando o navegador web...");
+		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -230,6 +231,7 @@ public class RecepcaoProcesso extends JInternalFrame {
         passarMouse.moveToElement(abaOficios).click().build().perform();
         Thread.sleep(2000);
         abaOficios.click();
+        StringBuilder mensagemNaoEncontrados = new StringBuilder("");
 
         int pagina = 0;
         
@@ -389,7 +391,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		        	// se não encontrou a remessa de documentos, grava log com esta informação
 		        	if (!encontrouRemessaDocumentos) {
-		        		atualizarProcessoRecebido(numeroProcessoJudicial, dataHora, "Não foram encontrados os documentos da remessa do processo.");
+		        		mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + " - Data/Hora: " + dataHora + "\n");
 		        	}
 		        	
 		        	driver.close();
@@ -404,9 +406,13 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        break;
 	        }
         }
-		
-		appendLogArea(logArea, "Fim do processamento...");
+
+		MyUtils.appendLogArea(logArea, "Fim do processamento...");
         driver.quit();
+
+        if (!mensagemNaoEncontrados.toString().equals("")) {
+        	JOptionPane.showMessageDialog(null, "ATENÇÃO: para um ou mais processos não foi possível localizar e baixar os documentos. \n Isso pode acontecer porque a internet está lenta ou algum outro problema fora da escopo do robô. \n Em geral, basta apenas executar novamente o processamento para que os documenetos sejam lidos. \n\n" + mensagemNaoEncontrados.toString());
+        }
 	}
 
 	private boolean processoJaRecebido(JTextArea logArea, String numeroProcessoJudicial, String dataHoraMovimentacao) throws Exception {
@@ -453,11 +459,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private void delayInSeconds(int tempo) throws Exception {
 		TimeUnit.SECONDS.sleep(tempo);
-	}
-
-	private void appendLogArea(JTextArea logArea, String msg) {
-		logArea.append(msg + "\n");
-		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 
 	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora) throws Exception {

@@ -122,7 +122,7 @@ public class RespostaProcesso extends JInternalFrame {
 							despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 							responderProcessosSapiens(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), navegador);
 						} catch (Exception e) {
-							appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 							e.printStackTrace();
 						}
 					}
@@ -175,7 +175,7 @@ public class RespostaProcesso extends JInternalFrame {
 	}
 
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
-		appendLogArea(logArea, "Iniciando o navegador web...");
+		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -253,7 +253,7 @@ public class RespostaProcesso extends JInternalFrame {
 
         	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
 
-	        appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
+        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
 
 	        // clica no botão de filtro
 	        WebElement cbcProcessoJudicial = encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]"));
@@ -294,9 +294,9 @@ public class RespostaProcesso extends JInternalFrame {
 				passarMouse.contextClick(divLinhaResultado).perform();
 			} else {
 				if (linhasRetornadas.size() == 0) {
-					appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
+					MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
 				} else {
-					appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
+					MyUtils.appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
 				}
 				continue;
 			}
@@ -340,7 +340,7 @@ public class RespostaProcesso extends JInternalFrame {
 			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
         }
 		
-		appendLogArea(logArea, "Fim do processamento...");
+        MyUtils.appendLogArea(logArea, "Fim do processamento...");
         // driver.close();
         driver.quit();
 	}
@@ -380,11 +380,6 @@ public class RespostaProcesso extends JInternalFrame {
 
 	private void delayInSeconds(int tempo) throws Exception {
 		TimeUnit.SECONDS.sleep(tempo);
-	}
-
-	private void appendLogArea(JTextArea logArea, String msg) {
-		logArea.append(msg + "\n");
-		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 
 	private ArrayList<File> obterArquivos(String nomeDiretorio) {

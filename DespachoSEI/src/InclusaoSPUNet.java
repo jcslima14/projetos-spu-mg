@@ -107,7 +107,7 @@ public class InclusaoSPUNet extends JInternalFrame {
 							despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 							incluirDadosSPUNet(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), navegador);
 						} catch (Exception e) {
-							appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 							e.printStackTrace();
 						}
 					}
@@ -136,7 +136,7 @@ public class InclusaoSPUNet extends JInternalFrame {
 	}
 
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
-		appendLogArea(logArea, "Iniciando o navegador web...");
+		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -322,12 +322,7 @@ public class InclusaoSPUNet extends JInternalFrame {
 //			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
 //        }
 
-		appendLogArea(logArea, "Fim do processamento...");
+		MyUtils.appendLogArea(logArea, "Fim do processamento...");
 //        driver.quit();
-	}
-
-	private void appendLogArea(JTextArea logArea, String msg) {
-		logArea.append(msg + "\n");
-		logArea.setCaretPosition(logArea.getDocument().getLength());
 	}
 }
