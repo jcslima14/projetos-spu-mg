@@ -206,7 +206,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				MyUtils.appendLogArea(logArea, "Processo: " + despachoAGerar.getNumeroProcesso());
 	
 				if (despachoAGerar.getTipoDespacho().getGerarProcessoIndividual()) {
-					List<File> anexos = obterArquivos(pastaProcessosIndividuais, despachoAGerar.getNumeroProcesso(), "pdf");
+					List<File> anexos = obterArquivos(pastaProcessosIndividuais, despachoAGerar.getNumeroProcesso(), null);
 					if (despachoAGerar.getNumeroProcessoSEI() == null || despachoAGerar.getNumeroProcessoSEI().trim().equalsIgnoreCase("")) {
 						if (anexos == null || anexos.size() == 0) {
 							MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
@@ -602,10 +602,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			public boolean accept(File dir, String name) {
 				boolean atendeNome = true;
 				boolean atendeExtensao = true;
-				if (!filtroNomeArquivo.equalsIgnoreCase("")) {
+				if (filtroNomeArquivo != null && !filtroNomeArquivo.equalsIgnoreCase("")) {
 					atendeNome = name.toLowerCase().contains(filtroNomeArquivo.toLowerCase());
 				}
-				if (!filtroExtensao.equalsIgnoreCase("")) {
+				if (filtroExtensao != null && !filtroExtensao.equalsIgnoreCase("")) {
 					atendeExtensao = name.toLowerCase().endsWith(filtroExtensao.toLowerCase());
 				}
 				return atendeNome && atendeExtensao;
