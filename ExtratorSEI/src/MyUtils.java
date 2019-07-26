@@ -48,4 +48,28 @@ public class MyUtils {
 			return null;
 		}
 	}
+
+	public static boolean isMacOS() {
+		if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isWindows() {
+		if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static String chromeWebDriverPath() {
+		if (isMacOS()) {
+			return "../commons/resources/chromedriver/macos/chromedriver";
+		} else {
+			return "../commons/resources/chromedriver/windows/chromedriver.exe";
+		}
+	}
 }
