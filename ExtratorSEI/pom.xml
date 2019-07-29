@@ -66,6 +66,26 @@
 		<groupId>org.apache.poi</groupId>
 		<artifactId>poi-ooxml</artifactId>
 	</dependency>
+	<dependency>
+		<groupId>pentaho-library</groupId>
+		<artifactId>libserializer</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>pentaho-library</groupId>
+		<artifactId>libformat</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>pentaho-library</groupId>
+		<artifactId>libdocbundle</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>pentaho-library</groupId>
+		<artifactId>librepository</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>pentaho-library</groupId>
+		<artifactId>libswing</artifactId>
+	</dependency>
   </dependencies>
   <dependencyManagement>
   	<dependencies>
@@ -120,6 +140,31 @@
   			<groupId>org.apache.poi</groupId>
   			<artifactId>poi-ooxml</artifactId>
   			<version>3.9</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>pentaho-library</groupId>
+  			<artifactId>libserializer</artifactId>
+  			<version>5.0.1</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>pentaho-library</groupId>
+  			<artifactId>libformat</artifactId>
+  			<version>5.0.1</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>pentaho-library</groupId>
+  			<artifactId>libdocbundle</artifactId>
+  			<version>5.0.1</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>pentaho-library</groupId>
+  			<artifactId>librepository</artifactId>
+  			<version>5.0.1</version>
+  		</dependency>
+  		<dependency>
+  			<groupId>pentaho-library</groupId>
+  			<artifactId>libswing</artifactId>
+  			<version>5.0.1</version>
   		</dependency>
   	</dependencies>
   </dependencyManagement>
