@@ -126,7 +126,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		ChromeOptions opcoes = new ChromeOptions();
 		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", diretorioDespachos); }});
-		System.setProperty("webdriver.chrome.driver", "./resources/chromedriver/chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver(opcoes);
 
         // And now use this to visit Google

@@ -197,4 +197,36 @@ public class MyUtils {
     	Select cbxUnidade = new Select(MyUtils.encontrarElemento(wait, By.id("selInfraUnidades")));
     	cbxUnidade.selectByVisibleText(unidade);
 	}
+
+	public static boolean isMacOS() {
+		if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isWindows() {
+		if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public static String chromeWebDriverPath() {
+		if (isMacOS()) {
+			return "../commons/resources/chromedriver/macos/chromedriver";
+		} else {
+			return "../commons/resources/chromedriver/windows/chromedriver.exe";
+		}
+	}
+
+	public static String firefoxWebDriverPath() {
+		if (isMacOS()) {
+			return "../commons/resources/firefoxdriver/macos/geckodriver";
+		} else {
+			return "../commons/resources/firefoxdriver/windows/geckodriver.exe";
+		}
+	}
 }

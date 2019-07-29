@@ -155,7 +155,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		}
 		
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		System.setProperty("webdriver.chrome.driver", "./resources/chromedriver/chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver();
 
         // obter os dados do superior assinante

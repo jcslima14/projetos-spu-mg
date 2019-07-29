@@ -143,14 +143,14 @@ public class InclusaoSPUNet extends JInternalFrame {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.chrome.driver", "../commons/resources/chromedriver/chromedriver.exe");
+			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 	        driver = new ChromeDriver(opcoes);
 		} else {
 			FirefoxOptions opcoes = new FirefoxOptions();
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.gecko.driver", "../commons/resources/firefoxdriver/geckodriver.exe");
+			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
 			driver = new FirefoxDriver(opcoes);
 		}
 
