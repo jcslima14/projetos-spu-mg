@@ -216,8 +216,8 @@ public class InclusaoSPUNet extends JInternalFrame {
         waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
         btnMenuAplicacao.click();
 
-        WebElement btnGeoinformação = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
-        btnGeoinformação.click();
+        WebElement btnGeoinformacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
+        btnGeoinformacao.click();
 
         WebElement btnGeoinformaçãoCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
         passarMouse.moveToElement(btnGeoinformaçãoCadastrar).click().build().perform();

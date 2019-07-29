@@ -141,7 +141,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
 		appendLogArea(logArea, "Iniciando o navegador web...");
 		System.out.println("Começando aqui...");
-		System.setProperty("webdriver.chrome.driver", "./resources/chromedriver/chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver();
 
         // And now use this to visit Google

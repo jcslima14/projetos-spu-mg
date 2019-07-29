@@ -190,7 +190,8 @@ public class ExtratorSEI extends JFrame {
 					 "  processoandamentocomplementoid integer primary key autoincrement not null," + 
 					 "  numeroprocesso varchar NOT NULL," + 
 					 "  sequencial integer NOT NULL," + 
-					 "  nomedocumento varchar NOT NULL" + 
+					 "  nomedocumento varchar NOT NULL," + 
+					 "  numerodocumentosei varchar NOT NULL" + 
 					 ")"; 
 
 		Statement cmd = conexao.createStatement();

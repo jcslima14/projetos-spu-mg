@@ -214,7 +214,7 @@ public class CargaSEISQLite extends JInternalFrame {
 
 		appendLogArea(logArea, "Iniciando o navegador web...");
 		System.out.println("Começando aqui...");
-		System.setProperty("webdriver.chrome.driver", "../commons/resources/chromedriver/chromedriver.exe");
+		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver(opcoes);
 
         // And now use this to visit Google
@@ -331,6 +331,7 @@ public class CargaSEISQLite extends JInternalFrame {
 	        }
 	
 	        String tituloJanelaResultados = driver.getWindowHandle();
+	        TimeUnit.SECONDS.sleep(2);
 //	        boolean inicioEncontrado = false;
 	        
 	        while (true) {
