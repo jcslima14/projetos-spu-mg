@@ -331,6 +331,7 @@ public class CargaSEISQLite extends JInternalFrame {
 	        }
 	
 	        String tituloJanelaResultados = driver.getWindowHandle();
+	        TimeUnit.SECONDS.sleep(2);
 //	        boolean inicioEncontrado = false;
 	        
 	        while (true) {
