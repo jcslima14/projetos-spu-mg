@@ -223,13 +223,9 @@ public class AtribuicaoProcesso extends JInternalFrame {
         	}
         }
 
-        System.out.println(processosPorUsuario.toString());
-        
         // retirar da lista de quantidade, os usuários para os quais os processos não são atribuíveis
         retirarUsuariosNaoAtribuiveis(processosPorUsuario, unidadeSelecionada);
 
-        System.out.println(processosPorUsuario.toString());
-        
         // percorre a lista de processos que precisam ser atribuídos para verificar quais já passaram pela unidade e redistribuí-los para o usuário anterior
         for (String processoNaoAtribuido : processosNaoAtribuidos) {
         	String cpfAtribuicao = obterUsuarioASerAtribuido(processoNaoAtribuido, unidadeSelecionada, distribuirPorQuantidade);

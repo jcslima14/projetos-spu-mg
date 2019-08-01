@@ -30,29 +30,29 @@ import com.sun.rowset.CachedRowSetImpl;
 
 public class MyUtils {
 
-	public static Properties obterPropriedades() {
+	public static Properties obterPropriedades(String nomeArquivo) {
 		Properties retorno = new Properties();
 		InputStream input = null;
 
 		try {
-			input = new FileInputStream("extratorsei.properties");
+			input = new FileInputStream(nomeArquivo);
 			retorno.load(input);
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Erro ao obter propriedades para extração de dados do SEI. Verifique se o arquivo 'extratorsei.properties' existe no diretório da aplicação: \n \n" + e.getMessage());
+			JOptionPane.showMessageDialog(null, "Erro ao ler o arquivo de propriedades da aplicação. Verifique se o arquivo '" + nomeArquivo + "' existe no diretório da aplicação: \n \n" + e.getMessage());
 			e.printStackTrace();
 		}
 
 		return retorno;
 	}
 
-	public static void salvarPropriedades(Properties prop) {
+	public static void salvarPropriedades(Properties prop, String nomeArquivo) {
 		OutputStream output = null;
 
 		try {
-			output = new FileOutputStream("extratorsei.properties");
+			output = new FileOutputStream(nomeArquivo);
 			prop.store(output, "");
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Erro ao gravar propriedades para extração de dados do SEI. Verifique se o arquivo 'extratorsei.properties' existe no diretório da aplicação: \n \n" + e.getMessage());
+			JOptionPane.showMessageDialog(null, "Erro ao gravar o arquivo de propriedades da aplicação. Verifique se o arquivo '" + nomeArquivo + "' existe no diretório da aplicação: \n \n" + e.getMessage());
 			e.printStackTrace();
 		}
 	}

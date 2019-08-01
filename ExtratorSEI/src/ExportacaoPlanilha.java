@@ -49,7 +49,7 @@ public class ExportacaoPlanilha extends JInternalFrame {
 	private JCheckBox chkApenasAbertos = new JCheckBox() {{ setSelected(true); }};
 	private JLabel lblApenasAbertos = new JLabel("Apenas com trâmite em aberto na unidade");
 	private JButton btnProcessar = new JButton("Processar");
-	private Properties propriedades = MyUtils.obterPropriedades();
+	private Properties propriedades = MyUtils.obterPropriedades("extratorsei.properties");
 
 	public ExportacaoPlanilha(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
@@ -141,7 +141,7 @@ public class ExportacaoPlanilha extends JInternalFrame {
 					lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
 					if (!propriedades.getProperty("exportacao_planilha_default_path").equals(filArquivo.getSelectedFile().getParent())) {
 						propriedades.put("exportacao_planilha_default_path", filArquivo.getSelectedFile().getParent());
-						MyUtils.salvarPropriedades(propriedades);
+						MyUtils.salvarPropriedades(propriedades, "extratorsei.properties");
 					}
 				}
 			}
