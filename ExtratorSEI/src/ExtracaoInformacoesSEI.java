@@ -833,4 +833,43 @@ public class ExtracaoInformacoesSEI {
 		}
 		return false;
 	}
+
+	public int obterUltimoSequencialGravado(Connection conexao, ProcessoAndamento andamento, String unidade) throws Exception {
+		String sql = "select ultimosequencial from processounidade "
+				   + " where processoid = " + andamento.sqlBuscaProcesso()
+				   + "   and unidadeid = " + andamento.sqlBuscaUnidade(unidade);
+		int sequencial = 0;
+		
+		Statement consulta = conexao.createStatement();
+		ResultSet rs = consulta.executeQuery(sql);
+		while (rs.next()) {
+			sequencial = rs.getInt("ultimosequencial");
+		}
+		
+		consulta.close();
+		
+		return sequencial;
+	}
+
+	public ProcessoAndamento obterUltimoAndamentoGravado(Connection conexao, String numeroProcesso) throws Exception {
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select processoandamentoid, numeroprocesso, datahora, sequencial, unidade, usuario, descricao ");
+		sql.append("  from processoandamento ");
+		sql.append(" where numeroprocesso = '" + numeroProcesso + "' ");
+		sql.append("  order by sequencial desc limit 1 ");
+		
+		Statement consulta = conexao.createStatement();
+		ResultSet rs = consulta.executeQuery(sql.toString());
+
+		ProcessoAndamento retorno = new ProcessoAndamento();
+		retorno.setSequencial(0);
+		
+		while (rs.next()) {
+			retorno = new ProcessoAndamento(rs.getInt("processoandamentoid"), rs.getString("numeroprocesso"), rs.getString("datahora"), rs.getInt("sequencial"), rs.getString("unidade"), rs.getString("usuario"), rs.getString("descricao"));
+		}
+		
+		consulta.close();
+		
+		return retorno;
+	}
 }

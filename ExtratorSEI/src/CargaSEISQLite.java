@@ -325,23 +325,23 @@ public class CargaSEISQLite extends JInternalFrame {
 	        for (String tituloJanela : driver.getWindowHandles()) {
 	        	driver.switchTo().window(tituloJanela);
 	        }
-	
+
 	        String tituloJanelaResultados = driver.getWindowHandle();
 	        TimeUnit.SECONDS.sleep(2);
 //	        boolean inicioEncontrado = false;
-	        
+
 	        while (true) {
 		        // procura cada link para o processo de modo a clicar no mesmo e buscar o histórico de andamento
 		        List<WebElement> processos = driver.findElements(By.xpath("//table/tbody/tr/td[4]/a"));
-		
+
 		        for (WebElement processo : processos) {
 //		        	if (processo.getText().equals("04926.000942/2018-44")) inicioEncontrado = true;
 //		        	if (!inicioEncontrado) continue;
 		        	ProcessoAndamento paProcesso = new ProcessoAndamento() {{ setNumeroProcesso(processo.getText()); }};
-		        	int ultimoSequencialGravado = obterUltimoSequencialGravado(conexao, paProcesso, unidadeSelecionada);
+		        	int ultimoSequencialGravado = extrator.obterUltimoSequencialGravado(conexao, paProcesso, unidadeSelecionada);
 
 		            // obter o andamento do último sequencial gravado para verificar se é igual ao que vai ser lido agora
-		        	ProcessoAndamento ultimoAndamentoGravado = obterUltimoAndamentoGravado(conexao, paProcesso.getNumeroProcesso());
+		        	ProcessoAndamento ultimoAndamentoGravado = extrator.obterUltimoAndamentoGravado(conexao, paProcesso.getNumeroProcesso());
 
 		        	// se o processo estiver na lista de não visualizados, pula este registro
 		        	if (processosNaoVisualizados.get(paProcesso.getNumeroProcesso()) != null) {
@@ -353,11 +353,11 @@ public class CargaSEISQLite extends JInternalFrame {
 		        		MyUtils.appendLogArea(logArea, "Processo " + paProcesso.getNumeroProcesso() + " - Processo já existe na base com indicador de problema no andamento - Processamento ignorado");
 		        		continue;
 		        	}
-		        	
+
 		        	MyUtils.appendLogArea(logArea, "Processo " + paProcesso.getNumeroProcesso() + " - último registro gravado: " + ultimoSequencialGravado);
-			        
+
 		        	processo.click();
-	
+
 		        	// abriu uma nova aba, então navega até ela
 		            for (String tituloJanela : driver.getWindowHandles()) {
 		            	driver.switchTo().window(tituloJanela);
@@ -432,23 +432,6 @@ public class CargaSEISQLite extends JInternalFrame {
 //		return retorno;
 //	}
 
-	private int obterUltimoSequencialGravado(Connection conexao, ProcessoAndamento andamento, String unidade) throws Exception {
-		String sql = "select ultimosequencial from processounidade "
-				   + " where processoid = " + andamento.sqlBuscaProcesso()
-				   + "   and unidadeid = " + andamento.sqlBuscaUnidade(unidade);
-		int sequencial = 0;
-		
-		Statement consulta = conexao.createStatement();
-		ResultSet rs = consulta.executeQuery(sql);
-		while (rs.next()) {
-			sequencial = rs.getInt("ultimosequencial");
-		}
-		
-		consulta.close();
-		
-		return sequencial;
-	}
-
 	private static void atualizaUltimaDataCarga(Connection conexao, String dataFinal) throws Exception {
 		String sql = "";
 		sql += "update parametro ";
@@ -496,26 +479,4 @@ public class CargaSEISQLite extends JInternalFrame {
 //		
 //		return retorno;
 //	}
-
-	private ProcessoAndamento obterUltimoAndamentoGravado(Connection conexao, String numeroProcesso) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select processoandamentoid, numeroprocesso, datahora, sequencial, unidade, usuario, descricao ");
-		sql.append("  from processoandamento ");
-		sql.append(" where numeroprocesso = '" + numeroProcesso + "' ");
-		sql.append("  order by sequencial desc limit 1 ");
-		
-		Statement consulta = conexao.createStatement();
-		ResultSet rs = consulta.executeQuery(sql.toString());
-
-		ProcessoAndamento retorno = new ProcessoAndamento();
-		retorno.setSequencial(0);
-		
-		while (rs.next()) {
-			retorno = new ProcessoAndamento(rs.getInt("processoandamentoid"), rs.getString("numeroprocesso"), rs.getString("datahora"), rs.getInt("sequencial"), rs.getString("unidade"), rs.getString("usuario"), rs.getString("descricao"));
-		}
-		
-		consulta.close();
-		
-		return retorno;
-	}
 }

@@ -225,42 +225,57 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
         // retirar da lista de quantidade, os usuários para os quais os processos não são atribuíveis
         retirarUsuariosNaoAtribuiveis(processosPorUsuario, unidadeSelecionada);
+        ExtracaoInformacoesSEI extratorSEI = new ExtracaoInformacoesSEI(conexao, driver, false, logArea);
 
         // percorre a lista de processos que precisam ser atribuídos para verificar quais já passaram pela unidade e redistribuí-los para o usuário anterior
         for (String processoNaoAtribuido : processosNaoAtribuidos) {
-        	String cpfAtribuicao = obterUsuarioASerAtribuido(processoNaoAtribuido, unidadeSelecionada, distribuirPorQuantidade);
-        	if (!cpfAtribuicao.equals("")) {
-        		driver.switchTo().defaultContent();
-        		// encontra o botão de pesquisa de processos
-        		WebElement caixaPesquisa = driver.findElement(By.id("txtPesquisaRapida"));
-        		caixaPesquisa.sendKeys(processoNaoAtribuido);
-        		caixaPesquisa.sendKeys(Keys.RETURN);
-        		
-        		driver.switchTo().frame("ifrVisualizacao");
-        		WebElement botaoAtribuir = encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
-        		botaoAtribuir.click();
-        		
-        		// encontra a opção correspondente ao usuário a ser atribuído
-        		WebElement opcaoUsuario = null;
-        		try {
-        			opcaoUsuario = encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
-        		} catch (Exception e) {
-        			appendLogArea(logArea, "Não foi encontrada na lista a opção referente ao CPF " + cpfAtribuicao + ". A atribuição deve ser feita manualmente.");
-        			continue;
-        		}
-        		
-        		Select selecaoUsuario = new Select(driver.findElement(By.xpath("//select[@id = 'selAtribuicao']")));
-        		selecaoUsuario.selectByValue(opcaoUsuario.getAttribute("value"));
-        		
-        		WebElement botaoSalvar = driver.findElement(By.id("sbmSalvar"));
-        		appendLogArea(logArea, "Processo " + processoNaoAtribuido + " atribuído para " + cpfAtribuicao);
-        		atualizarQuantidadeProcessos(cpfAtribuicao);
-        		if (salvarDistribuicao) {
-        			botaoSalvar.click();
-        		}
-        	} else {
-        		appendLogArea(logArea, "Processo " + processoNaoAtribuido + ". Não foi possível determinar automaticamente a qual usuário atribuir o processo. A atribuição deve ser feita manualmente.");
+        	ProcessoAndamento processoAndamento = new ProcessoAndamento() {{ setNumeroProcesso(processoNaoAtribuido); }};
+
+    		driver.switchTo().defaultContent();
+    		// encontra o botão de pesquisa de processos
+    		WebElement caixaPesquisa = driver.findElement(By.id("txtPesquisaRapida"));
+    		caixaPesquisa.sendKeys(processoNaoAtribuido);
+    		caixaPesquisa.sendKeys(Keys.RETURN);
+
+    		int ultimoSequencialGravado = extratorSEI.obterUltimoSequencialGravado(conexao, processoAndamento, unidadeSelecionada);
+    		ProcessoAndamento ultimoAndamentoGravado = extratorSEI.obterUltimoAndamentoGravado(conexao, processoNaoAtribuido);
+
+    		// antes de atribuir, lê o log de andamentos para pegar as últimas atualizações disponíveis
+    		extratorSEI.extrairInformacoesProcesso(ultimoSequencialGravado, processoAndamento, unidadeSelecionada, ultimoAndamentoGravado);
+
+    		// obtem o usuário para o qual será atribuído o processo
+    		String[] resultadoAtribuicao = obterUsuarioASerAtribuido(processoNaoAtribuido, unidadeSelecionada, distribuirPorQuantidade);
+        	String cpfAtribuicao = resultadoAtribuicao[0];
+
+        	// se não foi possível atribuir automaticamente, retorna a informação para o usuário
+        	if (cpfAtribuicao.equals("")) {
+        		appendLogArea(logArea, resultadoAtribuicao[1]);
+        		continue;
         	}
+
+    		driver.switchTo().defaultContent();
+    		driver.switchTo().frame("ifrVisualizacao");
+    		WebElement botaoAtribuir = encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
+    		botaoAtribuir.click();
+
+    		// encontra a opção correspondente ao usuário a ser atribuído
+    		WebElement opcaoUsuario = null;
+    		try {
+    			opcaoUsuario = encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
+    		} catch (Exception e) {
+    			appendLogArea(logArea, "Não foi encontrada na lista a opção referente ao CPF " + cpfAtribuicao + ". A atribuição deve ser feita manualmente.");
+    			continue;
+    		}
+
+    		Select selecaoUsuario = new Select(driver.findElement(By.xpath("//select[@id = 'selAtribuicao']")));
+    		selecaoUsuario.selectByValue(opcaoUsuario.getAttribute("value"));
+
+    		WebElement botaoSalvar = driver.findElement(By.id("sbmSalvar"));
+    		appendLogArea(logArea, "Processo " + processoNaoAtribuido + " atribuído para " + cpfAtribuicao);
+    		atualizarQuantidadeProcessos(cpfAtribuicao);
+    		if (salvarDistribuicao) {
+    			botaoSalvar.click();
+    		}
         }
 
         System.out.println(processosPorUsuario.toString());
@@ -310,39 +325,106 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		}
 	}
 
-	private String obterUsuarioASerAtribuido(String processoNaoAtribuido, String unidadeSelecionada, boolean distribuirPorQuantidade) throws SQLException {
-		String cpf = "";
-		String sql = "";
-		sql += "select u.cpf from processotramite pt ";
-		sql += " inner join usuario u on pt.usuarioidatribuido = u.usuarioid ";
-		sql += " inner join unidade un using (unidadeid) ";
+	private String[] obterUsuarioASerAtribuido(String numeroProcesso, String unidade, boolean distribuirPorQuantidade) throws SQLException {
+		// buscar o último andamento onde houve classificação temática, desde que este último andamento tenha data superior à data gravada na tabela processo x unidade
+		Statement consulta = conexao.createStatement();
+		ResultSet rs;
+		String sql = null;
+		String tema = null;
+		String dataHoraUltimaClassificacaoTematica = "1900-01-01";
+
+		// obtem a última data em que a classificação temática foi processada
+		sql =  "select pu.datahoraultimaclassificacaotematica ";
+		sql += "  from processounidade pu ";
 		sql += " inner join processo p using (processoid) ";
-		sql += " where un.nome = '" + unidadeSelecionada + "'";
-		sql += "   and p.numeroprocesso = '" + processoNaoAtribuido + "'";
-		sql += "   and pt.datafim is not null ";
-		sql += " order by pt.datafim desc ";
+		sql += " inner join unidade u using (unidadeid) ";
+		sql += "where p.processo = '" + numeroProcesso + "' ";
+		sql += "  and u.nome = '" + unidade + "'";
+
+		rs = consulta.executeQuery(sql);
+		while (rs.next()) {
+			tema = rs.getString("datahoraultimaclassificacaotematica");
+		}
+
+		// obtem a classificação temática mais recente depois da última que tenha sido realizada para o processo
+		sql  = "select trim(substr(descricao, instr(descricao, ':') + 1)) as tema ";
+		sql += "  from processoandamento ";
+		sql += " where descricao like 'tema:%' ";
+		sql += "   and datahora > '" + dataHoraUltimaClassificacaoTematica + "' ";
+		sql += "   and lower(trim(substr(descricao, instr(descricao, ':') + 1))) in (select lower(gt.descricao) from grupotematico gt ";
+		sql += "																	  inner join unidade u using (unidadeid) ";
+		sql += "																	  where u.nome = '" + unidade + "') ";
+		sql += " order by datahora desc ";
 		sql += " limit 1 ";
 
-		Statement consulta = conexao.createStatement();
-		ResultSet rs = consulta.executeQuery(sql);
+		// se não retornou nada, indica que não houve nenhuma classificação temática após a última data processada
+		rs = consulta.executeQuery(sql);
+		boolean nenhumResultado = true;
+
+		while (rs.next()) {
+			nenhumResultado = false;
+			tema = rs.getString("tema");
+		}
+
+		if (nenhumResultado) {
+			return new String[] { null, "O processo '" + numeroProcesso + "' não possui nenhuma classificação temática para a unidade '" + unidade + "' após " + dataHoraUltimaClassificacaoTematica + "." };
+		}
+
+		// busca os usuários que compõem o grupo temático
+		sql  = "";
+		sql += "select cpf from usuariogrupotematico ugt ";
+		sql += " inner join grupotematico gt using (grupotematicoid) ";
+		sql += " inner join unidade un using (unidadeid) ";
+		sql += " inner join usuario us using (usuarioid) ";
+		sql += " where lower(gt.descricao) = '" + tema + "' ";
+		sql += "   and un.nome = '" + unidade + "' ";
+		sql += "   and ugt.usuarioid = pt.usuarioidatribuido ";
+		sql += "   and ugt.ativo = true ";
+
+		rs = consulta.executeQuery(sql);
+		String usuariosGrupoTematico = "";
+
+		while (rs.next()) {
+			usuariosGrupoTematico += rs.getString("cpf").concat("|");
+		}
+
+		// se encontrou o tema, busca o último usuário do grupo temático para quem este processo esteve atribuído
+		sql  = "";
+		sql += "select u.cpf ";
+		sql += "  from usuario u ";
+		sql += " inner join processotramite pt on pt.usuarioidatribuido = u.usuarioid ";
+		sql += " inner join processo p using (processoid) ";
+		sql += " inner join unidade un on pt.unidadeid = un.unidadeid ";
+		sql += " where un.nome = '" + unidade + "' ";
+		sql += "   and p.processo = '" + numeroProcesso + "' ";
+		sql += "   and instr('" + usuariosGrupoTematico + "', u.cpf) > 0 ";
+		sql += " order by pt.datainicio desc ";
+		sql += " limit 1 ";
+
+		String cpf = null;
+		String msgRetorno = null;
+
 		while (rs.next()) {
 			cpf = rs.getString("cpf");
 		}
-		
+
 		consulta.close();
 
 		// atribui o processo ao usuário que possui menos processos abertos
-		if (cpf.equals("") && distribuirPorQuantidade) {
+		if (cpf == null && distribuirPorQuantidade) {
 			Integer quantidade = null;
+			msgRetorno = "Não foi possível determinar o usuário para o processo '" + numeroProcesso + "'. Verifique se há algum usuário vinculado ao grupo temático '" + tema + "' na unidade '" + unidade + "'.";
+
 			for (String cpfUsuario : processosPorUsuario.keySet()) {
-				if (quantidade == null || processosPorUsuario.get(cpfUsuario).intValue() < quantidade.intValue()) {
+				if (usuariosGrupoTematico.contains(cpfUsuario) && (quantidade == null || processosPorUsuario.get(cpfUsuario).intValue() < quantidade.intValue())) {
 					quantidade = processosPorUsuario.get(cpfUsuario).intValue();
 					cpf = cpfUsuario;
+					msgRetorno = null;
 				}
 			}
 		}
-		
-		return cpf;
+
+		return new String[] { cpf, msgRetorno };
 	}
 
 	private static WebElement encontrarElemento(Wait<WebDriver> wait, By by) {

@@ -240,7 +240,8 @@ public class ExtratorSEI extends JFrame {
 					 "  processounidadeid integer primary key autoincrement not null," + 
 					 "  processoid varchar NOT NULL," + 
 					 "  unidadeid varchar NOT NULL," + 
-					 "  ultimosequencial integer NOT NULL" + 
+					 "  ultimosequencial integer NOT NULL," +
+					 "  datahoraultimaclassificacaotematica datetime" +
 					 ")"; 
 
 		Statement cmd = conexao.createStatement();
