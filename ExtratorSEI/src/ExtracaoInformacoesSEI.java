@@ -187,7 +187,7 @@ public class ExtracaoInformacoesSEI {
 	            		}
 
             			if (sequencial > ultimoSequencialGravado) {
-		            		if (andamentoDescricao.toLowerCase().contains(unidadeSelecionada.toLowerCase()) || andamentoUnidade.equalsIgnoreCase(unidadeSelecionada) || andamentoDescricao.toLowerCase().startsWith("assinado documento ")) {
+		            		if (andamentoDescricao.toLowerCase().contains(unidadeSelecionada.toLowerCase()) || andamentoUnidade.equalsIgnoreCase(unidadeSelecionada) || andamentoDescricao.toLowerCase().startsWith("assinado documento ") || andamentoDescricao.toLowerCase().replace(" ", "").startsWith("tema:")) {
 			            		String andamentoUsuarioNome = andamentoUsuario.findElement(By.xpath("./a")).getAttribute("title");
 
 			            		List<String> listaAnexos = new ArrayList<String>();

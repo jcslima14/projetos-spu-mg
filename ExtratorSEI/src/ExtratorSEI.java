@@ -36,7 +36,8 @@ public class ExtratorSEI extends JFrame {
 		JMenuItem sbmAtribuicaoProcesso = new JMenuItem("Atribuição de Processos");
 		JMenuItem sbmTesteLayout = new JMenuItem("Teste de Layout");
 		JMenuItem sbmGrupoTematico = new JMenuItem("Grupo Temático");
-		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmGrupoTematico); }};
+		JMenuItem sbmUsuarioGrupoTematico = new JMenuItem("Usuário x Grupo Temático");
+		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmGrupoTematico); add(sbmUsuarioGrupoTematico); }};
 		JMenu mnuAcoes = new JMenu("Ações") {{ add(sbmRelatorio); add(sbmPlanilhaGUT); addSeparator(); add(sbmCargaSEI); add(sbmAtribuicaoProcesso); }};
 //		mnuAcoes.add(sbmTesteLayout); 
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuAcoes); }};
@@ -49,6 +50,15 @@ public class ExtratorSEI extends JFrame {
 				}
 
 				relatorioTramitacao.exibirPreview();
+			}
+		});
+		
+		sbmUsuarioGrupoTematico.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				UsuarioGrupoTematicoCadastro janela = new UsuarioGrupoTematicoCadastro("Usuário x Grupo Temático", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
 			}
 		});
 		

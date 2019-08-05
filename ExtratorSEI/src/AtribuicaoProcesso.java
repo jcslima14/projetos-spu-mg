@@ -11,12 +11,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -111,7 +109,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 						try {
 							atribuirProcessos(AtribuicaoProcesso.this.conexao, logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), propriedades, chkDistribuirPorQuantidade.isSelected(), chkDistribuirNaoVisualizado.isSelected(), chkSalvarDistribuicao.isSelected());
 						} catch (Exception e) {
-							appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 							e.printStackTrace();
 						}
 					}
@@ -142,8 +140,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 	private void atribuirProcessos(Connection conexao, JTextArea logArea, String usuario, String senha, Map<String, String> propriedades, boolean distribuirPorQuantidade, boolean distribuirNaoVisualizado, boolean salvarDistribuicao) throws Exception {
 		List<String> processosNaoAtribuidos = new ArrayList<String>();
 
-		appendLogArea(logArea, "Iniciando o navegador web...");
-		System.out.println("Começando aqui...");
+		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver();
 
@@ -181,27 +178,24 @@ public class AtribuicaoProcesso extends JInternalFrame {
         driver.switchTo().window(primeiraJanela);
 
     	// clica no botão de controle de processos para abrir a página principal do SEI, onde está o menu de opções
-    	WebElement btnControleProcessos = encontrarElemento(wait5, By.id("lnkControleProcessos"));
+    	WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
     	btnControleProcessos.click();
     	
         // obtem a unidade selecionada
         String unidadeSelecionada = driver.findElement(By.xpath("//select[@id = 'selInfraUnidades']/option[@selected = 'selected']")).getText();
 
 		// mudar para visualização detalhada, para trazer todos os processos juntos em uma única lista
-		WebElement lnkVisualizacaoDetalhada = encontrarElemento(wait5, By.xpath("//a[contains(text(), 'Visualização detalhada')]"));
+		WebElement lnkVisualizacaoDetalhada = MyUtils.encontrarElemento(wait5, By.xpath("//a[contains(text(), 'Visualização detalhada')]"));
 		lnkVisualizacaoDetalhada.click();
 		processosPorUsuario = new LinkedHashMap<String, Integer>();
 
         // percorre a lista de processos recebidos em busca dos que ainda não foram visualizados
         while (true) {
-        	List<WebElement> processos = driver.findElements(By.xpath("//table[@id = 'tblProcessosDetalhado']/tbody/tr"));
-        	int l = 0;
+        	List<WebElement> processos = driver.findElements(By.xpath("//table[@id = 'tblProcessosDetalhado']/tbody/tr[./td]"));
         	
         	for (WebElement processo : processos) {
-        		if (l++ == 0) continue;
         		String numeroProcesso = processo.findElement(By.xpath("./td[3]")).getText();
         		String atribuidoPara = processo.findElement(By.xpath("./td[4]")).getText().replace("(", "").replace(")", "");
-        		// System.out.println("Processo: " + numeroProcesso + " - Atribuído para: " + atribuidoPara);
         		boolean processoNaoVisualizado = processo.findElement(By.xpath("./td[3]/a")).getAttribute("class").contains("processoNaoVisualizado");
         		if (distribuirNaoVisualizado) processoNaoVisualizado = false;
 
@@ -223,12 +217,21 @@ public class AtribuicaoProcesso extends JInternalFrame {
         	}
         }
 
+        System.out.println(processosPorUsuario.toString());
+
         // retirar da lista de quantidade, os usuários para os quais os processos não são atribuíveis
-        retirarUsuariosNaoAtribuiveis(processosPorUsuario, unidadeSelecionada);
+        // retirarUsuariosNaoAtribuiveis(processosPorUsuario, unidadeSelecionada);
         ExtracaoInformacoesSEI extratorSEI = new ExtracaoInformacoesSEI(conexao, driver, false, logArea);
 
         // percorre a lista de processos que precisam ser atribuídos para verificar quais já passaram pela unidade e redistribuí-los para o usuário anterior
         for (String processoNaoAtribuido : processosNaoAtribuidos) {
+    		if (!(processoNaoAtribuido.equals("10154.113338/2019-49") 
+			   || processoNaoAtribuido.equals("10154.113337/2019-02")
+			   || processoNaoAtribuido.equals("10154.113334/2019-61")
+			   || processoNaoAtribuido.equals("10154.113331/2019-27")
+			   || processoNaoAtribuido.equals("10154.113327/2019-69")
+			   )) continue;
+
         	ProcessoAndamento processoAndamento = new ProcessoAndamento() {{ setNumeroProcesso(processoNaoAtribuido); }};
 
     		driver.switchTo().defaultContent();
@@ -245,25 +248,30 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
     		// obtem o usuário para o qual será atribuído o processo
     		String[] resultadoAtribuicao = obterUsuarioASerAtribuido(processoNaoAtribuido, unidadeSelecionada, distribuirPorQuantidade);
-        	String cpfAtribuicao = resultadoAtribuicao[0];
+        	String cpfAtribuicao = resultadoAtribuicao[1];
 
         	// se não foi possível atribuir automaticamente, retorna a informação para o usuário
-        	if (cpfAtribuicao.equals("")) {
-        		appendLogArea(logArea, resultadoAtribuicao[1]);
+        	if (cpfAtribuicao == null) {
+        		MyUtils.appendLogArea(logArea, resultadoAtribuicao[0]);
         		continue;
         	}
 
     		driver.switchTo().defaultContent();
+    		driver.switchTo().frame("ifrArvore");
+    		WebElement linkNumeroProcesso = MyUtils.encontrarElemento(wait5, By.xpath("//span[contains(text(), '" + processoNaoAtribuido + "')]"));
+    		linkNumeroProcesso.click();
+
+    		driver.switchTo().defaultContent();
     		driver.switchTo().frame("ifrVisualizacao");
-    		WebElement botaoAtribuir = encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
+    		WebElement botaoAtribuir = MyUtils.encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
     		botaoAtribuir.click();
 
     		// encontra a opção correspondente ao usuário a ser atribuído
     		WebElement opcaoUsuario = null;
     		try {
-    			opcaoUsuario = encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
+    			opcaoUsuario = MyUtils.encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
     		} catch (Exception e) {
-    			appendLogArea(logArea, "Não foi encontrada na lista a opção referente ao CPF " + cpfAtribuicao + ". A atribuição deve ser feita manualmente.");
+    			MyUtils.appendLogArea(logArea, "Não foi encontrada na lista a opção referente ao CPF " + cpfAtribuicao + ". A atribuição deve ser feita manualmente.");
     			continue;
     		}
 
@@ -271,44 +279,20 @@ public class AtribuicaoProcesso extends JInternalFrame {
     		selecaoUsuario.selectByValue(opcaoUsuario.getAttribute("value"));
 
     		WebElement botaoSalvar = driver.findElement(By.id("sbmSalvar"));
-    		appendLogArea(logArea, "Processo " + processoNaoAtribuido + " atribuído para " + cpfAtribuicao);
+    		MyUtils.appendLogArea(logArea, "Processo " + processoNaoAtribuido + " atribuído para " + cpfAtribuicao);
     		atualizarQuantidadeProcessos(cpfAtribuicao);
     		if (salvarDistribuicao) {
     			botaoSalvar.click();
+    			atualizarDataHoraTema(conexao, processoAndamento, unidadeSelecionada, resultadoAtribuicao[3]);
     		}
         }
 
         System.out.println(processosPorUsuario.toString());
         
-		appendLogArea(logArea, "Fim do processamento...");
+        MyUtils.appendLogArea(logArea, "Fim do processamento...");
 
         driver.close();
         driver.quit();
-	}
-	
-	private void retirarUsuariosNaoAtribuiveis(Map<String, Integer> mapaDeProcessosPorUsuario, String unidadeSelecionada) throws SQLException {
-		for (Iterator<Map.Entry<String, Integer>> it = mapaDeProcessosPorUsuario.entrySet().iterator(); it.hasNext();) {
-			String cpf = it.next().getKey();
-			if (!usuarioPodeReceberProcessos(cpf, unidadeSelecionada)) {
-				it.remove();
-			}
-		}
-	}
-
-	private boolean usuarioPodeReceberProcessos(String cpf, String unidadeSelecionada) throws SQLException {
-		boolean retorno;
-		String sql = "";
-		sql += "select us.cpf from usuario us ";
-		sql += " inner join unidade un using (unidadeid) ";
-		sql += " where us.cpf = '" + cpf + "'";
-		sql += "   and un.nome = '" + unidadeSelecionada + "'";
-
-		Statement consulta = conexao.createStatement();
-		ResultSet rs = consulta.executeQuery(sql);
-		retorno = rs.next();
-		consulta.close();
-
-		return retorno;
 	}
 
 	private void contarProcessosPorUsuario(Map<String, Integer> mapaDeProcessosPorUsuario, String atribuidoPara) {
@@ -331,25 +315,29 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		ResultSet rs;
 		String sql = null;
 		String tema = null;
-		String dataHoraUltimaClassificacaoTematica = "1900-01-01";
+		String dataHoraUltimaClassificacaoTematica = null;
+		String dataHora = "";
 
 		// obtem a última data em que a classificação temática foi processada
 		sql =  "select pu.datahoraultimaclassificacaotematica ";
 		sql += "  from processounidade pu ";
 		sql += " inner join processo p using (processoid) ";
 		sql += " inner join unidade u using (unidadeid) ";
-		sql += "where p.processo = '" + numeroProcesso + "' ";
-		sql += "  and u.nome = '" + unidade + "'";
+		sql += " where p.numeroprocesso = '" + numeroProcesso + "' ";
+		sql += "   and u.nome = '" + unidade + "'";
 
 		rs = consulta.executeQuery(sql);
 		while (rs.next()) {
-			tema = rs.getString("datahoraultimaclassificacaotematica");
+			dataHoraUltimaClassificacaoTematica = rs.getString("datahoraultimaclassificacaotematica");
 		}
 
+		if (dataHoraUltimaClassificacaoTematica == null) dataHoraUltimaClassificacaoTematica = "1900-01-01";
+		
 		// obtem a classificação temática mais recente depois da última que tenha sido realizada para o processo
-		sql  = "select trim(substr(descricao, instr(descricao, ':') + 1)) as tema ";
+		sql  = "select trim(substr(descricao, instr(descricao, ':') + 1)) as tema, datahora ";
 		sql += "  from processoandamento ";
-		sql += " where descricao like 'tema:%' ";
+		sql += " where numeroprocesso = '" + numeroProcesso + "' ";
+		sql += "   and descricao like 'tema:%' ";
 		sql += "   and datahora > '" + dataHoraUltimaClassificacaoTematica + "' ";
 		sql += "   and lower(trim(substr(descricao, instr(descricao, ':') + 1))) in (select lower(gt.descricao) from grupotematico gt ";
 		sql += "																	  inner join unidade u using (unidadeid) ";
@@ -364,10 +352,11 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		while (rs.next()) {
 			nenhumResultado = false;
 			tema = rs.getString("tema");
+			dataHora = rs.getString("datahora");
 		}
 
 		if (nenhumResultado) {
-			return new String[] { null, "O processo '" + numeroProcesso + "' não possui nenhuma classificação temática para a unidade '" + unidade + "' após " + dataHoraUltimaClassificacaoTematica + "." };
+			return new String[] { "O processo '" + numeroProcesso + "' não possui nenhuma classificação temática para a unidade '" + unidade + "' após " + dataHoraUltimaClassificacaoTematica + ".", null, null, null };
 		}
 
 		// busca os usuários que compõem o grupo temático
@@ -376,9 +365,8 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		sql += " inner join grupotematico gt using (grupotematicoid) ";
 		sql += " inner join unidade un using (unidadeid) ";
 		sql += " inner join usuario us using (usuarioid) ";
-		sql += " where lower(gt.descricao) = '" + tema + "' ";
+		sql += " where lower(gt.descricao) = '" + tema.toLowerCase() + "' ";
 		sql += "   and un.nome = '" + unidade + "' ";
-		sql += "   and ugt.usuarioid = pt.usuarioidatribuido ";
 		sql += "   and ugt.ativo = true ";
 
 		rs = consulta.executeQuery(sql);
@@ -390,22 +378,39 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
 		// se encontrou o tema, busca o último usuário do grupo temático para quem este processo esteve atribuído
 		sql  = "";
-		sql += "select u.cpf ";
-		sql += "  from usuario u ";
-		sql += " inner join processotramite pt on pt.usuarioidatribuido = u.usuarioid ";
-		sql += " inner join processo p using (processoid) ";
-		sql += " inner join unidade un on pt.unidadeid = un.unidadeid ";
-		sql += " where un.nome = '" + unidade + "' ";
-		sql += "   and p.processo = '" + numeroProcesso + "' ";
-		sql += "   and instr('" + usuariosGrupoTematico + "', u.cpf) > 0 ";
-		sql += " order by pt.datainicio desc ";
-		sql += " limit 1 ";
+		sql += "select descricao, replace(descricao, 'Processo atribuído para ', '') as cpf ";
+		sql += "  from processoandamento pa ";
+		sql += " where pa.numeroprocesso = '" + numeroProcesso + "' ";
+		sql += "   and pa.unidade = '" + unidade + "' ";
+		sql += "   and (pa.descricao like 'processo atribuído para%' or pa.descricao like 'removida atribuição do processo') ";
+		sql += " order by pa.datahora desc, pa.sequencial desc ";
+
+		rs = consulta.executeQuery(sql);
 
 		String cpf = null;
 		String msgRetorno = null;
 
+		List<String> listaAtribuicoes = new ArrayList<String>();
+		boolean incluiProximoRegistro = true;
+		
+		// percorre a lista de atribuições e retiradas, eliminando as atribuições que foram retiradas do processo
 		while (rs.next()) {
-			cpf = rs.getString("cpf");
+			if (rs.getString("descricao").startsWith("Removida")) {
+				incluiProximoRegistro = false;
+			} else {
+				if (incluiProximoRegistro) {
+					listaAtribuicoes.add(rs.getString("cpf"));
+					incluiProximoRegistro = true;
+				}
+			}
+		}
+
+		// percorre a lista de CPFs atribuidos ao processo, buscando o primeiro que pertença ao grupo temático classificado
+		for (String cpfAtribuido : listaAtribuicoes) {
+			if (usuariosGrupoTematico.contains(cpfAtribuido.concat("|"))) {
+				cpf = cpfAtribuido;
+				break;
+			}
 		}
 
 		consulta.close();
@@ -416,7 +421,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 			msgRetorno = "Não foi possível determinar o usuário para o processo '" + numeroProcesso + "'. Verifique se há algum usuário vinculado ao grupo temático '" + tema + "' na unidade '" + unidade + "'.";
 
 			for (String cpfUsuario : processosPorUsuario.keySet()) {
-				if (usuariosGrupoTematico.contains(cpfUsuario) && (quantidade == null || processosPorUsuario.get(cpfUsuario).intValue() < quantidade.intValue())) {
+				if (usuariosGrupoTematico.contains(cpfUsuario.concat("|")) && (quantidade == null || processosPorUsuario.get(cpfUsuario).intValue() < quantidade.intValue())) {
 					quantidade = processosPorUsuario.get(cpfUsuario).intValue();
 					cpf = cpfUsuario;
 					msgRetorno = null;
@@ -424,25 +429,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 			}
 		}
 
-		return new String[] { cpf, msgRetorno };
-	}
-
-	private static WebElement encontrarElemento(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, WebElement>() {
-			@Override
-			public WebElement apply(WebDriver t) {
-				WebElement element = t.findElement(by);
-				if (element == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return element;
-			}
-		});
-	}
-
-	private void appendLogArea(JTextArea logArea, String msg) {
-		logArea.append(msg + "\n");
-		logArea.setCaretPosition(logArea.getDocument().getLength());
+		return new String[] { msgRetorno, cpf, tema, dataHora };
 	}
 
 	private Map<String, String> obterPropriedades() {
@@ -461,5 +448,17 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		}
 
 		return retorno;
+	}
+
+	private static void atualizarDataHoraTema(Connection conexao, ProcessoAndamento processo, String unidade, String dataHora) throws Exception {
+		String sql = "";
+		sql += "update processounidade ";
+		sql += "   set datahoraultimaclassificacaotematica = '" + dataHora + "'";
+		sql += " where processoid = " + processo.sqlBuscaProcesso();
+		sql += "   and unidadeid = " + processo.sqlBuscaUnidade(unidade);
+
+		Statement inclusao = conexao.createStatement();
+		inclusao.execute(sql);
+		inclusao.close();
 	}
 }
