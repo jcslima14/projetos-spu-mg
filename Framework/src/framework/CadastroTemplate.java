@@ -62,6 +62,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		setMaximizable(true);
 		setIconifiable(true);
 		setClosable(true);
+		setSize(1000, 500);
 	}
 
 	public void inicializar() {
