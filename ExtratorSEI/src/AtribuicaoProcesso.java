@@ -355,8 +355,10 @@ public class AtribuicaoProcesso extends JInternalFrame {
 			dataHora = rs.getString("datahora");
 		}
 
-		if (nenhumResultado) {
-			return new String[] { "O processo '" + numeroProcesso + "' não possui nenhuma classificação temática para a unidade '" + unidade + "' após " + dataHoraUltimaClassificacaoTematica + ".", null, null, null };
+		if (nenhumResultado && tema == null) {
+			tema = unidade;
+			dataHora = "1900-01-01";
+			// return new String[] { "O processo '" + numeroProcesso + "' não possui nenhuma classificação temática para a unidade '" + unidade + "' após " + dataHoraUltimaClassificacaoTematica + ".", null, null, null };
 		}
 
 		// busca os usuários que compõem o grupo temático
