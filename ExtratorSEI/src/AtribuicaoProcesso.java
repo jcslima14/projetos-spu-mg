@@ -225,12 +225,12 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
         // percorre a lista de processos que precisam ser atribuídos para verificar quais já passaram pela unidade e redistribuí-los para o usuário anterior
         for (String processoNaoAtribuido : processosNaoAtribuidos) {
-    		if (!(processoNaoAtribuido.equals("10154.113338/2019-49") 
-			   || processoNaoAtribuido.equals("10154.113337/2019-02")
-			   || processoNaoAtribuido.equals("10154.113334/2019-61")
-			   || processoNaoAtribuido.equals("10154.113331/2019-27")
-			   || processoNaoAtribuido.equals("10154.113327/2019-69")
-			   )) continue;
+//    		if (!(processoNaoAtribuido.equals("10154.113338/2019-49") 
+//			   || processoNaoAtribuido.equals("10154.113337/2019-02")
+//			   || processoNaoAtribuido.equals("10154.113334/2019-61")
+//			   || processoNaoAtribuido.equals("10154.113331/2019-27")
+//			   || processoNaoAtribuido.equals("10154.113327/2019-69")
+//			   )) continue;
 
         	ProcessoAndamento processoAndamento = new ProcessoAndamento() {{ setNumeroProcesso(processoNaoAtribuido); }};
 

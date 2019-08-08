@@ -16,7 +16,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-@SuppressWarnings("serial")
+@SuppressWarnings("serial")		
 public class ImoveisSPU extends JFrame {
 
 	public ImoveisSPU() {
@@ -25,7 +25,7 @@ public class ImoveisSPU extends JFrame {
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();
 		setContentPane(desktop);
-		
+
 		EntityManager conexao = obterConexaoEM();
 
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
