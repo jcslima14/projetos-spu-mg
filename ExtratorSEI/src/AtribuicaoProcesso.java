@@ -1,8 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -20,7 +18,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -57,7 +54,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
 		this.conexao = conexao;
 
-		Map<String, String> propriedades = obterPropriedades();
+		Properties propriedades = MyUtils.obterPropriedades("extratorsei.properties");
 
 		// define os objetos da tela
 		JLabel lblUsuario = new JLabel("Usuário:");
@@ -137,7 +134,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		this.show();
 	}
 
-	private void atribuirProcessos(Connection conexao, JTextArea logArea, String usuario, String senha, Map<String, String> propriedades, boolean distribuirPorQuantidade, boolean distribuirNaoVisualizado, boolean salvarDistribuicao) throws Exception {
+	private void atribuirProcessos(Connection conexao, JTextArea logArea, String usuario, String senha, Properties propriedades, boolean distribuirPorQuantidade, boolean distribuirNaoVisualizado, boolean salvarDistribuicao) throws Exception {
 		List<String> processosNaoAtribuidos = new ArrayList<String>();
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
@@ -145,7 +142,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
         WebDriver driver = new ChromeDriver();
 
         // And now use this to visit Google
-        driver.get(propriedades.get("endereco_sei"));
+        driver.get(propriedades.getProperty("endereco_sei"));
 
         Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(5))
@@ -432,24 +429,6 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		}
 
 		return new String[] { msgRetorno, cpf, tema, dataHora };
-	}
-
-	private Map<String, String> obterPropriedades() {
-		Map<String, String> retorno = new LinkedHashMap<String, String>();
-
-		Properties prop = new Properties();
-		InputStream input = null;
-
-		try {
-			input = new FileInputStream("extratorsei.properties");
-			prop.load(input);
-			retorno.put("endereco_sei", prop.getProperty("endereco_sei"));
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Erro ao obter propriedades para a carga de informações do SEI. Verifique se o arquivo 'extratorsei.properties' existe no diretório da aplicação: \n \n" + e.getMessage());
-			e.printStackTrace();
-		}
-
-		return retorno;
 	}
 
 	private static void atualizarDataHoraTema(Connection conexao, ProcessoAndamento processo, String unidade, String dataHora) throws Exception {
