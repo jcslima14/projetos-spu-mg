@@ -34,6 +34,13 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
+import framework.ComboBoxItem;
+import framework.MyComboBox;
+import framework.MyComboBoxModel;
+import framework.MyLabel;
+import framework.MyUtils;
+import framework.SpringUtilities;
+
 @SuppressWarnings("serial")
 public class ImpressaoDespacho extends JInternalFrame {
 
