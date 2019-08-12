@@ -1,3 +1,4 @@
+package framework;
 import javax.swing.JLabel;
 import javax.swing.table.DefaultTableCellRenderer;
 

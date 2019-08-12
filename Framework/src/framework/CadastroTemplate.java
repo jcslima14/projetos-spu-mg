@@ -1,3 +1,4 @@
+package framework;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -11,6 +12,7 @@ import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JInternalFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -20,11 +22,14 @@ import javax.swing.table.TableModel;
 public abstract class CadastroTemplate extends JInternalFrame {
 
 	private MyTable tabela = new MyTable();
+	private MyButton btnAtualizar = new MyButton("Atualizar") {{ setExclusao(true); }};
+	private MyButton btnIncluir = new MyButton("Incluir") {{ setExclusao(true); }};
 	private MyButton btnExcluir = new MyButton("Excluir") {{ setExclusao(true); }};
 	private MyButton btnSalvar = new MyButton("Salvar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyButton btnCancelar = new MyButton("Cancelar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyButton btnIncluir = new MyButton("Incluir") {{ setExclusao(true); }};
+	private MyButton[] btnBotoesPosteriores = null;
 	private JPanel pnlCamposEditaveis;
+	private JPanel pnlFiltros = null;
 
 	public MyTable getTabela() {
 		return this.tabela;
@@ -34,6 +39,14 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		this.pnlCamposEditaveis = pnlCamposEditaveis;
 	}
 
+	public void setPnlFiltros(JPanel pnlFiltros) {
+		this.pnlFiltros = pnlFiltros;
+	}
+
+	public void setBtnBotoesPosteriores(MyButton... btnBotoesPosteriores) {
+		this.btnBotoesPosteriores = btnBotoesPosteriores;
+	}
+	
 	public CadastroTemplate() {
 		super();
 		setResizable(true);
@@ -49,6 +62,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		setMaximizable(true);
 		setIconifiable(true);
 		setClosable(true);
+		setSize(1000, 500);
 	}
 
 	public void inicializar() {
@@ -62,11 +76,25 @@ public abstract class CadastroTemplate extends JInternalFrame {
 			e2.printStackTrace();
 		}
 		
+		JPanel pnlPainelSuperior = new JPanel();
+		pnlPainelSuperior.setLayout(new BoxLayout(pnlPainelSuperior, BoxLayout.Y_AXIS));
 		JPanel pnlBotoesAcima = new JPanel(new FlowLayout());
+		pnlBotoesAcima.add(btnAtualizar);
 		pnlBotoesAcima.add(btnIncluir);
 		pnlBotoesAcima.add(btnExcluir);
 
-		add(pnlBotoesAcima, BorderLayout.NORTH);
+		if (btnBotoesPosteriores != null) {
+			for (MyButton botao : btnBotoesPosteriores) {
+				pnlBotoesAcima.add(botao);
+			}
+		}
+
+		pnlPainelSuperior.add(pnlBotoesAcima);
+		if (pnlFiltros != null) {
+			pnlPainelSuperior.add(pnlFiltros);
+		}
+		
+		add(pnlPainelSuperior, BorderLayout.NORTH);
 
 		JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
 		pnlBotoesAbaixo.add(btnSalvar);
@@ -78,10 +106,22 @@ public abstract class CadastroTemplate extends JInternalFrame {
 
 		add(pnlAreaEdicao, BorderLayout.SOUTH);
 
+		btnAtualizar.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					resetarDados();
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null, "Erro ao tentar atualizar a lista de registros:/n/n" + e1.getMessage());
+					e1.printStackTrace();
+				}
+			}
+		});
+
 		btnIncluir.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				editarRegistro();
+				incluirRegistro();
 			}
 		});
 
@@ -110,6 +150,11 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		btnExcluir.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				int resposta = JOptionPane.showConfirmDialog(null, "ATENÇÃO! Esta ação não poderá ser desfeita! Confirma a exclusão dos registros selecionados?", "Confirmação de Exclusão", JOptionPane.YES_NO_OPTION);
+				if (resposta == JOptionPane.NO_OPTION) {
+					return;
+				}
+
 				try {
 					for (int i = 0; i < tabela.getRowCount(); i++) {
 						Boolean selecionado = (Boolean) tabela.getValueAt(i, 0);
@@ -152,14 +197,29 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		componentesEmEdicao(this, true);
 	}
 
+	private void incluirRegistro() {
+		componentesEmInclusao(this, true);
+	}
+
+	private void componentesEmInclusao(Container container, boolean caracterizar) {
+		Component[] componentes = container.getComponents();
+		for (Component componente : componentes) {
+			if (componente instanceof PropriedadesEdicao) {
+				if (((PropriedadesEdicao) componente).isInclusao()) {
+					componente.setEnabled(caracterizar);
+				}
+			} else if (componente instanceof Container) {
+				componentesEmInclusao((Container) componente, caracterizar);
+			}
+		}
+	}
+
 	private void componentesEmEdicao(Container container, boolean caracterizar) {
 		Component[] componentes = container.getComponents();
 		for (Component componente : componentes) {
 			if (componente instanceof PropriedadesEdicao) {
-				if (caracterizar) {
-					componente.setEnabled(((PropriedadesEdicao) componente).isEdicao());
-				} else {
-					componente.setEnabled(!((PropriedadesEdicao) componente).isEdicao());
+				if (((PropriedadesEdicao) componente).isEdicao()) {
+					componente.setEnabled(caracterizar);
 				}
 			} else if (componente instanceof Container) {
 				componentesEmEdicao((Container) componente, caracterizar);
@@ -169,11 +229,11 @@ public abstract class CadastroTemplate extends JInternalFrame {
 
 	private void cancelarEdicao() {
 		componentesEmEdicao(this, false);
+		componentesEmInclusao(this, false);
 	}
 
 	public void abrirJanela() {
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		// this.pack(); 
 		try {
 			this.setMaximum(true);
 		} catch (PropertyVetoException e) {
@@ -186,5 +246,9 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	private void resetarDados() throws Exception {
 		tabela.setModel(obterDados());
 		tabela.resizeColumns(getColunas(), true);
+	}
+
+	public void executarAtualizar() {
+		btnAtualizar.doClick();
 	}
 }

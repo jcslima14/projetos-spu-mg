@@ -1,19 +1,16 @@
-import javax.swing.JLabel;
+package framework;
+import javax.swing.JComboBox;
 
 @SuppressWarnings("serial")
-public class MyLabel extends JLabel implements PropriedadesEdicao {
+public class MyComboBox extends JComboBox<ComboBoxItem> implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyLabel() {
+	public MyComboBox() {
 		super();
-	}
-	
-	public MyLabel(String caption) {
-		super(caption);
 	}
 	
 	public boolean isInclusao() {

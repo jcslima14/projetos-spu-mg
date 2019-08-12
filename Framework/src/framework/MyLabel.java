@@ -1,18 +1,19 @@
-import javax.swing.JCheckBox;
+package framework;
+import javax.swing.JLabel;
 
 @SuppressWarnings("serial")
-public class MyCheckBox extends JCheckBox implements PropriedadesEdicao {
+public class MyLabel extends JLabel implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyCheckBox() {
+	public MyLabel() {
 		super();
 	}
 	
-	public MyCheckBox(String caption) {
+	public MyLabel(String caption) {
 		super(caption);
 	}
 	

@@ -1,3 +1,4 @@
+package framework;
 
 public interface ItemComboBox {
 	public Integer getIntegerItemValue();

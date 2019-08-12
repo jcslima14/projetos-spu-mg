@@ -30,11 +30,11 @@ public class Parametro {
 	public static String obterDescricao(int parametroId) {
 		return DESCRICOES.get(parametroId);
 	}
-	
+
 	Integer parametroId;
-	
+
 	String descricao;
-	
+
 	String conteudo;
 
 	public Parametro(Integer parametroId, String descricao, String conteudo) {

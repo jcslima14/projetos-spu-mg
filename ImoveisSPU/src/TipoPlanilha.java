@@ -4,6 +4,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import framework.ItemComboBox;
+
 @Entity
 @Table(name = "tipoplanilha")
 public class TipoPlanilha implements ItemComboBox {

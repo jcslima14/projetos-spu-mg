@@ -23,6 +23,19 @@ import javax.swing.table.TableModel;
 
 import com.google.common.io.Files;
 
+import framework.CadastroTemplate;
+import framework.ComboBoxItem;
+import framework.DialogTemplate;
+import framework.MyButton;
+import framework.MyCheckBox;
+import framework.MyComboBox;
+import framework.MyComboBoxModel;
+import framework.MyLabel;
+import framework.MyTableColumn;
+import framework.MyTableModel;
+import framework.MyTextField;
+import framework.MyUtils;
+
 @SuppressWarnings("serial")
 public class ProcessoRecebidoCadastro extends CadastroTemplate {
 

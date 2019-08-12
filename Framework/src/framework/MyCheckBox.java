@@ -1,15 +1,20 @@
-import javax.swing.JComboBox;
+package framework;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
-public class MyComboBox extends JComboBox<ComboBoxItem> implements PropriedadesEdicao {
+public class MyCheckBox extends JCheckBox implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyComboBox() {
+	public MyCheckBox() {
 		super();
+	}
+	
+	public MyCheckBox(String caption) {
+		super(caption);
 	}
 	
 	public boolean isInclusao() {

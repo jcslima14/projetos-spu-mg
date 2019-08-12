@@ -32,6 +32,13 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
+import framework.ComboBoxItem;
+import framework.MyComboBox;
+import framework.MyComboBoxModel;
+import framework.MyTextField;
+import framework.MyUtils;
+import framework.SpringUtilities;
+
 @SuppressWarnings("serial")
 public class ImportacaoPlanilha extends JInternalFrame {
 
@@ -50,7 +57,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private JButton btnProcessar = new JButton("Processar"); 
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
-	private Properties propriedades = MyUtils.obterPropriedades();
+	private Properties propriedades = MyUtils.obterPropriedades("imoveisspu.properties");
 
 	public ImportacaoPlanilha(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -156,7 +163,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					if (filArquivo.getSelectedFile().exists()) {
 						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
 						propriedades.put("importacao_planilha_default_path", filArquivo.getSelectedFile().getParent());
-						MyUtils.salvarPropriedades(propriedades);
+						MyUtils.salvarPropriedades(propriedades, "imoveisspu.properties");
 					}
 				}
 			}

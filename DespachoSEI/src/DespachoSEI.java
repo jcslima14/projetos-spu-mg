@@ -13,6 +13,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import framework.MyUtils;
+
 @SuppressWarnings("serial")
 public class DespachoSEI extends JFrame {
 

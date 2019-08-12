@@ -9,6 +9,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
+import framework.CadastroTemplate;
+import framework.MyCheckBox;
+import framework.MyLabel;
+import framework.MyTableColumn;
+import framework.MyTableModel;
+import framework.MyTextField;
+import framework.MyUtils;
+
 @SuppressWarnings("serial")
 public class TipoDespachoCadastro extends CadastroTemplate {
 

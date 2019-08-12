@@ -13,6 +13,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 
+import framework.SpringUtilities;
+
 @SuppressWarnings("serial")
 public class ConsolidacaoInformacoes extends JInternalFrame {
 

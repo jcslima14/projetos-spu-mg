@@ -1,4 +1,11 @@
+package framework;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -6,13 +13,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 import java.util.function.Function;
 
 import javax.sql.rowset.CachedRowSet;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -23,6 +34,33 @@ import com.sun.rowset.CachedRowSetImpl;
 
 public class MyUtils {
 
+	public static Properties obterPropriedades(String nomeArquivo) {
+		Properties retorno = new Properties();
+		InputStream input = null;
+
+		try {
+			input = new FileInputStream(nomeArquivo);
+			retorno.load(input);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao ler o arquivo de propriedades da aplicação. Verifique se o arquivo '" + nomeArquivo + "' existe no diretório da aplicação: \n \n" + e.getMessage());
+			e.printStackTrace();
+		}
+
+		return retorno;
+	}
+
+	public static void salvarPropriedades(Properties prop, String nomeArquivo) {
+		OutputStream output = null;
+
+		try {
+			output = new FileOutputStream(nomeArquivo);
+			prop.store(output, "");
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao gravar o arquivo de propriedades da aplicação. Verifique se o arquivo '" + nomeArquivo + "' existe no diretório da aplicação: \n \n" + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
 	public static Vector<Vector<Object>>obterDados(ResultSet rs) throws Exception {
 		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
 
@@ -31,6 +69,22 @@ public class MyUtils {
 			linha.add(Boolean.FALSE);
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
 				linha.add(rs.getObject(i));
+			}
+			retorno.add(linha);
+		}
+
+		return retorno;
+	}
+
+	public static <T> Vector<Vector<Object>>obterDados(List<T> dados, String... campos) throws Exception {
+		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
+
+		for (T dado : dados) {
+			Vector<Object> linha = new Vector<Object>();
+			linha.add(Boolean.FALSE);
+			for (int i = 0; i < campos.length; i++) {
+				Method metodo = dado.getClass().getMethod(campos[i]);
+				linha.add(metodo.invoke(dado));
 			}
 			retorno.add(linha);
 		}
@@ -149,11 +203,6 @@ public class MyUtils {
 		cmd.execute(sql);
 		cmd.close();
 	}
-	
-	public static String obterValorCelula(Cell celula) {
-		if (celula == null) return "";
-		else return celula.getStringCellValue();
-	}
 
 	public static String verificacaoDeEspacoEmDisco(long espacoMinimo) {
 		File arquivo = new File(".").getAbsoluteFile();
@@ -228,5 +277,63 @@ public class MyUtils {
 		} else {
 			return "../commons/resources/firefoxdriver/windows/geckodriver.exe";
 		}
+	}
+
+	public static <T> void insereOpcoesComboBox(MyComboBox comboBox, List<T> opcoes) {
+		for (T opcao : opcoes) {
+			ItemComboBox item = (ItemComboBox) opcao;
+			comboBox.addItem(new ComboBoxItem(item.getIntegerItemValue(), item.getStringItemValue(), item.getItemLabel()));
+		}
+	}
+
+	public static String obterValorCelula(Cell cell) {
+        if (cell != null) {
+            switch (cell.getCellTypeEnum()) {
+	            case STRING:
+	                return cell.getStringCellValue();
+	            case BOOLEAN:
+	                return ((Object) cell.getBooleanCellValue()).toString();
+	            case NUMERIC:	
+	                return (new BigDecimal(((Object) cell.getNumericCellValue()).toString())).toPlainString();
+				default:
+					break;
+            }
+        }
+
+        return null;
+    }
+
+	public static String obterValorCelula(Row row, int colNumber) {
+		if (colNumber < 0) return "";
+		if (row.getCell(colNumber) == null) return "";
+		String retorno = obterValorCelula(row.getCell(colNumber));
+		if (retorno == null) return "";
+		else return retorno;
+    }
+
+	public static String obterValorCelula(Row row, int colNumber, DataFormatter df) {
+		if (colNumber < 0) return "";
+		if (row.getCell(colNumber) == null) return "";
+		String retorno = df.formatCellValue(row.getCell(colNumber));
+		if (retorno == null) return "";
+		else return retorno;
+    }
+
+	public static String retiraAcento(String s) {
+		return s.replace("Ç", "C")
+				.replace("Á", "A")
+				.replace("À", "A")
+				.replace("É", "E")
+				.replace("Í", "I")
+				.replace("Ó", "O")
+				.replace("Ú", "U")
+				.replace("Â", "A")
+				.replace("Ê", "E")
+				.replace("Ô", "O")
+				.replace("Ã", "A")
+				.replace("Õ", "O")
+				.replace("Ü", "U")
+				.replace("º", "o")
+				.replace("°", "o");
 	}
 }

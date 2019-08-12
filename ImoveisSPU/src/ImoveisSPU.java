@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -15,7 +16,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-@SuppressWarnings("serial")
+@SuppressWarnings("serial")		
 public class ImoveisSPU extends JFrame {
 
 	public ImoveisSPU() {
@@ -24,7 +25,7 @@ public class ImoveisSPU extends JFrame {
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();
 		setContentPane(desktop);
-		
+
 		EntityManager conexao = obterConexaoEM();
 
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
@@ -116,7 +117,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaCidi(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "cidi")) {
+		if (!tabelaExiste(conexao, "cidi")) {
 			String sql = "CREATE TABLE cidi " + 
 						 "(" + 
 						 "  cidiid integer primary key autoincrement not null," + 
@@ -144,7 +145,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaCidiAlienacao(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "cidialienacao")) {
+		if (!tabelaExiste(conexao, "cidialienacao")) {
 			String sql = "CREATE TABLE cidialienacao " + 
 						 "(" + 
 						 "  cidialienacaoid integer primary key autoincrement not null," + 
@@ -164,7 +165,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaCidiDevolucao(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "cididevolucao")) {
+		if (!tabelaExiste(conexao, "cididevolucao")) {
 			String sql = "CREATE TABLE cididevolucao " + 
 						 "(" + 
 						 "  cididevolucaoid integer primary key autoincrement not null," + 
@@ -182,7 +183,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaSpiunet(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "spiunet")) {
+		if (!tabelaExiste(conexao, "spiunet")) {
 			String sql = "CREATE TABLE spiunet " + 
 						 "(" + 
 						 "  spiunetid integer primary key autoincrement not null," + 
@@ -198,7 +199,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaSiapa(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "siapa")) {
+		if (!tabelaExiste(conexao, "siapa")) {
 			String sql = "CREATE TABLE siapa " + 
 						 "(" + 
 						 "  siapaid integer primary key autoincrement not null," + 
@@ -213,7 +214,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaMunicipio(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "municipio")) {
+		if (!tabelaExiste(conexao, "municipio")) {
 			String sql = "CREATE TABLE municipio " + 
 						 "(" + 
 						 "  municipioid integer primary key autoincrement not null," + 
@@ -235,7 +236,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaMunicipioCorrecao(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "municipiocorrecao")) {
+		if (!tabelaExiste(conexao, "municipiocorrecao")) {
 			String sql = "CREATE TABLE municipiocorrecao " + 
 						 "(" + 
 						 "  municipiocorrecaoid integer primary key autoincrement not null," + 
@@ -248,7 +249,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaTipoPlanilha(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "tipoplanilha")) {
+		if (!tabelaExiste(conexao, "tipoplanilha")) {
 			String sql = "CREATE TABLE tipoplanilha " + 
 						 "(" + 
 						 "  tipoplanilhaid integer primary key autoincrement not null," + 
@@ -261,7 +262,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaEstruturaPlanilha(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "estruturaplanilha")) {
+		if (!tabelaExiste(conexao, "estruturaplanilha")) {
 			String sql = "CREATE TABLE estruturaplanilha " + 
 						 "(" + 
 						 "  estruturaplanilhaid integer primary key autoincrement not null," + 
@@ -276,7 +277,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaCidiPoligono(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "cidipoligono")) {
+		if (!tabelaExiste(conexao, "cidipoligono")) {
 			String sql = "CREATE TABLE cidipoligono " + 
 						 "(" + 
 						 "  cidipoligonoid integer primary key autoincrement not null," + 
@@ -290,7 +291,7 @@ public class ImoveisSPU extends JFrame {
 	}
 
 	private void criarTabelaRIPPoligono(EntityManager conexao) throws SQLException {
-		if (!MyUtils.tabelaExiste(conexao, "rippoligono")) {
+		if (!tabelaExiste(conexao, "rippoligono")) {
 			String sql = "CREATE TABLE rippoligono " + 
 						 "(" + 
 						 "  rippoligonoid integer primary key autoincrement not null," + 
@@ -315,5 +316,20 @@ public class ImoveisSPU extends JFrame {
 		}
 		
 		return conexao;
+	}
+
+	public static boolean tabelaExiste(EntityManager conexao, String nomeTabela) {
+		boolean retorno = false;
+		String sql = "select * from sqlite_master sm where tbl_name = '" + nomeTabela + "'";
+
+		try {
+			List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql);
+			retorno = !rs.isEmpty();
+		} catch (Exception e) {
+			System.out.println("Erro: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return retorno;
 	}
 }

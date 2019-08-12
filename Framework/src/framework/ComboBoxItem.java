@@ -1,3 +1,4 @@
+package framework;
 public class ComboBoxItem {
 	private Integer intId;
 	

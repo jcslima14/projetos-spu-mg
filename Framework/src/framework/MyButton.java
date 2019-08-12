@@ -1,18 +1,19 @@
-import javax.swing.JTextArea;
+package framework;
+import javax.swing.JButton;
 
 @SuppressWarnings("serial")
-public class MyTextArea extends JTextArea implements PropriedadesEdicao {
+public class MyButton extends JButton implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyTextArea() {
+	public MyButton() {
 		super();
 	}
 	
-	public MyTextArea(String caption) {
+	public MyButton(String caption) {
 		super(caption);
 	}
 	

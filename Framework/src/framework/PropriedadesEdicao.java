@@ -1,3 +1,4 @@
+package framework;
 
 public interface PropriedadesEdicao {
 	public boolean isInclusao();

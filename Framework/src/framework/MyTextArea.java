@@ -1,18 +1,19 @@
-import javax.swing.JLabel;
+package framework;
+import javax.swing.JTextArea;
 
 @SuppressWarnings("serial")
-public class MyLabel extends JLabel implements PropriedadesEdicao {
+public class MyTextArea extends JTextArea implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyLabel() {
+	public MyTextArea() {
 		super();
 	}
 	
-	public MyLabel(String caption) {
+	public MyTextArea(String caption) {
 		super(caption);
 	}
 	

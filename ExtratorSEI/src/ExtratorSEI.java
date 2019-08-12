@@ -35,9 +35,12 @@ public class ExtratorSEI extends JFrame {
 		JMenuItem sbmCargaSEI = new JMenuItem("Carga de Informações do SEI");
 		JMenuItem sbmAtribuicaoProcesso = new JMenuItem("Atribuição de Processos");
 		JMenuItem sbmTesteLayout = new JMenuItem("Teste de Layout");
+		JMenuItem sbmGrupoTematico = new JMenuItem("Grupo Temático");
+		JMenuItem sbmUsuarioGrupoTematico = new JMenuItem("Usuário x Grupo Temático");
+		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmGrupoTematico); add(sbmUsuarioGrupoTematico); }};
 		JMenu mnuAcoes = new JMenu("Ações") {{ add(sbmRelatorio); add(sbmPlanilhaGUT); addSeparator(); add(sbmCargaSEI); add(sbmAtribuicaoProcesso); }};
 //		mnuAcoes.add(sbmTesteLayout); 
-		JMenuBar barraMenu = new JMenuBar() {{ add(mnuAcoes); }};
+		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuAcoes); }};
 
 		sbmRelatorio.addActionListener(new ActionListener() {
 			@Override
@@ -47,6 +50,24 @@ public class ExtratorSEI extends JFrame {
 				}
 
 				relatorioTramitacao.exibirPreview();
+			}
+		});
+		
+		sbmUsuarioGrupoTematico.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				UsuarioGrupoTematicoCadastro janela = new UsuarioGrupoTematicoCadastro("Usuário x Grupo Temático", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+		
+		sbmGrupoTematico.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				GrupoTematicoCadastro janela = new GrupoTematicoCadastro("Grupo Temático", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
 			}
 		});
 		
@@ -150,6 +171,8 @@ public class ExtratorSEI extends JFrame {
 		criarTabelaProcessoDocumentoAssinado(conexao);
 		criarTabelaProcessoMarcador(conexao);
 		criarTabelaTipoMarcador(conexao);
+		criarTabelaGrupoTematico(conexao);
+		criarTabelaUsuarioGrupoTematico(conexao);
 	}
 
 	private static void criarTabelaParametro(Connection conexao) throws SQLException {
@@ -227,7 +250,8 @@ public class ExtratorSEI extends JFrame {
 					 "  processounidadeid integer primary key autoincrement not null," + 
 					 "  processoid varchar NOT NULL," + 
 					 "  unidadeid varchar NOT NULL," + 
-					 "  ultimosequencial integer NOT NULL" + 
+					 "  ultimosequencial integer NOT NULL," +
+					 "  datahoraultimaclassificacaotematica datetime" +
 					 ")"; 
 
 		Statement cmd = conexao.createStatement();
@@ -389,6 +413,31 @@ public class ExtratorSEI extends JFrame {
 					 "(" + 
 					 "  tipomarcadorid integer primary key autoincrement not null," + 
 					 "  descricao varchar not null" + 
+					 ")"; 
+
+		Statement cmd = conexao.createStatement();
+		cmd.execute(sql);
+	}
+
+	private static void criarTabelaGrupoTematico(Connection conexao) throws SQLException {
+		String sql = "CREATE TABLE grupotematico" + 
+					 "(" + 
+					 "  grupotematicoid integer primary key autoincrement not null," + 
+					 "  unidadeid integer not null," + 
+					 "  descricao varchar not null" + 
+					 ")"; 
+
+		Statement cmd = conexao.createStatement();
+		cmd.execute(sql);
+	}
+
+	private static void criarTabelaUsuarioGrupoTematico(Connection conexao) throws SQLException {
+		String sql = "CREATE TABLE usuariogrupotematico" + 
+					 "(" + 
+					 "  usuariogrupotematicoid integer primary key autoincrement not null," + 
+					 "  usuarioid integer not null," + 
+					 "  grupotematicoid integer not null," + 
+					 "  ativo boolean not null" + 
 					 ")"; 
 
 		Statement cmd = conexao.createStatement();
