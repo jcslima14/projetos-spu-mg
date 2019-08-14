@@ -44,6 +44,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmProcessoRecebido = new JMenuItem("Processos Recebidos do Sapiens");
 		JMenuItem sbmInclusaoSPUNet = new JMenuItem("Inclusão de Geometadados no SPUNet");
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
+		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmDespacho); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipio); addSeparator(); 
 													 add(sbmTipoDespacho); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); addSeparator();
@@ -52,7 +53,19 @@ public class DespachoSEI extends JFrame {
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoDespachoSEI); add(sbmImpressaoDespachos); add(sbmRespostaProcesso); 
 //															   addSeparator(); add(sbmInclusaoSPUNet);  
 															}};
-		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); }};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); 
+//															   addSeparator(); add(sbmInclusaoSPUNet);  
+		}};
+		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
+
+		sbmExecucaoScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ExecucaoScript janela = new ExecucaoScript("Execução de Scripts", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
 
 		sbmInclusaoSPUNet.addActionListener(new ActionListener() {
 			@Override
@@ -316,8 +329,7 @@ public class DespachoSEI extends JFrame {
 						 "  abreviacao varchar NOT NULL," + 
 						 "  artigo varchar NOT NULL," + 
 						 "  descricao varchar NOT NULL," + 
-						 "  usarcomarca boolean NOT NULL," + 
-						 "  caminhodespachos varchar NOT NULL" + 
+						 "  usarcomarca boolean NOT NULL" + 
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
@@ -333,7 +345,8 @@ public class DespachoSEI extends JFrame {
 						 "  numerodocumentosei varchar NOT NULL," + 
 						 "  gerarprocessoindividual boolean NOT NULL," + 
 						 "  unidadeaberturaprocesso varchar," + 
-						 "  tipoprocesso varchar" + 
+						 "  tipoprocesso varchar," + 
+						 "  imprimirresposta boolean" + 
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);

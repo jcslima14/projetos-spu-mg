@@ -8,18 +8,15 @@ public class Destino {
 
 	Boolean usarComarca;
 	
-	String caminhoDespachos;
-	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;
 	}
 	
-	public Destino(Integer destinoId, String artigo, String descricao, Boolean usarComarca, String caminhoDespachos) {
+	public Destino(Integer destinoId, String artigo, String descricao, Boolean usarComarca) {
 		this.destinoId = destinoId;
 		this.artigo = artigo;
 		this.descricao = descricao;
 		this.usarComarca = usarComarca;
-		this.caminhoDespachos = caminhoDespachos;
 	}
 	
 	public Integer getDestinoId() {
@@ -52,13 +49,5 @@ public class Destino {
 
 	public void setUsarComarca(Boolean usarComarca) {
 		this.usarComarca = usarComarca;
-	}
-
-	public String getCaminhoDespachos() {
-		return caminhoDespachos;
-	}
-
-	public void setCaminhoDespachos(String caminhoDespachos) {
-		this.caminhoDespachos = caminhoDespachos;
 	}
 }
