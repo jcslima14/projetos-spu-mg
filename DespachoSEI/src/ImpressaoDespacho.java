@@ -129,7 +129,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 	}
 
 	private void imprimirDespachoSEI(String usuario, String senha, Integer assinanteId) throws Exception {
-		String diretorioDespachos = obterDiretorioDespachos();
+        String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
+		String diretorioDespachos = obterDiretorioDespachos(pastaRespostasImpressas);
+
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		ChromeOptions opcoes = new ChromeOptions();
 		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", diretorioDespachos); }});
@@ -190,7 +192,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			for (Despacho despachoAImprimir : despachosAImprimir.get(numeroProcessoSEI)) {
 				String numeroProcesso = despachoAImprimir.getNumeroProcesso();
 				String numeroDespacho = despachoAImprimir.getNumeroDocumentoSEI();
-	
+
 				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Despacho: " + numeroDespacho);
 	
 				// encontra e marca o checkbox do documento
@@ -234,7 +236,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						renomearArquivoProcesso(diretorioDespachos, numeroProcessoSEI, despachoAImprimir.getDestino().getCaminhoDespachos() + "\\" + numeroProcesso + ".pdf");
+						renomearArquivoProcesso(diretorioDespachos, numeroProcessoSEI, pastaRespostasImpressas + "\\" + numeroProcesso + ".pdf");
 	
 						// verifica se o arquivo foi gerado e atualiza o número do despacho gerado no SEI
 						atualizarDespachoGerado(despachoAImprimir);
@@ -335,21 +337,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 		};
 	}
 
-	private String obterDiretorioDespachos() throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select caminhodespachos "
-				 + "  from destino "
-				 + " where caminhodespachos <> '' "
-		 		 + " limit 1 ");
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		if (rs.next()) {
-			File caminho = new File(rs.getString("caminhodespachos"));
-			return caminho.getParent();
-		}
-
-		return null;
+	private String obterDiretorioDespachos(String pastaRespostas) throws Exception {
+		File caminho = new File(pastaRespostas);
+		return caminho.getParent();
 	}
 
 	private void atualizarDespachoGerado(Despacho despacho) throws Exception {
@@ -382,8 +372,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 		sql.append(" inner join tipodespacho td using (tipodespachoid) ");
 		sql.append(" where coalesce(dp.numerodocumentosei, '') <> '' ");
 		sql.append("   and coalesce(dp.numeroprocessosei, '') <> '' ");
-		sql.append("   and coalesce(dt.caminhodespachos, '') <> '' ");
-		sql.append("   and td.gerarprocessoindividual = false ");
+		sql.append("   and td.imprimirresposta = true ");
 		if (assinanteId != null && !assinanteId.equals(0)) {
 			sql.append(" and assinanteid = " + assinanteId);
 		}

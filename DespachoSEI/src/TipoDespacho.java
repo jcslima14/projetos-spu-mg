@@ -11,18 +11,21 @@ public class TipoDespacho {
 	String unidadeAberturaProcesso;
 	
 	String tipoProcesso;
-	
+
+	Boolean imprimirResposta;
+
 	public TipoDespacho(Integer tipoDespachoId) {
 		this.tipoDespachoId = tipoDespachoId;
 	}
 
-	public TipoDespacho(Integer tipoDespachoId, String descricao, String numeroDocumentoSEI, Boolean gerarProcessoIndividual, String unidadeAberturaProcesso, String tipoProcesso) {
+	public TipoDespacho(Integer tipoDespachoId, String descricao, String numeroDocumentoSEI, Boolean gerarProcessoIndividual, String unidadeAberturaProcesso, String tipoProcesso, Boolean imprimirResposta) {
 		this.tipoDespachoId = tipoDespachoId;
 		this.descricao = descricao;
 		this.numeroDocumentoSEI = numeroDocumentoSEI;
 		this.gerarProcessoIndividual = gerarProcessoIndividual;
 		this.unidadeAberturaProcesso = unidadeAberturaProcesso;
 		this.tipoProcesso = tipoProcesso;
+		this.imprimirResposta = imprimirResposta;
 	}
 
 	public Integer getTipoDespachoId() {
@@ -71,5 +74,13 @@ public class TipoDespacho {
 
 	public void setTipoProcesso(String tipoProcesso) {
 		this.tipoProcesso = tipoProcesso;
+	}
+
+	public Boolean getImprimirResposta() {
+		return imprimirResposta;
+	}
+
+	public void setImprimirResposta(Boolean imprimirResposta) {
+		this.imprimirResposta = imprimirResposta;
 	}
 }

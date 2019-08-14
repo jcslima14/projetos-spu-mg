@@ -199,7 +199,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new TipoDespacho(rs.getInt("tipodespachoid"), rs.getString("descricao"), rs.getString("numerodocumentosei"), rs.getBoolean("gerarprocessoindividual"), rs.getString("unidadeaberturaprocesso"), rs.getString("tipoprocesso")));
+			retorno.add(new TipoDespacho(rs.getInt("tipodespachoid"), rs.getString("descricao"), rs.getString("numerodocumentosei"), rs.getBoolean("gerarprocessoindividual"), rs.getString("unidadeaberturaprocesso"), rs.getString("tipoprocesso"), rs.getBoolean("imprimirresposta")));
 		}
 		
 		return retorno;
@@ -284,7 +284,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getBoolean("usarcomarca"), rs.getString("caminhodespachos")));
+			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getBoolean("usarcomarca")));
 		}
 		
 		return retorno;

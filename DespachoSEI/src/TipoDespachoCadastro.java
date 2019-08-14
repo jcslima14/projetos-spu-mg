@@ -28,6 +28,7 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 	private MyTextField txtNumeroDocumentoSEI = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNumeroDocumentoSEI = new MyLabel("Nº Documento SEI para Modelo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyCheckBox chkGerarProcessoIndividual = new MyCheckBox("Gerar processo individual") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyCheckBox chkImprimirResposta = new MyCheckBox("Gerar resposta em PDF") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtUnidadeAberturaProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblUnidadeAberturaProcesso = new MyLabel("Unidade para abertura de processo individual") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtTipoProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -46,7 +47,7 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(lblNumeroDocumentoSEI);
 		pnlCamposEditaveis.add(txtNumeroDocumentoSEI);
 		pnlCamposEditaveis.add(chkGerarProcessoIndividual);
-		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(chkImprimirResposta);
 		pnlCamposEditaveis.add(lblUnidadeAberturaProcesso);
 		pnlCamposEditaveis.add(txtUnidadeAberturaProcesso);
 		pnlCamposEditaveis.add(lblTipoProcesso);
@@ -61,6 +62,7 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 		txtDescricao.setText("");
 		txtNumeroDocumentoSEI.setText("");
 		chkGerarProcessoIndividual.setSelected(false);
+		chkImprimirResposta.setSelected(false);
 		txtUnidadeAberturaProcesso.setText("");
 		txtTipoProcesso.setText("");
 	}
@@ -74,14 +76,16 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 				+  "     , gerarprocessoindividual = " + (chkGerarProcessoIndividual.isSelected() ? "true" : "false")
 				+  "     , unidadeaberturaprocesso = '" + txtUnidadeAberturaProcesso.getText() + "' "
 				+  "     , tipoprocesso = '" + txtTipoProcesso.getText() + "' "
+				+  "     , imprimirresposta = " + (chkImprimirResposta.isSelected() ? "true" : "false")
 				+  " where tipodespachoid = " + txtTipoDespachoId.getText();
 		} else {
-			sql += "insert into tipodespacho (descricao, numerodocumentosei, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso) values (";
+			sql += "insert into tipodespacho (descricao, numerodocumentosei, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta) values (";
 			sql += "'" + txtDescricao.getText().trim() + "', ";
 			sql += "'" + txtNumeroDocumentoSEI.getText() + "', ";
 			sql += (chkGerarProcessoIndividual.isSelected() ? "true" : "false") + ", ";
 			sql += "'" + txtUnidadeAberturaProcesso.getText() + "', ";
-			sql += "'" + txtTipoProcesso.getText() + "') ";
+			sql += "'" + txtTipoProcesso.getText() + "', ";
+			sql += (chkGerarProcessoIndividual.isSelected() ? "true" : "false") + ") ";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -100,10 +104,11 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 		txtUnidadeAberturaProcesso.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 5).toString());
 		Object tipoProcesso = this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 6);
 		txtTipoProcesso.setText(tipoProcesso == null ? "" : tipoProcesso.toString());
+		chkImprimirResposta.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 7).toString().equalsIgnoreCase("Sim") ? true : false);
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select tipodespachoid, descricao, numerodocumentosei, case when gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual, coalesce(unidadeaberturaprocesso, '') as unidadeaberturaprocesso, tipoprocesso from tipodespacho");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select tipodespachoid, descricao, numerodocumentosei, case when gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual, coalesce(unidadeaberturaprocesso, '') as unidadeaberturaprocesso, tipoprocesso, case when imprimirresposta then 'Sim' else 'Não' end as imprimirresposta from tipodespacho");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -119,6 +124,7 @@ public class TipoDespachoCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Gerar processo?", 100, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Unidade Abertura Processo", 150, true));
 			colunas.add(new MyTableColumn("Tipo de Processo no SEI", 250, true));
+			colunas.add(new MyTableColumn("Imprimir resposta?", 100, true, JLabel.CENTER));
 		}
 		return this.colunas;
 	}
