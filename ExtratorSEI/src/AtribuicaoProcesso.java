@@ -35,6 +35,9 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
+import framework.ComboBoxItem;
+import framework.MyComboBox;
+import framework.MyComboBoxModel;
 import framework.MyUtils;
 import framework.SpringUtilities;
 
@@ -44,7 +47,9 @@ public class AtribuicaoProcesso extends JInternalFrame {
 	private Connection conexao;
 	
 	private Map<String, Integer> processosPorUsuario;
-	
+
+	private MyComboBox cbbUnidade = new MyComboBox();
+
 	public AtribuicaoProcesso(String tituloJanela, Connection conexao) {
 		super("Atribuição de Processos no SEI");
 		setResizable(true);
@@ -60,8 +65,12 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		JLabel lblUsuario = new JLabel("Usuário:");
 		JTextField txtUsuario = new JTextField(15);
 		lblUsuario.setLabelFor(txtUsuario);
+		JLabel lblUnidade = new JLabel("Unidade:");
+		lblUsuario.setLabelFor(txtUsuario);
 
-		JCheckBox chkDistribuirPorQuantidade = new JCheckBox("Distribuir por quantidade");
+		opcoesUnidade();
+
+		JCheckBox chkDistribuirPorQuantidade = new JCheckBox("Distribuir por quantidade", true);
 		JCheckBox chkDistribuirNaoVisualizado = new JCheckBox("Distribuir não visualizado", true);
 		JCheckBox chkSalvarDistribuicao = new JCheckBox("Salvar distribuição feita", true);
 
@@ -74,6 +83,8 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		JButton botaoProcessar = new JButton("Processar"); 
 		JButton botaoSair = new JButton("Sair"); 
 
+		painelDados.add(lblUnidade);
+		painelDados.add(cbbUnidade);
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
@@ -88,7 +99,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		painelDados.add(botaoSair); 
 
 		SpringUtilities.makeGrid(painelDados,
-                6, 2, //rows, cols
+                7, 2, //rows, cols
                 6, 6, //initX, initY
                 6, 6); //xPad, yPad
 
@@ -104,7 +115,8 @@ public class AtribuicaoProcesso extends JInternalFrame {
 					@Override
 					public void run() {
 						try {
-							atribuirProcessos(AtribuicaoProcesso.this.conexao, logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), propriedades, chkDistribuirPorQuantidade.isSelected(), chkDistribuirNaoVisualizado.isSelected(), chkSalvarDistribuicao.isSelected());
+							String unidade = ((ComboBoxItem) cbbUnidade.getSelectedItem()).getCaption();
+							atribuirProcessos(AtribuicaoProcesso.this.conexao, logArea, unidade, txtUsuario.getText(), new String(txtSenha.getPassword()), propriedades, chkDistribuirPorQuantidade.isSelected(), chkDistribuirNaoVisualizado.isSelected(), chkSalvarDistribuicao.isSelected());
 						} catch (Exception e) {
 							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 							e.printStackTrace();
@@ -127,6 +139,11 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		}); 
     }
 
+	private void opcoesUnidade() {
+		cbbUnidade.setModel(new MyComboBoxModel());
+		MyUtils.insereOpcoesComboBox(conexao, cbbUnidade, "select unidadeid, nome from unidade order by nome");
+	}
+
 	public void abrirJanela() {
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		this.pack(); 
@@ -134,7 +151,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		this.show();
 	}
 
-	private void atribuirProcessos(Connection conexao, JTextArea logArea, String usuario, String senha, Properties propriedades, boolean distribuirPorQuantidade, boolean distribuirNaoVisualizado, boolean salvarDistribuicao) throws Exception {
+	private void atribuirProcessos(Connection conexao, JTextArea logArea, String unidade, String usuario, String senha, Properties propriedades, boolean distribuirPorQuantidade, boolean distribuirNaoVisualizado, boolean salvarDistribuicao) throws Exception {
 		List<String> processosNaoAtribuidos = new ArrayList<String>();
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
@@ -173,6 +190,9 @@ public class AtribuicaoProcesso extends JInternalFrame {
         }
 
         driver.switchTo().window(primeiraJanela);
+
+        // selecionar a unidade default
+        MyUtils.selecionarUnidade(driver, wait5, unidade);
 
     	// clica no botão de controle de processos para abrir a página principal do SEI, onde está o menu de opções
     	WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
