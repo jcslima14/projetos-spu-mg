@@ -87,8 +87,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 			painelDados.add(new JLabel("<html><font color='red'>" + espacoEmDisco + "</font></html>"));
 			painelDados.add(new JPanel());
 		}
-//		painelDados.add(painelArquivo);
-//		painelDados.add(lblDiretorioDespachosSalvos);
+
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
@@ -284,7 +283,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	        	// clica no link para abrir a janela do processo
 
     			// verifica se o processo já foi recepcionado com esta data de movimentação; se já tiver sido, não precisa ser reprocessado
-        		if (!processoJaRecebido(logArea, numeroProcessoJudicial, dataHora)) {
+        		if (!processoJaRecebido(logArea, numeroSemFormatacao, dataHora)) {
     				lnkProcessoJudicial.click();
 
 		        	TimeUnit.SECONDS.sleep(1);
@@ -296,10 +295,13 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        		janelaAberta = janela;
 		        		driver.switchTo().window(janelaAberta);
 		        	}
-	
+
 		        	txtProcessoJudicial = MyUtils.encontrarElemento(wait30, By.xpath("//td[.//*[contains(text(), '" + (numeroProcessoInformado ? "Número Único" : "NUP") + "')]]//following-sibling::td/div/a/b"));
 		        	TimeUnit.SECONDS.sleep(2);
-		        	
+
+		        	// busca o nome do autor da solicitação
+		        	String autor = MyUtils.encontrarElemento(wait30, By.xpath("//div[@id = 'dadosInteressadosFC-innerCt']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td/div[text() = 'REQUERENTE (PÓLO ATIVO)']]/td[2]")).getText();
+
 	        		boolean encontrouRemessaDocumentos = false;
 
 		        	do {
@@ -376,7 +378,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 					        		arquivosOk = arquivosBaixadosERenomeados(logArea, quantArquivos, pastaDeDownload, numeroSemFormatacao, dataHora);
 				        		} while (!arquivosOk);
 	
-				        		atualizarProcessoRecebido(numeroProcessoJudicial, dataHora, resultadoDownload);
+				        		receberProcessoSapiens(numeroSemFormatacao, autor, dataHora, resultadoDownload);
 	
 				        		break;
 			        		}
@@ -418,8 +420,8 @@ public class RecepcaoProcesso extends JInternalFrame {
         }
 	}
 
-	private boolean processoJaRecebido(JTextArea logArea, String numeroProcessoJudicial, String dataHoraMovimentacao) throws Exception {
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(numeroProcessoJudicial, null, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), false);
+	private boolean processoJaRecebido(JTextArea logArea, String numeroProcesso, String dataHoraMovimentacao) throws Exception {
+		List<SolicitacaoEnvio> processos = despachoServico.obterSolicitacaoEnvio(null, null, Origem.SAPIENS, numeroProcesso, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), null, false);
 		if (processos == null || processos.isEmpty()) {
 			MyUtils.appendLogArea(logArea, "Processo ainda não recebido...");
 			return false;
@@ -428,16 +430,27 @@ public class RecepcaoProcesso extends JInternalFrame {
 		}
 	}
 
-	private void atualizarProcessoRecebido(String numeroProcessoJudicial, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
+	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
 		String sql = "";
-		sql += "insert into processorecebido (numerounico, datahoramovimentacao, municipioid, arquivosprocessados, resultadodownload) ";
-		sql += "select '" + numeroProcessoJudicial + "'";
+		sql += "insert into solicitacao (origemid, numeroprocesso, autor) ";
+		sql += "select " + Origem.SAPIENS.getOrigemId();
+		sql += "	 , '" + numeroProcesso + "'";
+		sql += "	 , '" + autor + "'";
+		sql += " where not exists (select 1 from solicitacao where origem = " + Origem.SAPIENS + " and numeroprocesso = '" + numeroProcesso + "')";
+
+		MyUtils.execute(conexao, sql);
+
+		sql = "";
+		sql += "insert into solicitacaoenvio (solicitacaoid, datahoramovimentacao, arquivosprocessados, resultadodownload) ";
+		sql += "select solicitacaoid ";
 		sql += "     , '" + dataHoraFormatada + "'";
-		sql += "     , (select municipioid from processorecebido where numerounico = '" + numeroProcessoJudicial + "' order by datahoramovimentacao desc limit 1) ";
 		sql += "	 , false ";
 		sql += "     , " + (resultadoDownload.equals("") ? "null" : "'" + resultadoDownload.replace("'", "") + "'");
-		sql += " where not exists (select 1 from processorecebido where numerounico = '" + numeroProcessoJudicial + "' and datahoramovimentacao = '" + dataHoraFormatada + "')";
+		sql += "  from solicitacao s ";
+		sql += " where origemid = " + Origem.SAPIENS.getOrigemId();
+		sql += "   and numeroprocesso = '" + numeroProcesso + "' ";
+		sql += "   and not exists (select 1 from solicitacaoenvio se where se.solicitacaoid = s.solicitacaoid and datahoramovimentacao = '" + dataHoraFormatada + "')";
 
 		MyUtils.execute(conexao, sql);
 	}

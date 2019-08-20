@@ -49,11 +49,15 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private JButton btnCopiarAreaTransferencia = new JButton("Copiar");
 	private JButton btnIniciarProcessamentoArquivos = new JButton("Iniciar Processamento");
 
-	private JTextField txtProcessoRecebidoId = new JTextField() {{ setEnabled(false); }};
-	private MyLabel lblProcessoRecebidoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyTextField txtNumeroUnico = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyLabel lblNumeroUnico = new MyLabel("Número Único") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyTextField txtDataMovimentacao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JTextField txtSolicitacaoEnvioId = new JTextField() {{ setEnabled(false); }};
+	private MyLabel lblSolicitacaoEnvioId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtOrigem = new MyTextField() {{ setEnabled(false); }};
+	private MyLabel lblOrigem = new MyLabel("Origem") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtNumeroProcesso = new MyTextField() {{ setEnabled(false); }};
+	private MyLabel lblNumeroProcesso = new MyLabel("Número Único") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtAutor = new MyTextField() {{ setEnabled(false); }};
+	private MyLabel lblAutor = new MyLabel("Autor") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtDataMovimentacao = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblDataMovimentacao = new MyLabel("Data/Hora Movimentação") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbMunicipio = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblMunicipio = new MyLabel("Município") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -68,8 +72,10 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private MyLabel lblFiltroArquivosProcessados = new MyLabel("Arquivos Processados") {{ setExclusao(true); }};
 	private MyComboBox cbbOrdenacao = new MyComboBox() {{ setExclusao(true); }};
 	private MyLabel lblOrdenacao = new MyLabel("Ordenar por") {{ setExclusao(true); }};
-	private JPanel pnlFiltros = new JPanel(new GridLayout(2, 5));
+	private JPanel pnlFiltros = new JPanel(new GridLayout(3, 5));
 
+	private SolicitacaoEnvio entidadeEditada;
+	
 	private List<MyTableColumn> colunas;
 
 	private DespachoServico despachoServico;
@@ -99,11 +105,16 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		pnlFiltros.add(lblOrdenacao);
 		pnlFiltros.add(cbbOrdenacao);
 		
-		pnlCamposEditaveis.add(lblProcessoRecebidoId);
-		pnlCamposEditaveis.add(txtProcessoRecebidoId);
+		pnlCamposEditaveis.add(lblSolicitacaoEnvioId);
+		pnlCamposEditaveis.add(txtSolicitacaoEnvioId);
 		pnlCamposEditaveis.add(new JPanel());
-		pnlCamposEditaveis.add(lblNumeroUnico);
-		pnlCamposEditaveis.add(txtNumeroUnico);
+		pnlCamposEditaveis.add(lblOrigem);
+		pnlCamposEditaveis.add(txtOrigem);
+		pnlCamposEditaveis.add(lblNumeroProcesso);
+		pnlCamposEditaveis.add(txtNumeroProcesso);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblAutor);
+		pnlCamposEditaveis.add(txtAutor);
 		pnlCamposEditaveis.add(lblDataMovimentacao);
 		pnlCamposEditaveis.add(txtDataMovimentacao);
 		pnlCamposEditaveis.add(new JPanel());
@@ -192,8 +203,8 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	}
 
 	public void limparCamposEditaveis() {
-		txtProcessoRecebidoId.setText("");
-		txtNumeroUnico.setText("");
+		txtSolicitacaoEnvioId.setText("");
+		txtNumeroProcesso.setText("");
 		txtDataMovimentacao.setText("");
 		cbbMunicipio.setSelectedIndex(0);
 		resultadoDownload = "";
@@ -224,61 +235,65 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		List<Municipio> municipios = despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null);
 		Municipio municipio = (municipios != null && !municipios.isEmpty() ? municipios.iterator().next() : new Municipio(0));
 
-		ProcessoRecebido entidade = new ProcessoRecebido(txtProcessoRecebidoId.getText().equals("") ? null : Integer.parseInt(txtProcessoRecebidoId.getText()), txtNumeroUnico.getText(), 
-				txtDataMovimentacao.getText(), municipio, resultadoDownload, chkArquivosProcessados.isSelected(), resultadoProcessamento);
+		entidadeEditada.getSolicitacao().setMunicipio(municipio);
+		entidadeEditada.setArquivosProcessados(chkArquivosProcessados.isSelected());
 
-		salvarRegistro(entidade);
+		salvarRegistro(entidadeEditada);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
-		sql += "delete from processorecebido where processorecebidoid = " + id;
+		sql += "delete from solicitacaoenvio where solicitacaoenvioid = " + id;
 		MyUtils.execute(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
-		ResultSet rs;
 		try {
-			txtProcessoRecebidoId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
+			txtSolicitacaoEnvioId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 
-			rs = MyUtils.executeQuery(conexao, "select * from processorecebido where processorecebidoid = " + txtProcessoRecebidoId.getText());
-			rs.next();
+			SolicitacaoEnvio entidade = despachoServico.obterSolicitacaoEnvio(Integer.parseInt(txtSolicitacaoEnvioId.getText()), null, null, null, null, null, false).iterator().next();
 
-			txtNumeroUnico.setText(rs.getString("numerounico"));
-			txtDataMovimentacao.setText(rs.getString("datahoramovimentacao"));
-			resultadoDownload = rs.getString("resultadodownload");
-			resultadoProcessamento = rs.getString("resultadoprocessamento");
-			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, rs.getInt("municipioid"), null));
-			chkArquivosProcessados.setSelected(rs.getBoolean("arquivosprocessados"));
+			txtOrigem.setText(entidade.getSolicitacao().getOrigem().getDescricao());
+			txtNumeroProcesso.setText(entidade.getSolicitacao().getNumeroProcesso());
+			txtAutor.setText(entidade.getSolicitacao().getAutor());
+			txtDataMovimentacao.setText(entidade.getDataHoraMovimentacao());
+			resultadoDownload = entidade.getResultadoDownload();
+			resultadoProcessamento = entidade.getResultadoProcessamento();
+			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidade.getSolicitacao().getMunicipio().getMunicipioId(), null));
+			chkArquivosProcessados.setSelected(entidade.getArquivosProcessados());
 		} catch (Exception e) {
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Envio de Solicitação para edição: \n\n" + e.getMessage());
 		}
 	}
 
 	public TableModel obterDados() throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select t.processorecebidoid ");
-		sql.append("	  , t.numerounico ");
-		sql.append("	  , t.datahoramovimentacao ");
-		sql.append("	  , m.nome as municipio ");
-		sql.append("	  , t.resultadodownload ");
-		sql.append("	  , t.resultadoprocessamento ");
-		sql.append("	  , case when t.arquivosprocessados then 'Sim' else 'Não' end as arquivosprocessados ");
-		sql.append("  from processorecebido t ");
+		sql.append("select se.solicitacaoenvioid ");
+		sql.append("	 , o.descricao origem ");
+		sql.append("	 , s.numeroprocesso numeroprocesso ");
+		sql.append("	 , s.autor autor ");
+		sql.append("	 , se.datahoramovimentacao ");
+		sql.append("	 , m.nome as municipio ");
+		sql.append("	 , se.resultadodownload ");
+		sql.append("	 , se.resultadoprocessamento ");
+		sql.append("	 , case when se.arquivosprocessados then 'Sim' else 'Não' end as arquivosprocessados ");
+		sql.append("  from solicitacaoenvio se ");
+		sql.append(" inner join solicitacao s using (solicitacaoid) ");
+		sql.append(" inner join origem o using (origemid) ");
 		sql.append("  left join municipio m using (municipioid) ");
 		sql.append(" where 1 = 1 ");
 
 		if (!txtFiltroNumeroUnico.getText().trim().equals("")) {
-			sql.append(" and numerounico like '%" + txtFiltroNumeroUnico.getText().trim().replace("'", "") + "%' ");
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroUnico.getText().trim() + "%' ");
 		}
 
 		Integer filtroMunicipio = MyUtils.idItemSelecionado(cbbFiltroMunicipio);
 		if (filtroMunicipio.equals(-2)) {
-			sql.append(" and municipioid is not null ");
+			sql.append(" and se.municipioid is not null ");
 		} else if (filtroMunicipio.equals(-1)) {
-			sql.append(" and municipioid is null ");
+			sql.append(" and se.municipioid is null ");
 		} else if (filtroMunicipio.intValue() > 0) {
-			sql.append(" and municipioid = " + filtroMunicipio);
+			sql.append(" and se.municipioid = " + filtroMunicipio);
 		}
 
 		Integer filtroArquivosProcessados = MyUtils.idItemSelecionado(cbbFiltroArquivosProcessados);
@@ -301,7 +316,9 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			colunas = new ArrayList<MyTableColumn>();
 			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
-			colunas.add(new MyTableColumn("Número Único", 200, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Origem", 60, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Número Processo", 200, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Autor", 300));
 			colunas.add(new MyTableColumn("Data Movimentação", 150, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Município", 400));
 			colunas.add(new MyTableColumn("Resultado do Download", 400));
@@ -340,19 +357,19 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			return;
 		}
 
-		List<ProcessoRecebido> processos = despachoServico.obterProcessoRecebido(null, false, null, true);
+		List<SolicitacaoEnvio> envios = despachoServico.obterSolicitacaoEnvio(null, null, null, null, null, false, true);
 		
-		for (ProcessoRecebido processo : processos) {
-			processamentoArquivosOk(processo, pastaDownload, pastaDestino);
+		for (SolicitacaoEnvio envio : envios) {
+			processamentoArquivosOk(envio, pastaDownload, pastaDestino);
 		}
 		
 		JOptionPane.showMessageDialog(null, "Processamento finalizado. Verifique o resultado filtrando os registros processados.");
 		this.executarAtualizar();
 	}
 
-	private void processamentoArquivosOk(ProcessoRecebido processo, File pastaDownload, File pastaDestino) throws Exception {
-		String processoFormatado = processo.getNumeroUnico().replace("/", "").replace(".", "").replace("-", "");
-		String pastaProcesso = processoFormatado + " (" + MyUtils.formatarData(MyUtils.obterData(processo.getDataHoraMovimentacao(), "yyyy-MM-dd HH:mm:ss"), "yyyyMMdd_HHmm") + ")";
+	private void processamentoArquivosOk(SolicitacaoEnvio envio, File pastaDownload, File pastaDestino) throws Exception {
+		String processoFormatado = envio.getSolicitacao().getNumeroProcesso();
+		String pastaProcesso = processoFormatado + " (" + MyUtils.formatarData(MyUtils.obterData(envio.getDataHoraMovimentacao(), "yyyy-MM-dd HH:mm:ss"), "yyyyMMdd_HHmm") + ")";
 		File pastaOrigem = new File(pastaDownload, pastaProcesso);
 		String msgRetorno = "";
 		if (!pastaOrigem.exists() || !pastaOrigem.isDirectory()) {
@@ -363,7 +380,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			
 			for (File arquivoOrigem : pastaOrigem.listFiles()) {
 				if (!arquivoOrigem.isDirectory()) {
-					String nomeArquivo = arquivoOrigem.getName().substring(0, arquivoOrigem.getName().lastIndexOf(".")) + " " + processo.getMunicipio().getNome();
+					String nomeArquivo = arquivoOrigem.getName().substring(0, arquivoOrigem.getName().lastIndexOf(".")) + " " + envio.getSolicitacao().getMunicipio().getNome();
 					String extensaoArquivo = arquivoOrigem.getName().substring(arquivoOrigem.getName().lastIndexOf(".") + 1);
 					MyUtils.appendLogArea(txtTexto, "Copiando o arquivo '" + arquivoOrigem.getName() + "'");
 					String novoNome = nomeArquivo + "." + extensaoArquivo;
@@ -374,7 +391,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 						arquivoDestino = new File(pastaDestino, novoNome);
 
 						if (arquivoDestino.exists()) {
-							novoNome = processoFormatado + " (" + (++seqCopia) + ") " + processo.getMunicipio().getNome() + "." + extensaoArquivo;
+							novoNome = processoFormatado + " (" + (++seqCopia) + ") " + envio.getSolicitacao().getMunicipio().getNome() + "." + extensaoArquivo;
 						}
 					} while (arquivoDestino.exists());
 					Files.copy(arquivoOrigem, arquivoDestino);
@@ -394,34 +411,28 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			pastaOrigem.delete();
 			MyUtils.appendLogArea(txtTexto, "Excluindo a pasta '" + pastaOrigem.getName() + "'");
 			msgRetorno = "Foram copiados " + arquivosCopiados + " arquivos para a pasta de destino final dos processos do Sapiens.";
-			processo.setArquivosProcessados(true);
+			envio.setArquivosProcessados(true);
 		}
 
-		processo.setResultadoProcessamento(msgRetorno);
-		salvarRegistro(processo);
+		envio.setResultadoProcessamento(msgRetorno);
+		salvarRegistro(envio);
 	}
 
-	private void salvarRegistro(ProcessoRecebido entidade) throws Exception {
+	private void salvarRegistro(SolicitacaoEnvio entidade) throws Exception {
 		String sql = "";
-		if (entidade.getProcessoRecebidoId() != null) {
-			sql += "update processorecebido "
-				+  "   set numerounico = '" + entidade.getNumeroUnico() + "' " 
-				+  "     , datahoramovimentacao = '" + entidade.getDataHoraMovimentacao() + "' " 
-				+  "     , municipioid = " + (entidade.getMunicipio().getMunicipioId().equals(0) ? "null" : entidade.getMunicipio().getMunicipioId())
-				+  "     , resultadodownload = " + (entidade.getResultadoDownload() == null || entidade.getResultadoDownload().trim().equals("") ? "null" : "'"  + entidade.getResultadoDownload() + "'")
-				+  "     , arquivosprocessados = " + (entidade.getArquivosProcessados() ? "true" : "false") 
-				+  "     , resultadoprocessamento = " + (entidade.getResultadoProcessamento() == null || entidade.getResultadoProcessamento().trim().equals("") ? "null" : "'"  + entidade.getResultadoProcessamento() + "'")
-				+  " where processorecebidoid = " + entidade.getProcessoRecebidoId();
-		} else {
-			sql += "insert into processorecebido (numerounico, datahoramovimentacao, municipioid, resultadodownload, resultadoprocessamento, arquivosprocessados) values ("
-				+  "'" + entidade.getNumeroUnico() + "', " 
-				+  "'" + entidade.getDataHoraMovimentacao() + "', " 
-				+  (entidade.getMunicipio().getMunicipioId().equals(0) ? "null" : entidade.getMunicipio().getMunicipioId()) + ", " 
-				+  (entidade.getResultadoDownload().trim().equals("") ? "null" : "'"  + entidade.getResultadoDownload() + "'") + ","
-				+  (entidade.getResultadoProcessamento().trim().equals("") ? "null" : "'"  + entidade.getResultadoProcessamento() + "'") + ","
-				+  (entidade.getArquivosProcessados() ? "true" : "false") + ") "; 
-		}
 
+		sql += "update solicitacao "
+			+  "   set municipioid = " + (entidade.getSolicitacao().getMunicipio().getMunicipioId().equals(0) ? "null" : entidade.getSolicitacao().getMunicipio().getMunicipioId())
+			+  " where solicitacaoid = " + entidade.getSolicitacao().getSolicitacaoId();
+
+		MyUtils.execute(conexao, sql);
+
+		sql = "";
+		sql += "update solicitacaoenvio ";
+		sql += "   set arquivosprocessados = " + (entidade.getArquivosProcessados() ? "true" : "false");
+		sql += "     , resultadoprocessamento = " + (entidade.getResultadoProcessamento() == null || entidade.getResultadoProcessamento().trim().equals("") ? "null" : "'" + entidade.getResultadoProcessamento() + "'");
+		sql += " where solicitacaoenvioid = " + entidade.getSolictacaoEnvioId();
+		
 		MyUtils.execute(conexao, sql);
 	}
 }

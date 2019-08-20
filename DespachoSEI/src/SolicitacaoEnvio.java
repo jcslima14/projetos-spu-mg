@@ -1,11 +1,9 @@
-public class ProcessoRecebido {
-	Integer processoRecebidoId;
+public class SolicitacaoEnvio {
+	Integer solictacaoEnvioId;
 	
-	String numeroUnico;
+	Solicitacao solicitacao;
 	
 	String dataHoraMovimentacao;
-	
-	Municipio municipio;
 	
 	String resultadoDownload;
 	
@@ -13,30 +11,29 @@ public class ProcessoRecebido {
 	
 	String resultadoProcessamento;
 
-	public ProcessoRecebido(Integer processoRecebidoId, String numeroUnico, String dataHoraMovimentacao, Municipio municipio, String resultadoDownload, Boolean arquivosProcessados, String resultadoProcessamento) {
-		this.processoRecebidoId = processoRecebidoId;
-		this.numeroUnico = numeroUnico;
+	public SolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, String dataHoraMovimentacao, String resultadoDownload, Boolean arquivosProcessados, String resultadoProcessamento) {
+		this.solictacaoEnvioId = solicitacaoEnvioId;
+		this.solicitacao = solicitacao;
 		this.dataHoraMovimentacao = dataHoraMovimentacao;
-		this.municipio = municipio;
 		this.resultadoDownload = resultadoDownload;
 		this.arquivosProcessados = arquivosProcessados;
 		this.resultadoProcessamento = resultadoProcessamento;
 	}
 
-	public Integer getProcessoRecebidoId() {
-		return processoRecebidoId;
+	public Integer getSolictacaoEnvioId() {
+		return solictacaoEnvioId;
 	}
 
-	public void setProcessoRecebidoId(Integer processoRecebidoId) {
-		this.processoRecebidoId = processoRecebidoId;
+	public void setSolictacaoEnvioId(Integer solictacaoEnvioId) {
+		this.solictacaoEnvioId = solictacaoEnvioId;
 	}
 
-	public String getNumeroUnico() {
-		return numeroUnico;
+	public Solicitacao getSolicitacao() {
+		return solicitacao;
 	}
 
-	public void setNumeroUnico(String numeroUnico) {
-		this.numeroUnico = numeroUnico;
+	public void setSolicitacao(Solicitacao solicitacao) {
+		this.solicitacao = solicitacao;
 	}
 
 	public String getDataHoraMovimentacao() {
@@ -45,14 +42,6 @@ public class ProcessoRecebido {
 
 	public void setDataHoraMovimentacao(String dataHoraMovimentacao) {
 		this.dataHoraMovimentacao = dataHoraMovimentacao;
-	}
-
-	public Municipio getMunicipio() {
-		return municipio;
-	}
-
-	public void setMunicipio(Municipio municipio) {
-		this.municipio = municipio;
 	}
 
 	public String getResultadoDownload() {

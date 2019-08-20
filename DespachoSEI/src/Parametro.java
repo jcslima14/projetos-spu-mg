@@ -37,10 +37,13 @@ public class Parametro {
 
 	String conteudo;
 
-	public Parametro(Integer parametroId, String descricao, String conteudo) {
+	Boolean ativo;
+	
+	public Parametro(Integer parametroId, String descricao, String conteudo, Boolean ativo) {
 		this.parametroId = parametroId;
 		this.descricao = descricao;
 		this.conteudo = conteudo;
+		this.ativo = ativo;
 	}
 
 	public Integer getParametroId() {
@@ -65,5 +68,13 @@ public class Parametro {
 
 	public void setConteudo(String conteudo) {
 		this.conteudo = conteudo;
+	}
+
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
 	}
 }

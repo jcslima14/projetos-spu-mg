@@ -162,7 +162,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         WebDriver driver = new ChromeDriver();
 
         // obter os dados do superior assinante
-		superior = despachoServico.obterAssinante(null, null, Boolean.TRUE).iterator().next();
+		superior = despachoServico.obterAssinante(null, null, true, true).iterator().next();
 		
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
@@ -582,8 +582,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 																 rs.getString("coordenada"),
 																 rs.getString("area"),
 																 despachoServico.obterTipoDespacho(rs.getInt("tipodespachoid"), null).iterator().next(),
-																 despachoServico.obterAssinante(rs.getInt("assinanteid"), null, null).iterator().next(),
-																 despachoServico.obterDestino(rs.getInt("destinoid"), null, null, null).iterator().next(),
+																 despachoServico.obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
+																 despachoServico.obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
 																 rs.getString("observacao"),
 																 rs.getString("numerodocumentosei"),
 																 rs.getString("datahoradespacho"),

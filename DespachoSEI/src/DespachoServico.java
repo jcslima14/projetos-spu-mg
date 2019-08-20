@@ -3,6 +3,9 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
+import framework.MyComboBox;
 import framework.MyUtils;
 
 public class DespachoServico {
@@ -12,11 +15,156 @@ public class DespachoServico {
 		this.conexao = conexao;
 	}
 
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, String numeroProcesso) throws Exception {
+		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select * from solicitacao where 1 = 1");
+		if (solicitacaoId != null) {
+			sql.append(" and solicitacaoid = " + solicitacaoId);
+		} else {
+			if (origem != null) {
+				sql.append(" and origemid = " + origem.getOrigemId());
+			}
+			if (numeroProcesso != null) {
+				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
+			}
+		}
+
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new Solicitacao(rs.getInt("solicitacaoid"), 
+					obterOrigem(rs.getInt("origemid"), null).iterator().next(),
+					obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
+					rs.getString("numeroprocesso"), 
+					rs.getString("autor"),
+					obterMunicipio(false, rs.getInt("municipioid"), null).iterator().next(),
+					obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
+					rs.getString("cartorio"),
+					obterTipoImovel(rs.getInt("tipoimovelid"), null).iterator().next(),
+					rs.getString("endereco"),
+					rs.getString("cooredenada"),
+					rs.getString("area"),
+					rs.getString("numeroprocessosei"),
+					rs.getBoolean("arquivosanexados")
+					));
+		}
+
+		return retorno;
+	}
+
+	public List<SolicitacaoEnvio> obterSolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, Origem origem, String numeroProcesso, String dataHoraMovimentacao, Boolean arquivosProcessados, boolean somenteMunicipiosPreenchidos) throws Exception {
+		List<SolicitacaoEnvio> retorno = new ArrayList<SolicitacaoEnvio>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select se.* from solicitacaoenvio se inner join solicitacao s using (solicitacaoid) where 1 = 1");
+		if (solicitacaoEnvioId != null) {
+			sql.append(" and se.solicitacaoenvioid = " + solicitacaoEnvioId);
+		} else {
+			if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
+				sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
+			}
+			if (origem != null && origem.getOrigemId() != null) {
+				sql.append(" and s.origemid = " + origem.getOrigemId());
+			}
+			if (numeroProcesso != null) {
+				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "'");
+			}
+			if (dataHoraMovimentacao != null) {
+				sql.append(" and sr.datahoramovimentacao = '" + dataHoraMovimentacao + "'");
+			}
+			if (arquivosProcessados != null) {
+				sql.append(" and sr.arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
+			}
+			if (somenteMunicipiosPreenchidos) {
+				sql.append(" and s.municipioid is not null");
+			}
+		}
+
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new SolicitacaoEnvio(rs.getInt("solicitacaoenvioid"), 
+					obterSolicitacao(rs.getInt("solicitacaoid"), null, null).iterator().next(),
+					rs.getString("datahoramovimentacao"), 
+					rs.getString("resultadodownload"),
+					rs.getBoolean("arquivosprocessados"),
+					rs.getString("resultadoprocessamento")
+					));
+		}
+
+		return retorno;
+	}
+
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso) throws Exception {
+		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select sr.* from solicitacaoresposta sr inner join solicitacao s using (solicitacaoid) where 1 = 1");
+		if (solicitacaoRespostaId != null) {
+			sql.append(" and sr.solicitacaorespostaid = " + solicitacaoRespostaId);
+		} else {
+			if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
+				sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
+			}
+			if (origem != null && origem.getOrigemId() != null) {
+				sql.append(" and s.origemid = " + origem.getOrigemId());
+			}
+			if (numeroProcesso != null) {
+				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "'");
+			}
+		}
+
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
+					obterSolicitacao(rs.getInt("solicitacaoid"), null, null).iterator().next(),
+					obterTipoResposta(rs.getInt("tipoprocessoid"), null).iterator().next(),
+					rs.getString("observacao"), 
+					obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
+					obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null).iterator().next(),
+					rs.getString("numerodocumentosei"),
+					rs.getString("datahoraresposta"),
+					rs.getString("numeroprocessosei"),
+					rs.getBoolean("repostaimpressa"),
+					rs.getString("datahoraimpressao"),
+					rs.getString("blocoassinatura"),
+					rs.getBoolean("respostanoblocoassinatura")
+					));
+		}
+
+		return retorno;
+	}
+
+	public List<Origem> obterOrigem(Integer origemId, String descricao) throws Exception {
+		List<Origem> retorno = new ArrayList<Origem>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select * from origem where 1 = 1");
+		if (origemId != null) {
+			sql.append(" and origemid = " + origemId);
+		} else {
+			if (descricao != null) {
+				sql.append(" and descricao like '" + descricao + "'");
+			}
+		}
+
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new Origem(rs.getInt("origemid"), rs.getString("descricao")));
+		}
+		
+		return retorno;
+	}
+
 	public List<Parametro> obterParametro(Integer parametroId, String descricao) throws Exception {
 		List<Parametro> retorno = new ArrayList<Parametro>();
 
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from parametro where 1= 1");
+		sql.append("select * from parametro where 1 = 1");
 		if (parametroId != null) {
 			sql.append(" and parametroid = " + parametroId);
 		} else {
@@ -28,7 +176,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Parametro(rs.getInt("parametroid"), rs.getString("descricao"), rs.getString("conteudo")));
+			retorno.add(new Parametro(rs.getInt("parametroid"), rs.getString("descricao"), rs.getString("conteudo"), rs.getBoolean("ativo")));
 		}
 		
 		return retorno;
@@ -102,40 +250,11 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			Assinante assinante = obterAssinante(rs.getInt("assinanteid"), null, null).iterator().next();
+			Assinante assinante = obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next();
 			TipoDespacho tipoDespacho = obterTipoDespacho(rs.getInt("tipodespachoid"), null).iterator().next();
 			retorno.add(new AssinanteTipoDespacho(rs.getInt("assinantetipodespachoid"), assinante, tipoDespacho, rs.getString("blocoassinatura")));
 		}
 
-		return retorno;
-	}
-
-	public List<ProcessoRecebido> obterProcessoRecebido(String numeroUnico, Boolean arquivosProcessados, String dataHoraMovimentacao, boolean somenteMunicipiosPreenchidos) throws Exception {
-		List<ProcessoRecebido> retorno = new ArrayList<ProcessoRecebido>();
-
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from processorecebido where 1 = 1");
-		if (numeroUnico != null) {
-			sql.append(" and numerounico = '" + numeroUnico + "'");
-		}
-		if (arquivosProcessados != null) {
-			sql.append(" and arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
-		}
-		if (somenteMunicipiosPreenchidos) {
-			sql.append(" and municipioid is not null");
-		}
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			Municipio municipio = null;
-			List<Municipio> municipios = obterMunicipio(false, rs.getInt("municipioid"), null);
-			if (municipios != null && !municipios.isEmpty()) {
-				municipio = municipios.iterator().next();
-			}
-			retorno.add(new ProcessoRecebido(rs.getInt("processorecebidoid"), rs.getString("numerounico"), rs.getString("datahoramovimentacao"), municipio, rs.getString("resultadodownload"), rs.getBoolean("arquivosprocessados"), rs.getString("resultadoprocessamento")));
-		}
-		
 		return retorno;
 	}
 
@@ -205,6 +324,38 @@ public class DespachoServico {
 		return retorno;
 	}
 
+	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao) throws Exception {
+		List<TipoResposta> retorno = new ArrayList<TipoResposta>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select * from tiporesposta where 1 = 1");
+		if (tipoRespostaId != null) {
+			sql.append(" and tiporespostaid = " + tipoRespostaId);
+		} else {
+			if (descricao != null) {
+				sql.append(" and descricao like '" + descricao + "'");
+			}
+		}
+
+		sql.append(" order by descricao ");
+		
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new TipoResposta(rs.getInt("tiporespostaid"),
+					rs.getString("descricao"), 
+					rs.getString("tipodocumento"), 
+					rs.getString("numerodocumentosei"), 
+					rs.getBoolean("gerarprocessoindividual"), 
+					rs.getString("unidadeaberturaprocesso"), 
+					rs.getString("tipoprocesso"), 
+					rs.getBoolean("imprimirresposta"), 
+					rs.getInt("quantidadeassinaturas")));
+		}
+		
+		return retorno;
+	}
+
 	public List<Municipio> obterMunicipio(boolean obterComarca, Integer municipioId, String nome) throws Exception {
 		List<Municipio> retorno = new ArrayList<Municipio>();
 
@@ -218,6 +369,8 @@ public class DespachoServico {
 			}
 		}
 
+		sql.append(" order by nome ");
+		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
@@ -229,13 +382,15 @@ public class DespachoServico {
 			retorno.add(new Municipio(rs.getInt("municipioid"),
 									  rs.getString("nome"),
 									  (comarcas.size() > 0 ? comarcas.iterator().next() : null),
-									  obterDestino(rs.getInt("destinoid"), null, null, null).iterator().next()));
+									  obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
+									  obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next()
+					));
 		}
 		
 		return retorno;
 	}
 
-	public List<Assinante> obterAssinante(Integer assinanteId, String nome, Boolean superior) throws Exception {
+	public List<Assinante> obterAssinante(Integer assinanteId, String nome, Boolean superior, Boolean ativo) throws Exception {
 		List<Assinante> retorno = new ArrayList<Assinante>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -249,18 +404,21 @@ public class DespachoServico {
 			if (superior != null) {
 				sql.append(" and superior = " + (superior ? "true" : "false"));
 			}
+			if (ativo != null) {
+				sql.append(" and ativo = " + (ativo ? "true" : "false"));
+			}
 		}
 
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocesso"), rs.getString("blocoassinatura")));
+			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocesso"), rs.getString("blocoassinatura")));
 		}
 		
 		return retorno;
 	}
 
-	public List<Destino> obterDestino(Integer destinoId, String descricao, String abreviacao, String municipio) throws Exception {
+	public List<Destino> obterDestino(Integer destinoId, String descricao, String abreviacao, String municipio, String orderBy) throws Exception {
 		List<Destino> retorno = new ArrayList<Destino>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -281,10 +439,13 @@ public class DespachoServico {
 			}
 		}
 
+		if (orderBy == null) orderBy = "descricao";
+		sql.append(" order by " + orderBy);
+		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getBoolean("usarcomarca")));
+			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getString("abreviacao")));
 		}
 		
 		return retorno;
@@ -334,5 +495,35 @@ public class DespachoServico {
 				+  "false) "; 
 		}
 		MyUtils.execute(conexao, sql);
+	}
+	
+	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoResposta>();
+			opcoesIniciais.addAll(obterTipoResposta(null, null));
+			MyUtils.insereOpcoesComboBox(cbbTipoResposta, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Resposta: \n\n" + e.getMessage());
+		}
+	}
+
+	public void preencherOpcoesMunicipio(MyComboBox cbbMunicipio, List<Municipio> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Municipio>();
+			opcoesIniciais.addAll(obterMunicipio(false, null, null));
+			MyUtils.insereOpcoesComboBox(cbbMunicipio, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Município: \n\n" + e.getMessage());
+		}
+	}
+
+	public void preencherOpcoesDestino(MyComboBox cbbDestino, List<Destino> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Destino>();
+			opcoesIniciais.addAll(obterDestino(null, null, null, null, "abreviacao"));
+			MyUtils.insereOpcoesComboBox(cbbDestino, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Destino: \n\n" + e.getMessage());
+		}
 	}
 }

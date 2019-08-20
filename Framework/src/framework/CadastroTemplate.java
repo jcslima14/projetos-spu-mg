@@ -112,7 +112,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 				try {
 					resetarDados();
 				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(null, "Erro ao tentar atualizar a lista de registros:/n/n" + e1.getMessage());
+					JOptionPane.showMessageDialog(null, "Erro ao tentar atualizar a lista de registros:\n\n" + e1.getMessage());
 					e1.printStackTrace();
 				}
 			}

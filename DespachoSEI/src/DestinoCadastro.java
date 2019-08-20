@@ -10,7 +10,6 @@ import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
-import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -29,9 +28,7 @@ public class DestinoCadastro extends CadastroTemplate {
 	private MyLabel lblArtigo = new MyLabel("Artigo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyCheckBox chkUsarComarca = new MyCheckBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyLabel lblUsarComarca = new MyLabel("Usar Comarca") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(5, 2));
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
 	private List<MyTableColumn> colunas;
 
 	public DestinoCadastro(String tituloJanela, Connection conexao) {
@@ -46,8 +43,6 @@ public class DestinoCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtArtigo);
 		pnlCamposEditaveis.add(lblDescricao);
 		pnlCamposEditaveis.add(txtDescricao);
-		pnlCamposEditaveis.add(lblUsarComarca);
-		pnlCamposEditaveis.add(chkUsarComarca);
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -58,7 +53,6 @@ public class DestinoCadastro extends CadastroTemplate {
 		txtAbreviacao.setText("");
 		txtArtigo.setText("");
 		txtDescricao.setText("");
-		chkUsarComarca.setSelected(false);
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -68,10 +62,9 @@ public class DestinoCadastro extends CadastroTemplate {
 				+  "   set abreviacao = '" + txtAbreviacao.getText() + "' "
 				+  "     , artigo = '" + txtArtigo.getText() + "' "
 				+  "	 , descricao = '" + txtDescricao.getText().trim() + "' "
-				+  "	 , usarcomarca = " + (chkUsarComarca.isSelected() ? "true" : "false") 
 				+  " where destinoid = " + txtDestinoId.getText();
 		} else {
-			sql += "insert into destino (abreviacao, artigo, descricao, usarcomarca) values ('" + txtAbreviacao.getText().trim() + "', '" + txtArtigo.getText().trim() + "', '" + txtDescricao.getText().trim() + "', " + (chkUsarComarca.isSelected() ? "true" : "false") + ")";
+			sql += "insert into destino (abreviacao, artigo, descricao) values ('" + txtAbreviacao.getText().trim() + "', '" + txtArtigo.getText().trim() + "', '" + txtDescricao.getText().trim() + "')";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -87,11 +80,10 @@ public class DestinoCadastro extends CadastroTemplate {
 		txtAbreviacao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
 		txtArtigo.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
 		txtDescricao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 4).toString());
-		chkUsarComarca.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 5).toString().equals("Sim") ? true : false);
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select destinoid, abreviacao, artigo, descricao, case when usarcomarca then 'Sim' else 'Não' end as usarcomarca from destino");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select destinoid, abreviacao, artigo, descricao from destino");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -104,8 +96,7 @@ public class DestinoCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Abreviacao", 150, true));
 			colunas.add(new MyTableColumn("Artigo", 30, true));
-			colunas.add(new MyTableColumn("Descrição", 300, true));
-			colunas.add(new MyTableColumn("Usar Comarca?", 100, true) {{ setAlignment(JLabel.CENTER); }});
+			colunas.add(new MyTableColumn("Descrição", 400, true));
 		}
 		return this.colunas;
 	}

@@ -1,22 +1,23 @@
+import framework.ItemComboBox;
 
-public class Destino {
+public class Destino implements ItemComboBox {
 	Integer destinoId;
 	
 	String artigo;
 	
 	String descricao;
 
-	Boolean usarComarca;
+	String abreviacao;
 	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;
 	}
 	
-	public Destino(Integer destinoId, String artigo, String descricao, Boolean usarComarca) {
+	public Destino(Integer destinoId, String artigo, String descricao, String abreviacao) {
 		this.destinoId = destinoId;
 		this.artigo = artigo;
 		this.descricao = descricao;
-		this.usarComarca = usarComarca;
+		this.abreviacao = abreviacao;
 	}
 	
 	public Integer getDestinoId() {
@@ -43,11 +44,26 @@ public class Destino {
 		this.descricao = descricao;
 	}
 
-	public Boolean getUsarComarca() {
-		return usarComarca;
+	public String getAbreviacao() {
+		return abreviacao;
 	}
 
-	public void setUsarComarca(Boolean usarComarca) {
-		this.usarComarca = usarComarca;
+	public void setAbreviacao(String abreviacao) {
+		this.abreviacao = abreviacao;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getDestinoId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getDescricao();
 	}
 }

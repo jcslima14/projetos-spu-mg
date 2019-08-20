@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -25,7 +26,8 @@ public class ParametroCadastro extends CadastroTemplate {
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtConteudo = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblConteudo = new MyLabel("Conteúdo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(3, 2));
+	private MyCheckBox chkAtivo = new MyCheckBox("Ativo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
 	private List<MyTableColumn> colunas;
 
 	public ParametroCadastro(String tituloJanela, Connection conexao) {
@@ -38,6 +40,8 @@ public class ParametroCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtDescricao);
 		pnlCamposEditaveis.add(lblConteudo);
 		pnlCamposEditaveis.add(txtConteudo);
+		pnlCamposEditaveis.add(chkAtivo);
+		pnlCamposEditaveis.add(new JPanel());
 		
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -47,14 +51,16 @@ public class ParametroCadastro extends CadastroTemplate {
 		txtParametroId.setText("");
 		txtDescricao.setText("");
 		txtConteudo.setText("");
+		chkAtivo.setSelected(true);
 	}
 
 	public void salvarRegistro() throws Exception {
 		String sql = "";
-		sql += "insert into parametro (parametroid, descricao, conteudo) ";
+		sql += "insert into parametro (parametroid, descricao, conteudo, ativo) ";
 		sql += "select " + txtParametroId.getText();
 		sql += "	 , '" + txtDescricao.getText().trim() + "'";
 		sql += "	 , '" + txtConteudo.getText() + "'";
+		sql += "	 , " + (chkAtivo.isSelected() ? "true" : "false");
 		sql += " where not exists (select 1 from parametro where parametroid = " + txtParametroId.getText() + ")";
 		MyUtils.execute(conexao, sql);
 
@@ -62,6 +68,7 @@ public class ParametroCadastro extends CadastroTemplate {
 		sql += "update parametro "
 			+  "   set descricao = '" + txtDescricao.getText().trim() + "' "
 			+  "     , conteudo = '" + txtConteudo.getText() + "' "
+			+  "     , ativo = " + (chkAtivo.isSelected() ? "true" : "false")
 			+  " where parametroid = " + txtParametroId.getText();
 		MyUtils.execute(conexao, sql);
 	}
@@ -76,10 +83,11 @@ public class ParametroCadastro extends CadastroTemplate {
 		txtParametroId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		txtDescricao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
 		txtConteudo.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
+		chkAtivo.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 4).toString().contentEquals("Sim") ? true : false);
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select * from parametro");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select parametroid, descricao, conteudo, case when ativo then 'Sim' else 'Não' end as ativo from parametro");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -92,6 +100,7 @@ public class ParametroCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Descrição", 250, true));
 			colunas.add(new MyTableColumn("Conteúdo", 500, true));
+			colunas.add(new MyTableColumn("Ativo?", 100, true, JLabel.CENTER));
 		}
 		return this.colunas;
 	}

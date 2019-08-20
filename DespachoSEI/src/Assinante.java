@@ -3,6 +3,8 @@ public class Assinante {
 	Integer assinanteId;
 	
 	String nome;
+
+	Boolean ativo;
 	
 	String cargo;
 	
@@ -18,9 +20,10 @@ public class Assinante {
 		this.assinanteId = assinanteId;
 	}
 
-	public Assinante(Integer assinanteId, String nome, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
+	public Assinante(Integer assinanteId, String nome, Boolean ativo, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
 		this.assinanteId = assinanteId;
 		this.nome = nome;
+		this.ativo = ativo;
 		this.cargo = cargo;
 		this.setor = setor;
 		this.superior = superior;
@@ -42,6 +45,14 @@ public class Assinante {
 
 	public void setNome(String nome) {
 		this.nome = nome;
+	}
+
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
 	}
 
 	public String getCargo() {

@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
 import framework.MyComboBox;
-import framework.MyComboBoxModel;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -30,16 +30,22 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private MyLabel lblMunicipioComarca = new MyLabel("Comarca") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbDestino = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDestino = new MyLabel("Destino") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(5, 2));
+	private MyComboBox cbbTipoResposta = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblTipoResposta = new MyLabel("Tipo de Resposta Padrão") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
 	public MunicipioCadastro(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
-		opcoesComarca();
-		opcoesDestino();
-
+		despachoServico = new DespachoServico(conexao);
+		
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Nenhuma)")); }});
+		despachoServico.preencherOpcoesMunicipio(cbbMunicipioComarca, null);
+		despachoServico.preencherOpcoesDestino(cbbDestino, null);
+		
 		pnlCamposEditaveis.add(lblMunicipioId);
 		pnlCamposEditaveis.add(txtMunicipioId);
 		pnlCamposEditaveis.add(lblNome);
@@ -48,6 +54,8 @@ public class MunicipioCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(cbbMunicipioComarca);
 		pnlCamposEditaveis.add(lblDestino);
 		pnlCamposEditaveis.add(cbbDestino);
+		pnlCamposEditaveis.add(lblTipoResposta);
+		pnlCamposEditaveis.add(cbbTipoResposta);
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -58,21 +66,12 @@ public class MunicipioCadastro extends CadastroTemplate {
 		txtNome.setText("");
 		cbbMunicipioComarca.setSelectedIndex(0);
 		cbbDestino.setSelectedIndex(0);
-	}
-
-	private void opcoesComarca() {
-		cbbMunicipioComarca.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbMunicipioComarca, "select municipioid, nome from municipio order by nome");
-	}
-
-	private void opcoesDestino() {
-		cbbDestino.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbDestino, "select destinoid, abreviacao from destino order by abreviacao");
+		cbbTipoResposta.setSelectedIndex(0);
 	}
 
 	public void salvarRegistro() throws Exception {
 		Municipio municipio = new Municipio(txtMunicipioId.getText().equals("") ? null : Integer.parseInt(txtMunicipioId.getText()), txtNome.getText(), 
-				new Municipio(MyUtils.idItemSelecionado(cbbMunicipioComarca)), new Destino(MyUtils.idItemSelecionado(cbbDestino)));
+				new Municipio(MyUtils.idItemSelecionado(cbbMunicipioComarca)), new Destino(MyUtils.idItemSelecionado(cbbDestino)), new TipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta)));
 
 		String sql = "";
 		if (municipio.getMunicipioId() != null) {
@@ -80,12 +79,14 @@ public class MunicipioCadastro extends CadastroTemplate {
 				+  "   set nome = '" + municipio.getNome().replace("'", "''") + "' " 
 				+  "     , municipioidcomarca = " + municipio.getMunicipioComarca().getMunicipioId() 
 				+  "     , destinoid = " + municipio.getDestino().getDestinoId() 
+				+  "     , tiporespostaid = " + (municipio.getTipoResposta().getTipoRespostaId().equals(0) ? "null" : municipio.getTipoResposta().getTipoRespostaId())
 				+  " where municipioid = " + municipio.getMunicipioId();
 		} else {
-			sql += "insert into municipio (nome, municipioidcomarca, destinoid) values ("
+			sql += "insert into municipio (nome, municipioidcomarca, destinoid, tiporespostaid) values ("
 				+  "'" + municipio.getNome() + "', " 
 				+  municipio.getMunicipioComarca().getMunicipioId() + ", " 
-				+  municipio.getDestino().getDestinoId() + ") "; 
+				+  municipio.getDestino().getDestinoId() + ", "
+				+  (municipio.getTipoResposta().getTipoRespostaId().equals(0) ? "null" : municipio.getTipoResposta().getTipoRespostaId()) + ") "; 
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -97,17 +98,16 @@ public class MunicipioCadastro extends CadastroTemplate {
 	}
 
 	public void prepararParaEdicao() {
-		ResultSet rs;
+		txtMunicipioId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		try {
-			txtMunicipioId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
+			Municipio entidade = despachoServico.obterMunicipio(true, Integer.parseInt(txtMunicipioId.getText()), null).iterator().next();
 
-			rs = MyUtils.executeQuery(conexao, "select * from municipio where municipioid = " + txtMunicipioId.getText());
-			rs.next();
-
-			txtNome.setText(rs.getString("nome"));
-			cbbMunicipioComarca.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipioComarca, rs.getInt("municipioidcomarca"), null));
-			cbbDestino.setSelectedIndex(MyUtils.itemSelecionado(cbbDestino, rs.getInt("destinoid"), null));
+			txtNome.setText(entidade.getNome());
+			cbbMunicipioComarca.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipioComarca, entidade.getMunicipioComarca().getMunicipioId(), null));
+			cbbDestino.setSelectedIndex(MyUtils.itemSelecionado(cbbDestino, entidade.getDestino().getDestinoId(), null));
+			cbbTipoResposta.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoResposta, entidade.getTipoResposta().getTipoRespostaId(), null));
 		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao obter as informações do Município para edição: \n\n" + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -118,9 +118,11 @@ public class MunicipioCadastro extends CadastroTemplate {
 									  + "	  , m.nome "
 									  + "	  , mc.nome as comarca "
 									  + "	  , d.abreviacao as destino "
+									  + "	  , tr.descricao as tiporesposta "
 									  + "  from municipio m "
 									  + "  left join municipio mc on mc.municipioid = m.municipioidcomarca "
-									  + "  left join destino d using (destinoid) ");
+									  + "  left join destino d using (destinoid) "
+									  + "  left join tiporesposta tr using (tiporespostaid) ");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -131,9 +133,10 @@ public class MunicipioCadastro extends CadastroTemplate {
 			colunas = new ArrayList<MyTableColumn>();
 			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
-			colunas.add(new MyTableColumn("Nome", 400));
-			colunas.add(new MyTableColumn("Comarca", 400));
+			colunas.add(new MyTableColumn("Nome", 300));
+			colunas.add(new MyTableColumn("Comarca", 300));
 			colunas.add(new MyTableColumn("Destino", 150));
+			colunas.add(new MyTableColumn("Tipo de Resposta Padrão", 200));
 		}
 		return this.colunas;
 	}
