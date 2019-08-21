@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,9 +95,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								imprimirDespachoSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));;
+								imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));;
 							} catch (Exception e) {
-								MyUtils.appendLogArea(logArea, "Erro ao imprimir os despachos do SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								MyUtils.appendLogArea(logArea, "Erro ao imprimir as respostas do SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 								e.printStackTrace();
 							}
 						}
@@ -128,13 +127,13 @@ public class ImpressaoDespacho extends JInternalFrame {
 		this.show();
 	}
 
-	private void imprimirDespachoSEI(String usuario, String senha, Integer assinanteId) throws Exception {
+	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
         String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
-		String diretorioDespachos = obterDiretorioDespachos(pastaRespostasImpressas);
+		String diretorioRespostas = obterDiretorioDespachos(pastaRespostasImpressas);
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		ChromeOptions opcoes = new ChromeOptions();
-		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", diretorioDespachos); }});
+		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", diretorioRespostas); }});
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver(opcoes);
 
@@ -169,8 +168,8 @@ public class ImpressaoDespacho extends JInternalFrame {
         // selecionar a unidade default
         MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
 
-		Map<String, List<Despacho>> despachosAImprimir = obterDespachos(1, assinanteId);
-		for (String numeroProcessoSEI : despachosAImprimir.keySet()) {
+		Map<String, List<SolicitacaoResposta>> respostasAImprimir = obterRespostasAProcessar(1, assinanteId);
+		for (String numeroProcessoSEI : respostasAImprimir.keySet()) {
 			// pesquisa o número do processo
 			driver.switchTo().defaultContent();
 			WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait5, By.name("txtPesquisaRapida"));
@@ -189,26 +188,26 @@ public class ImpressaoDespacho extends JInternalFrame {
 			TimeUnit.SECONDS.sleep(1);
 			btnDesmarcarTudo.click();
 
-			for (Despacho despachoAImprimir : despachosAImprimir.get(numeroProcessoSEI)) {
-				String numeroProcesso = despachoAImprimir.getNumeroProcesso();
-				String numeroDespacho = despachoAImprimir.getNumeroDocumentoSEI();
+			for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
+				String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
+				String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
 
-				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Despacho: " + numeroDespacho);
+				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
 	
 				// encontra e marca o checkbox do documento
-				WebElement chkSelecionarDespacho = null;
+				WebElement chkSelecionarDocumento = null;
 				try {
-					chkSelecionarDespacho = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDespacho + "']]/*/input[@class = 'infraCheckbox']"));
+					chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
-				if (chkSelecionarDespacho != null) {
-					// trecho para verificar se o despacho possui duas assinaturas
+				if (chkSelecionarDocumento != null) {
+					// trecho para verificar se o documento possui a quantidade de assinaturas necessárias
 					String janelaAtual = driver.getWindowHandle();
 	
-					WebElement lnkDespacho = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDespacho + "']"));
-					lnkDespacho.click();
+					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
+					lnkDocumento.click();
 					
 					for (String janelaAberta : driver.getWindowHandles()) {
 						driver.switchTo().window(janelaAberta);
@@ -224,37 +223,39 @@ public class ImpressaoDespacho extends JInternalFrame {
 					driver.switchTo().defaultContent();
 					driver.switchTo().frame("ifrVisualizacao");
 	
-					if (assinaturas.size() != 2) {
-						MyUtils.appendLogArea(logArea, "Para ser impresso, o documento precisa de 2 assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.");
+					int quantidadeAssinaturas = respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas();
+					
+					if (assinaturas.size() != quantidadeAssinaturas) {
+						MyUtils.appendLogArea(logArea, "Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.");
 					} else {
-						chkSelecionarDespacho.click();
+						chkSelecionarDocumento.click();
 	
 						// apaga arquivo com o nome do processo, caso já exista
-						apagarArquivoProcesso(diretorioDespachos, numeroProcessoSEI);
+						apagarArquivoProcesso(diretorioRespostas, numeroProcessoSEI);
 	
 						// gera o arquivo no diretório de downloads
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						renomearArquivoProcesso(diretorioDespachos, numeroProcessoSEI, pastaRespostasImpressas + "\\" + numeroProcesso + ".pdf");
+						renomearArquivoProcesso(diretorioRespostas, numeroProcessoSEI, pastaRespostasImpressas + "\\" + numeroProcesso + ".pdf");
 	
-						// verifica se o arquivo foi gerado e atualiza o número do despacho gerado no SEI
-						atualizarDespachoGerado(despachoAImprimir);
+						// atualiza o indicativo de que o documento foi impresso
+						atualizarRespostaImpressa(respostaAImprimir);
 	
-						chkSelecionarDespacho = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDespacho + "']]/*/input[@class = 'infraCheckbox']"));
-						chkSelecionarDespacho.click();
+						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+						chkSelecionarDocumento.click();
 					}
 				} else {
-					MyUtils.appendLogArea(logArea, "Despacho não encontrado ou não habilitado para geração em PDF");
+					MyUtils.appendLogArea(logArea, "Documento não encontrado ou não habilitado para geração em PDF");
 				}
-			} // fim do loop de leitura dos despachos de cada processo
-		} // fim do loop de diferentes processos com despachos
+			} // fim do loop de leitura das respostas de cada processo
+		} // fim do loop de diferentes processos com documentos a serem impressos
 
-		// início da retirada dos despachos do bloco de assinatura
-		MyUtils.appendLogArea(logArea, "Preparando para retirar despachos dos blocos de assinatura...");
+		// início da retirada dos documentos do bloco de assinatura
+		MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...");
 
-		Map<String, List<Despacho>> despachosARetirar = obterDespachos(2, assinanteId);
-		for (String blocoAssinatura : despachosARetirar.keySet()) {
+		Map<String, List<SolicitacaoResposta>> respostasARetirar = obterRespostasAProcessar(2, assinanteId);
+		for (String blocoAssinatura : respostasARetirar.keySet()) {
 			driver.switchTo().defaultContent();
 			WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
 			btnControleProcessos.click();
@@ -276,25 +277,25 @@ public class ImpressaoDespacho extends JInternalFrame {
 			}
 
 			lnkBlocoAssinatura.click();
-			List<Despacho> despachosRetirados = new ArrayList<Despacho>();
+			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
 
-			for (Despacho despachoARetirar : despachosARetirar.get(blocoAssinatura)) {
+			for (SolicitacaoResposta respostaARetirar : respostasARetirar.get(blocoAssinatura)) {
 				WebElement chkSelecaoLinha = null;
 				try {
-					chkSelecaoLinha = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + despachoARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
+					chkSelecaoLinha = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
 				if (chkSelecaoLinha != null) {
-					MyUtils.appendLogArea(logArea, "Marcando para retirada o despacho " + despachoARetirar.getNumeroDocumentoSEI());
+					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 					chkSelecaoLinha.click();
-					despachosRetirados.add(despachoARetirar);
+					respostasRetiradas.add(respostaARetirar);
 				}
 			}
 			
-			if (despachosRetirados.size() > 0) {
-				MyUtils.appendLogArea(logArea, "Retirando os despachos marcados...");
+			if (respostasRetiradas.size() > 0) {
+				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
 				WebElement btnExcluir = MyUtils.encontrarElemento(wait5, By.id("btnExcluir"));
 				btnExcluir.click();
 				TimeUnit.MILLISECONDS.sleep(500);
@@ -303,9 +304,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 				MyUtils.encontrarElemento(wait5, By.id("btnFechar"));
 
-				MyUtils.appendLogArea(logArea, "Atualizando a situação dos despachos retirados...");
-				for (Despacho despachoRetirado : despachosRetirados) {
-					atualizarDespachoRetiradoBlocoAssinatura(despachoRetirado);
+				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
+				for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
+					atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
 				}
 			}
 		}
@@ -342,85 +343,47 @@ public class ImpressaoDespacho extends JInternalFrame {
 		return caminho.getParent();
 	}
 
-	private void atualizarDespachoGerado(Despacho despacho) throws Exception {
+	private void atualizarRespostaImpressa(SolicitacaoResposta resposta) throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("update despacho"
-				 + "   set despachoimpresso = true "
+		sql.append("update solicitacaoresposta "
+				 + "   set respostaimpressa = true "
 				 + "	 , datahoraimpressao = datetime('now', 'localtime') "
-				 + " where despachoid = " + despacho.getDespachoId());
+				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 
 		MyUtils.execute(conexao, sql.toString());
 	}
 
-	private void atualizarDespachoRetiradoBlocoAssinatura(Despacho despacho) throws Exception {
+	private void atualizarRespostaRetiradaBlocoAssinatura(SolicitacaoResposta resposta) throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("update despacho"
-				 + "   set despachonoblocoassinatura = false "
-				 + " where despachoid = " + despacho.getDespachoId());
+		sql.append("update solicitacaoresposta "
+				 + "   set respostanoblocoassinatura = false "
+				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 
 		MyUtils.execute(conexao, sql.toString());
 	}
 
-	// método para obter despachos: tipos de filtro: 1 - despachos não impressos; 2 - despachos a serem retirados do bloco de assinatura
-	private Map<String, List<Despacho>> obterDespachos(int tipoFiltro, Integer assinanteId) throws Exception {
-		Map<String, List<Despacho>> retorno = new LinkedHashMap<String, List<Despacho>>();
-
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select dp.* ");
-		sql.append("  from despacho dp ");
-		sql.append(" inner join destino dt using (destinoid) ");
-		sql.append(" inner join tipodespacho td using (tipodespachoid) ");
-		sql.append(" where coalesce(dp.numerodocumentosei, '') <> '' ");
-		sql.append("   and coalesce(dp.numeroprocessosei, '') <> '' ");
-		sql.append("   and td.imprimirresposta = true ");
-		if (assinanteId != null && !assinanteId.equals(0)) {
-			sql.append(" and assinanteid = " + assinanteId);
-		}
-		if (tipoFiltro == 1) {
-			sql.append(" and not dp.despachoimpresso ");
-		} else if (tipoFiltro == 2) {
-			sql.append(" and dp.despachoimpresso ");
-			sql.append(" and coalesce(dp.blocoassinatura, '') <> '' ");
-			sql.append(" and dp.despachonoblocoassinatura ");
-		}
+	// método para obter documentos: tipos de filtro: 1 - respostas não impressas; 2 - documentos de resposta a serem retirados do bloco de assinatura
+	private Map<String, List<SolicitacaoResposta>> obterRespostasAProcessar(int tipoFiltro, Integer assinanteId) throws Exception {
+		Map<String, List<SolicitacaoResposta>> retorno = new LinkedHashMap<String, List<SolicitacaoResposta>>();
+		Boolean respostaImpressa = null;
+		Boolean respostaNoBlocoAssinatura = null;
+		Assinante assinante = (assinanteId.equals(0) ? null : new Assinante(assinanteId));
 
 		if (tipoFiltro == 1) {
-			sql.append(" order by numeroprocessosei, numerodocumentosei ");
-		} else if (tipoFiltro == 2) {
-			sql.append(" order by blocoassinatura, numerodocumentosei ");
-		}
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			String chave = (tipoFiltro == 1 ? rs.getString("numeroprocessosei") : rs.getString("blocoassinatura"));
-			if (retorno.get(chave) == null) retorno.put(chave, new ArrayList<Despacho>());
-			retorno.get(chave).add(new Despacho(rs.getInt("despachoid"),
-									 rs.getString("datadespacho"),
-									 despachoServico.obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
-									 rs.getString("numeroprocesso"),
-									 rs.getString("autor"),
-									 rs.getString("comarca"),
-									 despachoServico.obterTipoImovel(rs.getInt("tipoimovelid"), null).iterator().next(),
-									 rs.getString("endereco"),
-									 rs.getString("municipio"),
-									 rs.getString("coordenada"),
-									 rs.getString("area"),
-									 despachoServico.obterTipoDespacho(rs.getInt("tipodespachoid"), null).iterator().next(),
-									 despachoServico.obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
-									 despachoServico.obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
-									 rs.getString("observacao"),
-									 rs.getString("numerodocumentosei"),
-									 rs.getString("datahoradespacho"),
-									 rs.getString("numeroprocessosei"),
-									 rs.getBoolean("arquivosanexados"),
-									 rs.getBoolean("despachoimpresso"),
-									 rs.getString("datahoraimpressao"),
-									 rs.getString("blocoassinatura"),
-									 rs.getBoolean("despachonoblocoassinatura")
-									 ));
+			respostaImpressa = false;
+		} else {
+			respostaImpressa = true;
+			respostaNoBlocoAssinatura = true;
 		}
 		
+		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, false, true, respostaImpressa, respostaNoBlocoAssinatura, assinante, true);
+
+		for (SolicitacaoResposta resposta : respostas) {
+			String chave = (tipoFiltro == 1 ? resposta.getNumeroProcessoSEI() : resposta.getBlocoAssinatura());
+			if (retorno.get(chave) == null) retorno.put(chave, new ArrayList<SolicitacaoResposta>());
+			retorno.get(chave).add(resposta);
+		}
+
 		return retorno;
 	}
 }

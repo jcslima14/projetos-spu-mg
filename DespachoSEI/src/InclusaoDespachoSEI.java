@@ -556,7 +556,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar() throws Exception {
 		Map<String, List<SolicitacaoResposta>> retorno = new TreeMap<String, List<SolicitacaoResposta>>();
 
-		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, true);
+		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, true, false, null, null, null, null);
 		
 		for (SolicitacaoResposta resposta : respostas) {
 			String unidadeAberturaProcesso = resposta.getTipoResposta().getUnidadeAberturaProcesso();

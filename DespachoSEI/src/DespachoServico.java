@@ -97,11 +97,15 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, boolean somenteDocumentosNaoGerados) throws Exception {
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, boolean somenteDocumentosNaoGerados, boolean somenteDocumentosGerados,
+			Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select sr.* from solicitacaoresposta sr inner join solicitacao s using (solicitacaoid) where 1 = 1");
+		sql.append("select sr.* from solicitacaoresposta sr ");
+		sql.append(" inner join solicitacao s using (solicitacaoid) ");
+		sql.append("  left join tiporesposta tr using (tiporespostaid) ");
+		sql.append(" where 1 = 1");
 		if (solicitacaoRespostaId != null) {
 			sql.append(" and sr.solicitacaorespostaid = " + solicitacaoRespostaId);
 		} else {
@@ -116,6 +120,21 @@ public class DespachoServico {
 			}
 			if (somenteDocumentosNaoGerados) {
 				sql.append(" and coalesce(sr.numerodocumentosei, '' ) = '' ");
+			}
+			if (somenteDocumentosGerados) {
+				sql.append(" and coalesce(sr.numerodocumentosei, '' ) <> '' ");
+			}
+			if (respostaImpressa != null) {
+				sql.append(" and sr.respostaimpressa = " + (respostaImpressa ? "true" : "false"));
+			}
+			if (respostaNoBlocoAssinatura != null) {
+				sql.append(" and sr.respostanoblocoassinatura = " + (respostaNoBlocoAssinatura ? "true" : "false"));
+			}
+			if (assinante != null && assinante.getAssinanteId() != null) {
+				sql.append(" and sr.assinanteid = " + assinante.getAssinanteId());
+			}
+			if (tipoRespostaImprimirResposta != null) {
+				sql.append(" and tr.imprimirresposta = " + (tipoRespostaImprimirResposta ? "true" : "false"));
 			}
 		}
 
