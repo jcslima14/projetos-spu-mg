@@ -121,6 +121,9 @@ public class DespachoServico {
 		if (arquivosProcessados != null) {
 			sql.append(" and arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
 		}
+		if (dataHoraMovimentacao != null) {
+			sql.append(" and datahoramovimentacao = '" + dataHoraMovimentacao + "' ");
+		}
 		if (somenteMunicipiosPreenchidos) {
 			sql.append(" and municipioid is not null");
 		}
