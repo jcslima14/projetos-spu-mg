@@ -240,14 +240,14 @@ public class RecepcaoProcesso extends JInternalFrame {
         apagaPastaDeDownloads(pastaDeDownload);
 
         while (true) {
-        	delayInSeconds(1);
+    		TimeUnit.SECONDS.sleep(1);
 
 	        WebElement infCarregando = null;
 	        do {
 		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 
-	        delayInSeconds(2);
+    		TimeUnit.SECONDS.sleep(2);
 
 	        // obtem a lista de processos a ser lida
 	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//table[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
@@ -309,7 +309,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		    		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 		    	        } while (infCarregando != null && infCarregando.isDisplayed());
 
-		    	        delayInSeconds(1);
+		        		TimeUnit.SECONDS.sleep(1);
 
 			        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr"));
 			        	for (WebElement regDocumento : regDocumentos) {
@@ -433,8 +433,9 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
 		String sql = "";
-		sql += "insert into solicitacao (origemid, numeroprocesso, autor) ";
+		sql += "insert into solicitacao (origemid, tipoprocessoid, numeroprocesso, autor) ";
 		sql += "select " + Origem.SAPIENS.getOrigemId();
+		sql += "	 , " + despachoServico.obterTipoProcesso(null, "Eletrônico").iterator().next().getTipoProcessoId();
 		sql += "	 , '" + numeroProcesso + "'";
 		sql += "	 , '" + autor + "'";
 		sql += " where not exists (select 1 from solicitacao where origem = " + Origem.SAPIENS + " and numeroprocesso = '" + numeroProcesso + "')";
@@ -471,10 +472,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 				arquivo.delete();
 			}
 		}
-	}
-
-	private void delayInSeconds(int tempo) throws Exception {
-		TimeUnit.SECONDS.sleep(tempo);
 	}
 
 	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora) throws Exception {

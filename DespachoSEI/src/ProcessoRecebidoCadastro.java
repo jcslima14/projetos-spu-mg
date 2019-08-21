@@ -233,12 +233,12 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 	public void salvarRegistro() throws Exception {
 		List<Municipio> municipios = despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null);
-		Municipio municipio = (municipios != null && !municipios.isEmpty() ? municipios.iterator().next() : new Municipio(0));
+		Municipio municipio = (municipios != null && !municipios.isEmpty() ? municipios.iterator().next() : null);
 
 		entidadeEditada.getSolicitacao().setMunicipio(municipio);
 		entidadeEditada.setArquivosProcessados(chkArquivosProcessados.isSelected());
 
-		salvarRegistro(entidadeEditada);
+		salvarRegistro(entidadeEditada, true);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
@@ -415,24 +415,32 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		}
 
 		envio.setResultadoProcessamento(msgRetorno);
-		salvarRegistro(envio);
+		salvarRegistro(envio, false);
 	}
 
-	private void salvarRegistro(SolicitacaoEnvio entidade) throws Exception {
+	private void salvarRegistro(SolicitacaoEnvio entidade, boolean atualizarSolicitacao) throws Exception {
 		String sql = "";
 
-		sql += "update solicitacao "
-			+  "   set municipioid = " + (entidade.getSolicitacao().getMunicipio().getMunicipioId().equals(0) ? "null" : entidade.getSolicitacao().getMunicipio().getMunicipioId())
-			+  " where solicitacaoid = " + entidade.getSolicitacao().getSolicitacaoId();
-
-		MyUtils.execute(conexao, sql);
+		if (atualizarSolicitacao) {
+			sql += "update solicitacao "
+				+  "   set municipioid = " + (entidade.getSolicitacao().getMunicipio() == null ? "null" : entidade.getSolicitacao().getMunicipio().getMunicipioId());
+	
+			// se a origem for Sapiens, define o destinatário de acordo com a tabela de municípios
+			if (entidade.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SAPIENS_ID)) {
+				sql += " , destinoid = " + (entidade.getSolicitacao().getMunicipio() == null ? "null" : entidade.getSolicitacao().getMunicipio().getDestino().getDestinoId());
+			}
+	
+			sql += " where solicitacaoid = " + entidade.getSolicitacao().getSolicitacaoId();
+	
+			MyUtils.execute(conexao, sql);
+		}
 
 		sql = "";
 		sql += "update solicitacaoenvio ";
 		sql += "   set arquivosprocessados = " + (entidade.getArquivosProcessados() ? "true" : "false");
 		sql += "     , resultadoprocessamento = " + (entidade.getResultadoProcessamento() == null || entidade.getResultadoProcessamento().trim().equals("") ? "null" : "'" + entidade.getResultadoProcessamento() + "'");
 		sql += " where solicitacaoenvioid = " + entidade.getSolictacaoEnvioId();
-		
+
 		MyUtils.execute(conexao, sql);
 	}
 }

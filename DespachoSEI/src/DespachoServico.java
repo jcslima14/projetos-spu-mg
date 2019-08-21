@@ -97,7 +97,7 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso) throws Exception {
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, boolean somenteDocumentosNaoGerados) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -112,7 +112,10 @@ public class DespachoServico {
 				sql.append(" and s.origemid = " + origem.getOrigemId());
 			}
 			if (numeroProcesso != null) {
-				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "'");
+				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "' ");
+			}
+			if (somenteDocumentosNaoGerados) {
+				sql.append(" and coalesce(sr.numerodocumentosei, '' ) = '' ");
 			}
 		}
 
@@ -232,27 +235,27 @@ public class DespachoServico {
 		}
 	}
 
-	public List<AssinanteTipoDespacho> obterAssinanteTipoDespacho(Integer assinanteTipoDespachoId, Integer assinanteId, Integer tipoDespachoId) throws Exception {
-		List<AssinanteTipoDespacho> retorno = new ArrayList<AssinanteTipoDespacho>();
+	public List<AssinanteTipoResposta> obterAssinanteTipoResposta(Integer assinanteTipoRespostaId, Integer assinanteId, Integer tipoRespostaId) throws Exception {
+		List<AssinanteTipoResposta> retorno = new ArrayList<AssinanteTipoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from assinantetipodespacho where 1 = 1");
-		if (assinanteTipoDespachoId != null) {
-			sql.append(" and assinantetipodespachoid = " + assinanteTipoDespachoId);
+		sql.append("select * from assinantetiporesposta where 1 = 1");
+		if (assinanteTipoRespostaId != null) {
+			sql.append(" and assinantetiporespostaid = " + assinanteTipoRespostaId);
 		}
 		if (assinanteId != null) {
 			sql.append(" and assinanteid = " + assinanteId);
 		}
-		if (tipoDespachoId != null) {
-			sql.append(" and tipodespachoid = " + tipoDespachoId);
+		if (tipoRespostaId != null) {
+			sql.append(" and tiporespostaid = " + tipoRespostaId);
 		}
 
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
 			Assinante assinante = obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next();
-			TipoDespacho tipoDespacho = obterTipoDespacho(rs.getInt("tipodespachoid"), null).iterator().next();
-			retorno.add(new AssinanteTipoDespacho(rs.getInt("assinantetipodespachoid"), assinante, tipoDespacho, rs.getString("blocoassinatura")));
+			TipoResposta tipoResposta = obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next();
+			retorno.add(new AssinanteTipoResposta(rs.getInt("assinantetiporespostaid"), assinante, tipoResposta, rs.getString("blocoassinatura")));
 		}
 
 		return retorno;
@@ -445,7 +448,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getString("abreviacao")));
+			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getString("abreviacao"), rs.getBoolean("usarcartorio")));
 		}
 		
 		return retorno;
@@ -496,7 +499,7 @@ public class DespachoServico {
 		}
 		MyUtils.execute(conexao, sql);
 	}
-	
+
 	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoResposta>();
@@ -504,6 +507,16 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbTipoResposta, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Resposta: \n\n" + e.getMessage());
+		}
+	}
+
+	public void preencherOpcoesAssinante(MyComboBox cbbAssinante, List<Assinante> opcoesIniciais, Boolean superior, Boolean ativo) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Assinante>();
+			opcoesIniciais.addAll(obterAssinante(null, null, superior, ativo));
+			MyUtils.insereOpcoesComboBox(cbbAssinante, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Assinante: \n\n" + e.getMessage());
 		}
 	}
 

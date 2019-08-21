@@ -8,16 +8,19 @@ public class Destino implements ItemComboBox {
 	String descricao;
 
 	String abreviacao;
+
+	Boolean usarCartorio;
 	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;
 	}
 	
-	public Destino(Integer destinoId, String artigo, String descricao, String abreviacao) {
+	public Destino(Integer destinoId, String artigo, String descricao, String abreviacao, Boolean usarCartorio) {
 		this.destinoId = destinoId;
 		this.artigo = artigo;
 		this.descricao = descricao;
 		this.abreviacao = abreviacao;
+		this.usarCartorio = usarCartorio;
 	}
 	
 	public Integer getDestinoId() {
@@ -65,5 +68,13 @@ public class Destino implements ItemComboBox {
 	@Override
 	public String getItemLabel() {
 		return getDescricao();
+	}
+
+	public Boolean getUsarCartorio() {
+		return usarCartorio;
+	}
+
+	public void setUsarCartorio(Boolean usarCartorio) {
+		this.usarCartorio = usarCartorio;
 	}
 }

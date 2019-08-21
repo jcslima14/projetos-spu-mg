@@ -6,7 +6,6 @@ import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,9 +100,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								gerarDespachoSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), lblPastaProcessosIndividuais.getText());
+								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), lblPastaProcessosIndividuais.getText());
 							} catch (Exception e) {
-								MyUtils.appendLogArea(logArea, "Erro ao gerar os despachos no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 								e.printStackTrace();
 							}
 						}
@@ -152,7 +151,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarDespachoSEI(String usuario, String senha, String pastaProcessosIndividuais) throws Exception {
+	private void gerarRespostaSEI(String usuario, String senha, String pastaProcessosIndividuais) throws Exception {
 		if (pastaProcessosIndividuais == null || pastaProcessosIndividuais.equalsIgnoreCase("")) {
 			throw new Exception("É necessário informar a pasta onde estão os arquivos a serem anexados nos processos que forem abertos individualmente.");
 		}
@@ -196,42 +195,42 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         // selecionar a unidade default
         MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
         
-		Map<String, List<Despacho>> despachosAGerar = obterDespachosACadastrar();
-		for (String unidadeAberturaProcesso : despachosAGerar.keySet()) {
-			List<Despacho> despachosDaUnidade = despachosAGerar.get(unidadeAberturaProcesso);
+		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar();
+		for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
+			List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
 
 			if (!unidadeAberturaProcesso.trim().equals("")) {
 				MyUtils.selecionarUnidade(driver, wait, unidadeAberturaProcesso);
 			}
 
-			for (Despacho despachoAGerar : despachosDaUnidade) {
+			for (SolicitacaoResposta respostaAGerar : respostasDaUnidade) {
 				// processamento....
-				MyUtils.appendLogArea(logArea, "Processo: " + despachoAGerar.getNumeroProcesso());
+				MyUtils.appendLogArea(logArea, "Processo: " + respostaAGerar.getSolicitacao().getNumeroProcesso());
 	
-				if (despachoAGerar.getTipoDespacho().getGerarProcessoIndividual()) {
-					List<File> anexos = obterArquivos(pastaProcessosIndividuais, despachoAGerar.getNumeroProcesso(), null);
-					if (despachoAGerar.getNumeroProcessoSEI() == null || despachoAGerar.getNumeroProcessoSEI().trim().equalsIgnoreCase("")) {
+				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
+					List<File> anexos = obterArquivos(pastaProcessosIndividuais, respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
+					if (respostaAGerar.getSolicitacao().getNumeroProcessoSEI() == null || respostaAGerar.getSolicitacao().getNumeroProcessoSEI().trim().equalsIgnoreCase("")) {
 						if (anexos == null || anexos.size() == 0) {
 							MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
 							continue;
 						}
 	
-						gerarProcessoIndividual(driver, wait, despachoAGerar, pastaProcessosIndividuais);
+						gerarProcessoIndividual(driver, wait, respostaAGerar, pastaProcessosIndividuais);
 					}
 	
-					if (!despachoAGerar.getArquivosAnexados()) {
-						anexarArquivosProcesso(despachoAGerar, anexos, driver, wait);
+					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
+						anexarArquivosProcesso(respostaAGerar, anexos, driver, wait);
 					}
 
-					despachoAGerar.setBlocoAssinatura(obterBlocoAssinatura(despachoAGerar.getAssinante(), despachoAGerar.getTipoDespacho()));
+					respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
 				} else {
-					despachoAGerar.setNumeroProcessoSEI(despachoAGerar.getAssinante().getNumeroProcesso());
-					despachoAGerar.setBlocoAssinatura(despachoAGerar.getAssinante().getBlocoAssinatura());
+					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcesso());
+					respostaAGerar.setBlocoAssinatura(respostaAGerar.getAssinante().getBlocoAssinatura());
 				}
 	
-				// pesquisa o processo onde deverá ser incluído o despacho
+				// pesquisa o processo onde deverá ser incluído a resposta
 				WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtPesquisaRapida']"));
-				txtPesquisaRapida.sendKeys(despachoAGerar.getNumeroProcessoSEI());
+				txtPesquisaRapida.sendKeys(respostaAGerar.getNumeroProcessoSEI());
 				txtPesquisaRapida.sendKeys(Keys.RETURN);
 				
 				// clica em inserir documento
@@ -239,9 +238,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
 				btnIncluirDocumento.click();
 				
-				// clica em despacho
-				WebElement btnOpcaoDespacho = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = 'Despacho']"));
-				btnOpcaoDespacho.click();
+				// clica no tipo de documento
+				WebElement btnOpcaoTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + respostaAGerar.getTipoResposta().getTipoDocumento() + "']"));
+				btnOpcaoTipoDocumento.click();
 	
 				// clica em documento modelo
 				WebElement lblDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//label[contains(text(), 'Documento Modelo')]"));
@@ -249,9 +248,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	
 				// preenche o código do documento modelo
 				WebElement txtCodigoDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtProtocoloDocumentoTextoBase']"));
-				txtCodigoDocumentoModelo.sendKeys(despachoAGerar.getTipoDespacho().getNumeroDocumentoSEI());
+				txtCodigoDocumentoModelo.sendKeys(respostaAGerar.getTipoResposta().getNumeroDocumentoModelo());
 	
-				// seleciona nivel de acesso do despacho
+				// seleciona nivel de acesso do documento
 				WebElement lblNivelAcessoPublico = MyUtils.encontrarElemento(wait, By.xpath("//label[@id = 'lblPublico']"));
 				lblNivelAcessoPublico.click();
 				
@@ -264,10 +263,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					driver.switchTo().window(tituloJanela);
 				}
 	
-				despachoAGerar.setNumeroDocumentoSEI(driver.getTitle().split(" - ")[1]);
-				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + despachoAGerar.getNumeroDocumentoSEI());
+				respostaAGerar.setNumeroDocumentoSEI(driver.getTitle().split(" - ")[1]);
+				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + respostaAGerar.getNumeroDocumentoSEI());
 	
-				// encontrar o iframe que contem o corpo do despacho a ser editado
+				// encontrar o iframe que contem o corpo do documento a ser editado
 				driver.switchTo().defaultContent();
 				List<WebElement> frmIFrames = null;
 				int espera = 15;
@@ -309,7 +308,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				TimeUnit.SECONDS.sleep(1);
 				tabSubstituir.click();
 	
-				Map<String, String> mapaSubstituicoes = obterMapaSubstituicoes(despachoAGerar, superior);
+				Map<String, String> mapaSubstituicoes = obterMapaSubstituicoes(respostaAGerar, superior);
 				
 				// repetir este pedaço para todos os textos a serem substituídos no documento
 				for (String chave : mapaSubstituicoes.keySet()) {
@@ -354,7 +353,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				// seleciona o bloco interno desejado
 				Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
-				cbxBlocoAssinatura.selectByValue(despachoAGerar.getBlocoAssinatura());
+				cbxBlocoAssinatura.selectByValue(respostaAGerar.getBlocoAssinatura());
 				
 				// clica em incluir
 				WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
@@ -362,10 +361,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				driver.switchTo().defaultContent();
 				
-				// atualiza o número do despacho gerado no SEI
-				atualizarDespachoGerado(despachoAGerar);
-			} // fim do loop de despachos a gerar por unidade
-		} // fim do loop de todos os despachos a gerar
+				// atualiza o número do documento gerado no SEI
+				atualizarDocumentoGerado(respostaAGerar, superior);
+			} // fim do loop de respostas a gerar por unidade
+		} // fim do loop de todas as respostas a gerar
 
 		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
 
@@ -373,8 +372,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         driver.quit();
 	}
 
-	private String obterBlocoAssinatura(Assinante assinante, TipoDespacho tipoDespacho) throws Exception {
-		List<AssinanteTipoDespacho> confs = despachoServico.obterAssinanteTipoDespacho(null, assinante.getAssinanteId(), tipoDespacho.getTipoDespachoId());
+	private String obterBlocoAssinatura(Assinante assinante, TipoResposta tipoResposta) throws Exception {
+		List<AssinanteTipoResposta> confs = despachoServico.obterAssinanteTipoResposta(null, assinante.getAssinanteId(), tipoResposta.getTipoRespostaId());
 		if (confs != null && confs.size() > 0) {
 			return confs.iterator().next().getBlocoAssinatura();
 		} else {
@@ -382,7 +381,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		}
 	}
 
-	private void gerarProcessoIndividual(WebDriver driver, Wait<WebDriver> wait, Despacho despacho, String pastaArquivosProcessosIndividuais) throws Exception {
+	private void gerarProcessoIndividual(WebDriver driver, Wait<WebDriver> wait, SolicitacaoResposta resposta, String pastaArquivosProcessosIndividuais) throws Exception {
 		String numeroProcesso = null;
 
 		MyUtils.appendLogArea(logArea, "Gerando processo individual...");
@@ -403,14 +402,11 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			lnkExibirTodosTipos.click();
 		}
 
-		WebElement lnkTipoProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + despacho.getTipoDespacho().getTipoProcesso() + "']"));
+		WebElement lnkTipoProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + resposta.getTipoResposta().getTipoProcesso() + "']"));
 		lnkTipoProcesso.click();
 
 		WebElement txtDescricaoProcesso = MyUtils.encontrarElemento(wait, By.id("txtDescricao"));
-		txtDescricaoProcesso.sendKeys(despacho.getNumeroProcesso());
-
-//		WebElement txtInteressado = MyUtils.encontrarElemento(wait, By.id("txtInteressadoProcedimento"));
-//		txtInteressado.sendKeys(despacho.getAutor());
+		txtDescricaoProcesso.sendKeys(resposta.getSolicitacao().getNumeroProcesso());
 
 		WebElement optNivelAcessoProcesso = MyUtils.encontrarElemento(wait, By.id("optPublico"));
 		optNivelAcessoProcesso.click();
@@ -427,18 +423,18 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		numeroProcesso = txtNumeroProcesso.getText();
 		MyUtils.appendLogArea(logArea, "Gerado o processo individual nº " + numeroProcesso);
 
-		despacho.setNumeroProcessoSEI(numeroProcesso);
-		atualizarProcessoGerado(despacho);
+		resposta.getSolicitacao().setNumeroProcessoSEI(numeroProcesso);
+		atualizarProcessoGerado(resposta);
 		
 		driver.switchTo().defaultContent();
 	}
 	
-	public void anexarArquivosProcesso(Despacho despacho, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
+	public void anexarArquivosProcesso(SolicitacaoResposta resposta, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
 		for (File anexo : anexos) {
 			driver.switchTo().defaultContent();
 
 			WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.id("txtPesquisaRapida"));
-			txtPesquisaRapida.sendKeys(despacho.getNumeroProcessoSEI());
+			txtPesquisaRapida.sendKeys(resposta.getSolicitacao().getNumeroProcessoSEI());
 			txtPesquisaRapida.sendKeys(Keys.RETURN);
 
 			MyUtils.appendLogArea(logArea, "Anexando o arquivo " + anexo.getName());
@@ -490,110 +486,83 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		
 		driver.switchTo().defaultContent();
 		
-		despacho.setArquivosAnexados(true);
-		atualizarArquivosAnexados(despacho);
+		resposta.getSolicitacao().setArquivosAnexados(true);
+		atualizarArquivosAnexados(resposta);
 	}
 
-	private Map<String, String> obterMapaSubstituicoes(Despacho despacho, Assinante superior) {
+	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {
 		Map<String, String> retorno = new LinkedHashMap<String, String>();
-		retorno.put("<numero_processo>", despacho.getNumeroProcesso());
-		retorno.put("<autor>", despacho.getAutor());
-		retorno.put("<comarca>", despacho.getComarca().toUpperCase());
-		String destino = despacho.getDestino().getUsarComarca() ? despacho.getComarca() : despacho.getDestino().getDescricao();
-		retorno.put("<destino_inicial>", despacho.getDestino().getArtigo() + " " + destino);
-		if (despacho.getTipoImovel().getDescricao().equalsIgnoreCase("rural") && !despacho.getEndereco().equalsIgnoreCase("")) {
-			retorno.put("<tipo_imovel>", despacho.getEndereco());
+		retorno.put("<numero_processo>", resposta.getSolicitacao().getNumeroProcesso());
+		retorno.put("<autor>", resposta.getSolicitacao().getAutor());
+		retorno.put("<comarca>", resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase());
+		retorno.put("<cartorio>", resposta.getSolicitacao().getCartorio());
+		String destino = resposta.getSolicitacao().getDestino().getUsarCartorio() ? resposta.getSolicitacao().getCartorio() : resposta.getSolicitacao().getDestino().getDescricao();
+		retorno.put("<destino_inicial>", resposta.getSolicitacao().getDestino().getArtigo() + " " + destino);
+		if (resposta.getSolicitacao().getTipoImovel().getDescricao().equalsIgnoreCase("rural") && !resposta.getSolicitacao().getEndereco().equalsIgnoreCase("")) {
+			retorno.put("<tipo_imovel>", resposta.getSolicitacao().getEndereco());
 			retorno.put("<endereco>", "");
 		} else {
-			retorno.put("<tipo_imovel>", despacho.getTipoImovel().getDescricao().toLowerCase());
-			retorno.put("<endereco>", despacho.getEndereco() == null || despacho.getEndereco().trim().equals("") ? "" : "localizado na " + despacho.getEndereco() + ", ");
+			retorno.put("<tipo_imovel>", resposta.getSolicitacao().getTipoImovel().getDescricao().toLowerCase());
+			retorno.put("<endereco>", resposta.getSolicitacao().getEndereco() == null || resposta.getSolicitacao().getEndereco().trim().equals("") ? "" : "localizado na " + resposta.getSolicitacao().getEndereco() + ", ");
 		}
-		retorno.put("<municipio>", despacho.getMunicipio());
-		retorno.put("<area>", despacho.getArea() == null || despacho.getArea().trim().equals("") ? "" : "com área de " + despacho.getArea() + ", ");
-		retorno.put("<coordenada>", despacho.getCoordenada() == null || despacho.getCoordenada().trim().equals("") ? "" : "cuja poligonal possui um dos vértices com coordenada " + despacho.getCoordenada() + ", ");
-		retorno.put("<destino_final>", despacho.getDestino().getArtigo().toLowerCase() + " " + (destino.startsWith("Procuradoria") ? "Procuradoria" : destino));
-		retorno.put("<assinante>", despacho.getAssinante().getNome());
-		retorno.put("<assinante_cargo>", despacho.getAssinante().getCargo());
-		retorno.put("<assinante_setor>", despacho.getAssinante().getSetor());
+		retorno.put("<municipio>", resposta.getSolicitacao().getMunicipio().getNome());
+		retorno.put("<area>", resposta.getSolicitacao().getArea() == null || resposta.getSolicitacao().getArea().trim().equals("") ? "" : "com área de " + resposta.getSolicitacao().getArea() + ", ");
+		retorno.put("<coordenada>", resposta.getSolicitacao().getCoordenada() == null || resposta.getSolicitacao().getCoordenada().trim().equals("") ? "" : "cuja poligonal possui um dos vértices com coordenada " + resposta.getSolicitacao().getCoordenada() + ", ");
+		retorno.put("<destino_final>", resposta.getSolicitacao().getDestino().getArtigo().toLowerCase() + " " + (destino.startsWith("Procuradoria") ? "Procuradoria" : destino));
+		retorno.put("<assinante>", resposta.getAssinante().getNome());
+		retorno.put("<assinante_cargo>", resposta.getAssinante().getCargo());
+		retorno.put("<assinante_setor>", resposta.getAssinante().getSetor());
 		retorno.put("<assinante_superior>", superior.getNome());
 		retorno.put("<assinante_superior_cargo>", superior.getCargo());
 		retorno.put("<assinante_superior_setor>", superior.getSetor());
-		retorno.put("<observacao>", despacho.getObservacao() == null || despacho.getObservacao().trim().equals("") ? "" : despacho.getObservacao());
+		retorno.put("<observacao>", resposta.getObservacao() == null || resposta.getObservacao().trim().equals("") ? "" : resposta.getObservacao());
 		return retorno;
 	}
 
-	private void atualizarProcessoGerado(Despacho despacho) throws Exception {
+	private void atualizarProcessoGerado(SolicitacaoResposta resposta) throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("update despacho "
-				 + "   set numeroprocessosei = '" + despacho.getNumeroProcessoSEI() + "' "
+		sql.append("update solicitacao "
+				 + "   set numeroprocessosei = '" + resposta.getSolicitacao().getNumeroProcessoSEI() + "' "
 				 + "	 , arquivosanexados = false "
-				 + " where despachoid = " + despacho.getDespachoId());
+				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
 
 		MyUtils.execute(conexao, sql.toString());
 	}
 
-	private void atualizarArquivosAnexados(Despacho despacho) throws Exception {
+	private void atualizarArquivosAnexados(SolicitacaoResposta resposta) throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("update despacho "
+		sql.append("update solicitacao "
 				 + "   set arquivosanexados = true "
-				 + " where despachoid = " + despacho.getDespachoId());
+				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
 
 		MyUtils.execute(conexao, sql.toString());
 	}
 
-	private void atualizarDespachoGerado(Despacho despacho) throws Exception {
+	private void atualizarDocumentoGerado(SolicitacaoResposta resposta, Assinante superior) throws Exception {
 		StringBuilder sql = new StringBuilder("");
-		sql.append("update despacho"
-				 + "   set numerodocumentosei = '" + despacho.getNumeroDocumentoSEI() + "'"
-				 + "	 , datahoradespacho = datetime('now', 'localtime') "
-				 + "	 , numeroprocessosei = '" + despacho.getNumeroProcessoSEI() + "' "
-				 + "	 , despachoimpresso = false "
-				 + "	 , blocoassinatura = '" + despacho.getBlocoAssinatura() + "' "
-				 + "	 , despachonoblocoassinatura = true "
-				 + " where despachoid = " + despacho.getDespachoId());
+		sql.append("update solicitacaoresposta "
+				 + "   set numerodocumentosei = '" + resposta.getNumeroDocumentoSEI() + "'"
+				 + "	 , datahoraresposta = datetime('now', 'localtime') "
+				 + "	 , numeroprocessosei = '" + resposta.getNumeroProcessoSEI() + "' "
+				 + "	 , respostaimpressa = false "
+				 + "	 , blocoassinatura = '" + resposta.getBlocoAssinatura() + "' "
+				 + "	 , respostanoblocoassinatura = true "
+				 + "     , assinanteidsuperior = " + superior.getAssinanteId()
+				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 
 		MyUtils.execute(conexao, sql.toString());
 	}
 
-	private Map<String, List<Despacho>> obterDespachosACadastrar() throws Exception {
-		Map<String, List<Despacho>> retorno = new TreeMap<String, List<Despacho>>();
+	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar() throws Exception {
+		Map<String, List<SolicitacaoResposta>> retorno = new TreeMap<String, List<SolicitacaoResposta>>();
 
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select d.*, coalesce(td.unidadeaberturaprocesso, '') as unidadeaberturaprocesso "
-				 + "  from despacho d "
-				 + " inner join tipodespacho td using (tipodespachoid) "
-				 + " where d.tipodespachoid is not null "
-				 + "   and coalesce(d.numerodocumentosei, '') = '' ");
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			String unidadeAberturaProcesso = rs.getString("unidadeaberturaprocesso");
-			if (retorno.get(unidadeAberturaProcesso) == null) retorno.put(unidadeAberturaProcesso, new ArrayList<Despacho>());
-			retorno.get(unidadeAberturaProcesso).add(new Despacho(rs.getInt("despachoid"),
-																 rs.getString("datadespacho"),
-																 despachoServico.obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
-																 rs.getString("numeroprocesso"),
-																 rs.getString("autor"),
-																 rs.getString("comarca"),
-																 despachoServico.obterTipoImovel(rs.getInt("tipoimovelid"), null).iterator().next(),
-																 rs.getString("endereco"),
-																 rs.getString("municipio"),
-																 rs.getString("coordenada"),
-																 rs.getString("area"),
-																 despachoServico.obterTipoDespacho(rs.getInt("tipodespachoid"), null).iterator().next(),
-																 despachoServico.obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
-																 despachoServico.obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
-																 rs.getString("observacao"),
-																 rs.getString("numerodocumentosei"),
-																 rs.getString("datahoradespacho"),
-																 rs.getString("numeroprocessosei"),
-																 rs.getBoolean("arquivosanexados"),
-																 rs.getBoolean("despachoimpresso"),
-																 rs.getString("datahoraimpressao"),
-																 rs.getString("blocoassinatura"),
-																 rs.getBoolean("despachonoblocoassinatura")
-																 ));
+		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, true);
+		
+		for (SolicitacaoResposta resposta : respostas) {
+			String unidadeAberturaProcesso = resposta.getTipoResposta().getUnidadeAberturaProcesso();
+			if (unidadeAberturaProcesso == null) unidadeAberturaProcesso = "";
+			if (retorno.get(unidadeAberturaProcesso) == null) retorno.put(unidadeAberturaProcesso, new ArrayList<SolicitacaoResposta>());
+			retorno.get(unidadeAberturaProcesso).add(resposta);
 		}
 		
 		return retorno;

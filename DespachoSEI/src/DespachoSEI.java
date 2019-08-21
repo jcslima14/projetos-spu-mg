@@ -302,7 +302,7 @@ public class DespachoSEI extends JFrame {
 						 "  municipioid integer," +
 						 "  destinoid integer," + 
 						 "  cartorio varchar," + 
-						 "  tipoimovelid integer NOT NULL," + 
+						 "  tipoimovelid integer," + 
 						 "  endereco varchar," + 
 						 "  coordenada varchar," + 
 						 "  area varchar," + 
@@ -319,7 +319,7 @@ public class DespachoSEI extends JFrame {
 			String sql = "CREATE TABLE solicitacaoresposta " + 
 						 "(" +
 						 "  solicitacaorespostaid integer primary key autoincrement not null," +
-						 "  solicitacaoid integer primary key autoincrement not null," +
+						 "  solicitacaoid integer not null," +
 						 "  tiporespostaid integer," + 
 						 "  observacao varchar," + 
 						 "  assinanteid integer," + 
@@ -413,7 +413,7 @@ public class DespachoSEI extends JFrame {
 			String sql = "CREATE TABLE solicitacaotramite " + 
 						 "(" +
 						 "  solicitacaotramiteid integer primary key autoincrement not null," +
-						 "  solicitacaoid integer primary key autoincrement not null," +
+						 "  solicitacaoid integer not null," +
 						 "  datahoramovimentacao integer NOT NULL," +
 						 "  resultadodownload varchar," + 
 						 "  arquivosprocessados boolean," +

@@ -10,6 +10,7 @@ import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -28,7 +29,8 @@ public class DestinoCadastro extends CadastroTemplate {
 	private MyLabel lblArtigo = new MyLabel("Artigo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
+	private MyCheckBox chkUsarCartorio = new MyCheckBox("Usar cartório como nome do destinatário") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(5, 2));
 	private List<MyTableColumn> colunas;
 
 	public DestinoCadastro(String tituloJanela, Connection conexao) {
@@ -43,6 +45,8 @@ public class DestinoCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtArtigo);
 		pnlCamposEditaveis.add(lblDescricao);
 		pnlCamposEditaveis.add(txtDescricao);
+		pnlCamposEditaveis.add(chkUsarCartorio);
+		pnlCamposEditaveis.add(new JPanel());
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -53,6 +57,7 @@ public class DestinoCadastro extends CadastroTemplate {
 		txtAbreviacao.setText("");
 		txtArtigo.setText("");
 		txtDescricao.setText("");
+		chkUsarCartorio.setSelected(false);
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -62,9 +67,10 @@ public class DestinoCadastro extends CadastroTemplate {
 				+  "   set abreviacao = '" + txtAbreviacao.getText() + "' "
 				+  "     , artigo = '" + txtArtigo.getText() + "' "
 				+  "	 , descricao = '" + txtDescricao.getText().trim() + "' "
+				+  "	 , usarcartorio = " + (chkUsarCartorio.isSelected() ? "true" : "false")
 				+  " where destinoid = " + txtDestinoId.getText();
 		} else {
-			sql += "insert into destino (abreviacao, artigo, descricao) values ('" + txtAbreviacao.getText().trim() + "', '" + txtArtigo.getText().trim() + "', '" + txtDescricao.getText().trim() + "')";
+			sql += "insert into destino (abreviacao, artigo, descricao, usarcartorio) values ('" + txtAbreviacao.getText().trim() + "', '" + txtArtigo.getText().trim() + "', '" + txtDescricao.getText().trim() + "', " + (chkUsarCartorio.isSelected() ? "true" : "false") + ")";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -80,10 +86,11 @@ public class DestinoCadastro extends CadastroTemplate {
 		txtAbreviacao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
 		txtArtigo.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
 		txtDescricao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 4).toString());
+		chkUsarCartorio.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 5).toString().equals("Sim") ? true : false);
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select destinoid, abreviacao, artigo, descricao from destino");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select destinoid, abreviacao, artigo, descricao, case when usarcartorio then 'Sim' else 'Não' end as usarcartorio from destino");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -97,6 +104,7 @@ public class DestinoCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Abreviacao", 150, true));
 			colunas.add(new MyTableColumn("Artigo", 30, true));
 			colunas.add(new MyTableColumn("Descrição", 400, true));
+			colunas.add(new MyTableColumn("Usar cartório?", 100, true, JLabel.CENTER));
 		}
 		return this.colunas;
 	}

@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -239,7 +238,7 @@ public class RespostaProcesso extends JInternalFrame {
         driver.switchTo().window(primeiraJanela);
 
         // clica na aba de ofícios
-        WebElement abaOficios = encontrarElemento(wait5, By.xpath("//a[.//span[text() = 'Ofícios']]"));
+        WebElement abaOficios = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[text() = 'Ofícios']]"));
         passarMouse.moveToElement(abaOficios).click().build().perform();
         Thread.sleep(2000);
         abaOficios.click();
@@ -247,11 +246,11 @@ public class RespostaProcesso extends JInternalFrame {
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : obterArquivos(pastaDespachosSalvos)) {
-        	delayInSeconds(1);
+        	TimeUnit.SECONDS.sleep(1);
 
 	        WebElement infCarregando = null;
 	        do {
-		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
+		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 
         	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
@@ -259,37 +258,37 @@ public class RespostaProcesso extends JInternalFrame {
         	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
 
 	        // clica no botão de filtro
-	        WebElement cbcProcessoJudicial = encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]"));
-	        delayInSeconds(1);
+	        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]"));
+        	TimeUnit.SECONDS.sleep(1);
 	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
 	
-	        WebElement btnExpandirMenu = encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]/div"));
-	        delayInSeconds(1);
+	        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]/div"));
+        	TimeUnit.SECONDS.sleep(1);
 	        btnExpandirMenu.click();
 	
-	        WebElement divFiltro = encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
-	        delayInSeconds(1);
+	        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
+        	TimeUnit.SECONDS.sleep(1);
 
 	        infCarregando = null;
 	        do {
-		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
+		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 
 	        passarMouse.moveToElement(divFiltro).click().build().perform();
-	        WebElement iptPesquisar = encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
+	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
 	        Thread.sleep(500);
 	        iptPesquisar.clear();
 	        iptPesquisar.sendKeys(numeroProcesso);
 	
-	        delayInSeconds(2);
+        	TimeUnit.SECONDS.sleep(2);
 
 	        infCarregando = null;
 	        do {
-		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
+		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 		        
 	        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
-	        List<WebElement> linhasRetornadas = encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
 
 			if (linhasRetornadas.size() == 1) {
 				WebElement divLinhaResultado = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
@@ -304,38 +303,38 @@ public class RespostaProcesso extends JInternalFrame {
 				continue;
 			}
 	
-			delayInSeconds(1);
+        	TimeUnit.SECONDS.sleep(1);
 			
 			// clicar no botão responder
-			WebElement divResponder = encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
+			WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
 			passarMouse.moveToElement(divResponder).click().build().perform();
 
-			delayInSeconds(1);
+        	TimeUnit.SECONDS.sleep(1);
 
 			// clicar no botão de upload de arquivos
-			WebElement btnUploadArquivo = encontrarElemento(wait5, By.id("button_browse-button"));
+			WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
 			passarMouse.moveToElement(btnUploadArquivo).perform();
 	
-			WebElement inpUploadArquivo = encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
+			WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
 			inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
 			
-			WebElement btnConfirmarUpload = encontrarElemento(wait5, By.id("button_upload"));
+			WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
 			passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
 
 			WebElement infUploadCompleto = null;
 			
 			do {
-				infUploadCompleto = encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
+				infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
 			} while (infUploadCompleto == null);
 
-			delayInSeconds(1);
+        	TimeUnit.SECONDS.sleep(1);
 
-			WebElement btnFechar = encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
+			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
 			passarMouse.moveToElement(btnFechar).click().build().perform();
 
 	        infCarregando = null;
 	        do {
-		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
+		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 			
 			// mover o arquivo
@@ -353,36 +352,6 @@ public class RespostaProcesso extends JInternalFrame {
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		}
-	}
-	
-	private static WebElement encontrarElemento(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, WebElement>() {
-			@Override
-			public WebElement apply(WebDriver t) {
-				WebElement element = t.findElement(by);
-				if (element == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return element;
-			}
-		});
-	}
-
-	private static List<WebElement> encontrarElementos(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, List<WebElement>>() {
-			@Override
-			public List<WebElement> apply(WebDriver t) {
-				List<WebElement> elements = t.findElements(by);
-				if (elements == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return elements;
-			}
-		});
-	}
-
-	private void delayInSeconds(int tempo) throws Exception {
-		TimeUnit.SECONDS.sleep(tempo);
 	}
 
 	private ArrayList<File> obterArquivos(String nomeDiretorio) {
