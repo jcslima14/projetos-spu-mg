@@ -15,7 +15,7 @@ public class DespachoServico {
 		this.conexao = conexao;
 	}
 
-	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, String numeroProcesso) throws Exception {
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso) throws Exception {
 		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -23,8 +23,11 @@ public class DespachoServico {
 		if (solicitacaoId != null) {
 			sql.append(" and solicitacaoid = " + solicitacaoId);
 		} else {
-			if (origem != null) {
+			if (origem != null && origem.getOrigemId() != null) {
 				sql.append(" and origemid = " + origem.getOrigemId());
+			}
+			if (tipoProcesso != null && tipoProcesso.getTipoProcessoId() != null) {
+				sql.append(" and tipoprocessoid = " + tipoProcesso.getTipoProcessoId());
 			}
 			if (numeroProcesso != null) {
 				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
@@ -86,7 +89,7 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoEnvio(rs.getInt("solicitacaoenvioid"), 
-					obterSolicitacao(rs.getInt("solicitacaoid"), null, null).iterator().next(),
+					obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null).iterator().next(),
 					rs.getString("datahoramovimentacao"), 
 					rs.getString("resultadodownload"),
 					rs.getBoolean("arquivosprocessados"),
@@ -142,7 +145,7 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
-					obterSolicitacao(rs.getInt("solicitacaoid"), null, null).iterator().next(),
+					obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null).iterator().next(),
 					obterTipoResposta(rs.getInt("tipoprocessoid"), null).iterator().next(),
 					rs.getString("observacao"), 
 					obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
@@ -319,28 +322,6 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new TipoImovel(rs.getInt("tipoimovelid"), rs.getString("descricao")));
-		}
-		
-		return retorno;
-	}
-
-	public List<TipoDespacho> obterTipoDespacho(Integer tipoDespachoId, String descricao) throws Exception {
-		List<TipoDespacho> retorno = new ArrayList<TipoDespacho>();
-
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from tipodespacho where 1= 1");
-		if (tipoDespachoId != null) {
-			sql.append(" and tipodespachoid = " + tipoDespachoId);
-		} else {
-			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
-			}
-		}
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new TipoDespacho(rs.getInt("tipodespachoid"), rs.getString("descricao"), rs.getString("numerodocumentosei"), rs.getBoolean("gerarprocessoindividual"), rs.getString("unidadeaberturaprocesso"), rs.getString("tipoprocesso"), rs.getBoolean("imprimirresposta")));
 		}
 		
 		return retorno;
@@ -557,5 +538,110 @@ public class DespachoServico {
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Destino: \n\n" + e.getMessage());
 		}
+	}
+
+	public Solicitacao salvarSolicitacao(Solicitacao solicitacao) throws Exception {
+		StringBuilder sql = new StringBuilder("");
+
+		if (solicitacao.getSolicitacaoId() == null || solicitacao.getSolicitacaoId().equals(0)) {
+			sql.append("insert into solicitacao (origemid, tipoprocessoid, numeroprocesso, autor, municipioid, destinoid, cartorio, tipoimovelid, endereco, coordenada, area, numeroprocessosei, arquivosanexados) ");
+			sql.append("select " + solicitacao.getOrigem().getOrigemId());
+			sql.append("	 , " + solicitacao.getTipoProcesso().getTipoProcessoId());
+			sql.append("	 , '" + solicitacao.getNumeroProcesso() + "'");
+			sql.append("	 , '" + solicitacao.getAutor() + "'");
+			sql.append("	 , " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
+			sql.append("	 , " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
+			sql.append("	 , " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio() + "'"));
+			sql.append("	 , " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
+			sql.append("	 , " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco() + "'"));
+			sql.append("	 , " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada() + "'"));
+			sql.append("	 , " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
+			sql.append("	 , " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
+			sql.append("	 , " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
+			sql.append(" where not exists (select 1 from solicitacao where origem = " + solicitacao.getOrigem().getOrigemId() + " and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "')");
+		} else {
+			sql.append("update solicitacao ");
+			sql.append("   set origemid = " + solicitacao.getOrigem().getOrigemId());
+			sql.append("	 , tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
+			sql.append("	 , numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
+			sql.append("	 , autor = '" + solicitacao.getAutor() + "'");
+			sql.append("	 , municipioid = " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
+			sql.append("	 , destinoid = " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
+			sql.append("	 , cartorio = " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio() + "'"));
+			sql.append("	 , tipoimovelid = " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
+			sql.append("	 , endereco = " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco() + "'"));
+			sql.append("	 , coordenada = " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada() + "'"));
+			sql.append("	 , area = " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
+			sql.append("	 , numeroprocessosei = " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
+			sql.append("	 , arquivosanexados = " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
+			sql.append(" where solicitacaoid = " + solicitacao.getSolicitacaoId());
+		}
+
+		MyUtils.execute(conexao, sql.toString());
+		
+		return obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso()).iterator().next();
+	}
+
+	public SolicitacaoEnvio salvarSolicitacaoEnvio(SolicitacaoEnvio solicitacaoEnvio) throws Exception {
+		StringBuilder sql = new StringBuilder("");
+
+		if (solicitacaoEnvio.getSolictacaoEnvioId() == null || solicitacaoEnvio.getSolictacaoEnvioId().equals(0)) {
+			sql.append("insert into solicitacaoenvio (solicitacaoid, datahoramovimentacao, resultadodownload, arquivosprocessados, resultadoprocessamento) ");
+			sql.append("select " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId());
+			sql.append("     , '" + solicitacaoEnvio.getDataHoraMovimentacao() + "'");
+			sql.append("	 , " + (solicitacaoEnvio.getResultadoDownload() == null ? "null" : "'" + solicitacaoEnvio.getResultadoDownload().replace("'", "") + "'"));
+			sql.append("	 , " + (solicitacaoEnvio.getArquivosProcessados() == null ? "null" : (solicitacaoEnvio.getArquivosProcessados() ? "true" : "false")));
+			sql.append("	 , " + (solicitacaoEnvio.getResultadoProcessamento() == null ? "null" : "'" + solicitacaoEnvio.getResultadoProcessamento().replace("'", "") + "'"));
+			sql.append(" where not exists (select 1 from solicitacaoenvio where solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId() + " and datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "')");
+		} else {
+			sql.append("update solicitacaoenvio ");
+			sql.append("   set solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId());
+			sql.append("     , datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "'");
+			sql.append("	 , resultadodownload = " + (solicitacaoEnvio.getResultadoDownload() == null ? "null" : "'" + solicitacaoEnvio.getResultadoDownload().replace("'", "") + "'"));
+			sql.append("	 , arquivosprocessados = " + (solicitacaoEnvio.getArquivosProcessados() == null ? "null" : (solicitacaoEnvio.getArquivosProcessados() ? "true" : "false")));
+			sql.append("	 , resultadoprocessamento = " + (solicitacaoEnvio.getResultadoProcessamento() == null ? "null" : "'" + solicitacaoEnvio.getResultadoProcessamento().replace("'", "") + "'"));
+			sql.append(" where not exists (select 1 from solicitacaoenvio where solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId() + " and datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "')");
+		}
+
+		MyUtils.execute(conexao, sql.toString());
+		
+		return obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, solicitacaoEnvio.getDataHoraMovimentacao(), null, null, false).iterator().next();
+	}
+
+	public void salvarSolicitacaoResposta(SolicitacaoResposta resposta) throws Exception {
+		StringBuilder sql = new StringBuilder("");
+
+		if (resposta.getSolicitacaoRespostaId() == null || resposta.getSolicitacaoRespostaId().equals(0)) {
+			sql.append("insert into solicitacaoresposta (solicitacaoid, tiporespostaid, observacao, assinanteid, assinanteidsuperior, numerodocumentosei, datahoraresposta, numeroprocessosei, respostaimpressa, datahoraimpressao, blocoassinatura, respostanoblocoassinatura) ");
+			sql.append("select " + resposta.getSolicitacao().getSolicitacaoId());
+			sql.append("     , " + resposta.getTipoResposta().getTipoRespostaId());
+			sql.append("	 , " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
+			sql.append("	 , " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
+			sql.append("	 , " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
+			sql.append("	 , " + (resposta.getNumeroDocumentoSEI() == null ? "null" : "'" + resposta.getNumeroDocumentoSEI() + "'"));
+			sql.append("	 , " + (resposta.getDataHoraResposta() == null ? "null" : "'" + resposta.getDataHoraResposta() + "'"));
+			sql.append("	 , " + (resposta.getNumeroProcessoSEI() == null ? "null" : "'" + resposta.getNumeroProcessoSEI() + "'"));
+			sql.append("	 , " + (resposta.getRespostaImpressa() == null ? "null" : (resposta.getRespostaImpressa() ? "true" : "false")));
+			sql.append("	 , " + (resposta.getDataHoraImpressao() == null ? "null" : "'" + resposta.getDataHoraImpressao() + "'"));
+			sql.append("	 , " + (resposta.getBlocoAssinatura() == null ? "null" : "'" + resposta.getBlocoAssinatura() + "'"));
+			sql.append("	 , " + (resposta.getRespostaNoBlocoAssinatura() == null ? "null" : (resposta.getRespostaNoBlocoAssinatura() ? "true" : "false")));
+		} else {
+			sql.append("update solicitacaoresposta ");
+			sql.append("   set solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
+			sql.append("     , tiporespostaid = " + resposta.getTipoResposta().getTipoRespostaId());
+			sql.append("	 , observacao = " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
+			sql.append("	 , assinanteid = " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
+			sql.append("	 , assinanteidsuperior = " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
+			sql.append("	 , numerodocumentosei = " + (resposta.getNumeroDocumentoSEI() == null ? "null" : "'" + resposta.getNumeroDocumentoSEI() + "'"));
+			sql.append("	 , datahoraresposta = " + (resposta.getDataHoraResposta() == null ? "null" : "'" + resposta.getDataHoraResposta() + "'"));
+			sql.append("	 , numeroprocessosei = " + (resposta.getNumeroProcessoSEI() == null ? "null" : "'" + resposta.getNumeroProcessoSEI() + "'"));
+			sql.append("	 , respostaimpressa = " + (resposta.getRespostaImpressa() == null ? "null" : (resposta.getRespostaImpressa() ? "true" : "false")));
+			sql.append("	 , datahoraimpressao = " + (resposta.getDataHoraImpressao() == null ? "null" : "'" + resposta.getDataHoraImpressao() + "'"));
+			sql.append("	 , blocoassinatura = " + (resposta.getBlocoAssinatura() == null ? "null" : "'" + resposta.getBlocoAssinatura() + "'"));
+			sql.append("	 , respostanoblocoassinatura = " + (resposta.getRespostaNoBlocoAssinatura() == null ? "null" : (resposta.getRespostaNoBlocoAssinatura() ? "true" : "false")));
+			sql.append(" where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
+		}
+
+		MyUtils.execute(conexao, sql.toString());
 	}
 }

@@ -50,7 +50,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
-	private Connection conexao;
 
 	public RecepcaoProcesso(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
@@ -59,7 +58,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 		setIconifiable(true);
 		setClosable(true);
 
-		this.conexao = conexao;
 		this.despachoServico = new DespachoServico(conexao);
 		
 		cbbNavegador.addItem("Chrome");
@@ -113,7 +111,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				logArea.setText("");
 				new Thread(new Runnable() {
-					
+
 					@Override
 					public void run() {
 						try {
@@ -432,28 +430,19 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
-		String sql = "";
-		sql += "insert into solicitacao (origemid, tipoprocessoid, numeroprocesso, autor) ";
-		sql += "select " + Origem.SAPIENS.getOrigemId();
-		sql += "	 , " + despachoServico.obterTipoProcesso(null, "Eletrônico").iterator().next().getTipoProcessoId();
-		sql += "	 , '" + numeroProcesso + "'";
-		sql += "	 , '" + autor + "'";
-		sql += " where not exists (select 1 from solicitacao where origem = " + Origem.SAPIENS + " and numeroprocesso = '" + numeroProcesso + "')";
+		TipoProcesso tipoProcesso = despachoServico.obterTipoProcesso(null, "Eletrônico").iterator().next();
+		List<Solicitacao> solicitacoes = despachoServico.obterSolicitacao(null, Origem.SAPIENS, tipoProcesso, numeroProcesso);
+		Solicitacao solicitacao;
 
-		MyUtils.execute(conexao, sql);
+		if (solicitacoes == null || solicitacoes.isEmpty()) {
+			solicitacao = solicitacoes.iterator().next();
+			solicitacao.setAutor(autor);
+		} else {
+			solicitacao = new Solicitacao(Origem.SAPIENS, tipoProcesso, numeroProcesso, autor);
+		}
 
-		sql = "";
-		sql += "insert into solicitacaoenvio (solicitacaoid, datahoramovimentacao, arquivosprocessados, resultadodownload) ";
-		sql += "select solicitacaoid ";
-		sql += "     , '" + dataHoraFormatada + "'";
-		sql += "	 , false ";
-		sql += "     , " + (resultadoDownload.equals("") ? "null" : "'" + resultadoDownload.replace("'", "") + "'");
-		sql += "  from solicitacao s ";
-		sql += " where origemid = " + Origem.SAPIENS.getOrigemId();
-		sql += "   and numeroprocesso = '" + numeroProcesso + "' ";
-		sql += "   and not exists (select 1 from solicitacaoenvio se where se.solicitacaoid = s.solicitacaoid and datahoramovimentacao = '" + dataHoraFormatada + "')";
-
-		MyUtils.execute(conexao, sql);
+		solicitacao = despachoServico.salvarSolicitacao(solicitacao);
+		despachoServico.salvarSolicitacaoEnvio(new SolicitacaoEnvio(null, solicitacao, dataHoraFormatada, resultadoDownload, false, null));
 	}
 
 	private void apagaPastaDeDownloads(String caminho) {

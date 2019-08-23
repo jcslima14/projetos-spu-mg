@@ -167,7 +167,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		cbbDestino.setModel(new MyComboBoxModel());
 		MyUtils.insereOpcoesComboBox(conexao, cbbDestino, "select destinoid, abreviacao from destino");
 	}
-	
+
 	public void salvarRegistro() throws Exception {
 		Despacho despacho = new Despacho(txtDespachoId.getText().equals("") ? null : Integer.parseInt(txtDespachoId.getText()), null, new TipoProcesso(MyUtils.idItemSelecionado(cbbTipoProcesso)),
 				txtNumeroProcesso.getText(), txtAutor.getText(), txtComarca.getText(), new TipoImovel(MyUtils.idItemSelecionado(cbbTipoImovel)), txtEndereco.getText(), txtMunicipio.getText(), 

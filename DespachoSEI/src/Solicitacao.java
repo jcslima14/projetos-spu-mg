@@ -1,31 +1,38 @@
 public class Solicitacao {
-	Integer solicitacaoId;
+	private Integer solicitacaoId;
 	
-	Origem origem;
+	private Origem origem;
 	
-	TipoProcesso tipoProcesso;
+	private TipoProcesso tipoProcesso;
 	
-	String numeroProcesso;
+	private String numeroProcesso;
 	
-	String autor;
+	private String autor;
 	
-	Municipio municipio;
+	private Municipio municipio;
 	
-	Destino destino;
+	private Destino destino;
 	
-	String cartorio;
+	private String cartorio;
 	
-	TipoImovel tipoImovel;
+	private TipoImovel tipoImovel;
 	
-	String endereco;
+	private String endereco;
 	
-	String coordenada;
+	private String coordenada;
 	
-	String area;
+	private String area;
 	
-	String numeroProcessoSEI;
+	private String numeroProcessoSEI;
 
-	Boolean arquivosAnexados;
+	private Boolean arquivosAnexados;
+
+	public Solicitacao(Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor) {
+		this.origem = origem;
+		this.tipoProcesso = tipoProcesso;
+		this.numeroProcesso = numeroProcesso;
+		this.autor = autor;
+	}
 
 	public Solicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, Municipio municipio, Destino destino, String cartorio, TipoImovel tipoImovel, 
 			String endereco, String coordenada, String area, String numeroProcessoSEI, Boolean arquivosAnexados) {
