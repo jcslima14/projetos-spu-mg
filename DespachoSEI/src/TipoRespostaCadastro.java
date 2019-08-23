@@ -90,19 +90,19 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 				+  "     , gerarprocessoindividual = " + (chkGerarProcessoIndividual.isSelected() ? "true" : "false")
 				+  "     , unidadeaberturaprocesso = '" + txtUnidadeAberturaProcesso.getText() + "' "
 				+  "     , tipoprocesso = '" + txtTipoProcesso.getText() + "' "
-				+  "     , quantidadeassinaturas = '" + txtQuantidadeAssinaturas.getText() + "' "
 				+  "     , imprimirresposta = " + (chkImprimirResposta.isSelected() ? "true" : "false")
+				+  "     , quantidadeassinaturas = " + (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText())
 				+  " where tiporespostaid = " + txtTipoRespostaId.getText();
 		} else {
-			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentosei, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas) values (";
+			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas) values (";
 			sql += "'" + txtDescricao.getText().trim() + "', ";
 			sql += "'" + txtTipoDocumento.getText() + "', ";
 			sql += "'" + txtNumeroDocumentoModelo.getText() + "', ";
 			sql += (chkGerarProcessoIndividual.isSelected() ? "true" : "false") + ", ";
 			sql += "'" + txtUnidadeAberturaProcesso.getText() + "', ";
 			sql += "'" + txtTipoProcesso.getText() + "', ";
-			sql += (chkGerarProcessoIndividual.isSelected() ? "true" : "false") + ", ";
-			sql += txtQuantidadeAssinaturas.getText() + ") ";
+			sql += (chkImprimirResposta.isSelected() ? "true" : "false") + ", ";
+			sql += (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText()) + ") ";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -125,13 +125,14 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			txtUnidadeAberturaProcesso.setText(entidade.getUnidadeAberturaProcesso());
 			txtTipoProcesso.setText(entidade.getTipoProcesso());
 			chkImprimirResposta.setSelected(entidade.getImprimirResposta());
+			txtQuantidadeAssinaturas.setText(entidade.getQuantidadeAssinaturas().equals(0) ? "" : entidade.getQuantidadeAssinaturas().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select tiporespostaid, descricao, tipodocumento, numerodocumentosei, case when gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual, coalesce(unidadeaberturaprocesso, '') as unidadeaberturaprocesso, tipoprocesso, case when imprimirresposta then 'Sim' else 'Não' end as imprimirresposta, quantidadeassinaturas from tiporesposta");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select tiporespostaid, descricao, tipodocumento, numerodocumentomodelo, case when gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual, coalesce(unidadeaberturaprocesso, '') as unidadeaberturaprocesso, tipoprocesso, case when imprimirresposta then 'Sim' else 'Não' end as imprimirresposta, quantidadeassinaturas from tiporesposta");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}

@@ -1,15 +1,15 @@
 import framework.ItemComboBox;
 
 public class Destino implements ItemComboBox {
-	Integer destinoId;
+	private Integer destinoId;
 	
-	String artigo;
+	private String artigo;
 	
-	String descricao;
+	private String descricao;
 
-	String abreviacao;
+	private String abreviacao;
 
-	Boolean usarCartorio;
+	private Boolean usarCartorio;
 	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;

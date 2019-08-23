@@ -65,13 +65,13 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 	public void salvarRegistro() throws Exception {
 		String sql = "";
 		if (txtAssinanteTipoRespostaId.getText() != null && !txtAssinanteTipoRespostaId.getText().trim().equals("")) {
-			sql += "update assinantetipodespacho "
+			sql += "update assinantetiporesposta "
 				+  "   set assinanteid = " + MyUtils.idItemSelecionado(cbbAssinante)
-				+  "     , tipodespachoid = " + MyUtils.idItemSelecionado(cbbTipoResposta)
+				+  "     , tiporespostaid = " + MyUtils.idItemSelecionado(cbbTipoResposta)
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
-				+  " where assinantetipodespachoid = " + txtAssinanteTipoRespostaId.getText();
+				+  " where assinantetiporespostaid = " + txtAssinanteTipoRespostaId.getText();
 		} else {
-			sql += "insert into assinantetipodespacho (assinanteid, tipodespachoid, blocoassinatura) values ("
+			sql += "insert into assinantetiporesposta (assinanteid, tiporespostaid, blocoassinatura) values ("
 				+  MyUtils.idItemSelecionado(cbbAssinante) + ", "
 				+  MyUtils.idItemSelecionado(cbbTipoResposta) + ", "
 				+  "'" + txtBlocoAssinatura.getText() + "') ";
@@ -81,7 +81,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
-		sql += "delete from assinantetipodespacho where assinantetipodespachoid = " + id;
+		sql += "delete from assinantetiporesposta where assinantetiporespostaid = " + id;
 		MyUtils.execute(conexao, sql);
 	}
 
@@ -100,14 +100,14 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 	public TableModel obterDados() throws Exception {
 		String sql = "";
-		sql += "select atd.assinantetipodespachoid ";
+		sql += "select atr.assinantetiporespostaid ";
 		sql += "	 , a.nome as assinante ";
-		sql += "	 , td.descricao as tipodespacho ";
-		sql += "	 , atd.blocoassinatura ";
-		sql += "  from assinantetipodespacho atd ";
+		sql += "	 , tr.descricao as tiporesposta ";
+		sql += "	 , atr.blocoassinatura ";
+		sql += "  from assinantetiporesposta atr ";
 		sql += " inner join assinante a using (assinanteid) ";
-		sql += " inner join tipodespacho td using (tipodespachoid) ";
-		sql += " order by a.nome, td.descricao ";
+		sql += " inner join tiporesposta tr using (tiporespostaid) ";
+		sql += " order by a.nome, tr.descricao ";
 
 		ResultSet rs = MyUtils.executeQuery(conexao, sql);
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));

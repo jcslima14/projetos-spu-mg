@@ -75,7 +75,7 @@ public class ParametroCadastro extends CadastroTemplate {
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
-		sql += "delete from paraemtro where parametroid = " + id;
+		sql += "delete from parametro where parametroid = " + id;
 		MyUtils.execute(conexao, sql);
 	}
 

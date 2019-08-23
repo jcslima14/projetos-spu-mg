@@ -1,29 +1,29 @@
 public class SolicitacaoResposta {
-	Integer solicitacaoRespostaId;
+	private Integer solicitacaoRespostaId;
 	
-	Solicitacao solicitacao;
+	private Solicitacao solicitacao;
 	
-	TipoResposta tipoResposta;
+	private TipoResposta tipoResposta;
 	
-	String observacao;
+	private String observacao;
 	
-	Assinante assinante;
+	private Assinante assinante;
 	
-	Assinante assinanteSuperior;
+	private Assinante assinanteSuperior;
 	
-	String numeroDocumentoSEI;
+	private String numeroDocumentoSEI;
 	
-	String dataHoraResposta;
+	private String dataHoraResposta;
 	
-	String numeroProcessoSEI;
+	private String numeroProcessoSEI;
 	
-	Boolean respostaImpressa;
+	private Boolean respostaImpressa;
 	
-	String dataHoraImpressao;
+	private String dataHoraImpressao;
 	
-	String blocoAssinatura;
+	private String blocoAssinatura;
 	
-	Boolean respostaNoBlocoAssinatura;
+	private Boolean respostaNoBlocoAssinatura;
 
 	public SolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, TipoResposta tipoResposta, String observacao, Assinante assinante, Assinante assinanteSuperior, 
 			String numeroDocumentoSEI, String dataHoraResposta, String numeroProcessoSEI, Boolean respostaImpressa, String dataHoraImpressao, String blocoAssinatura, Boolean respostaNoBlocoAssinatura) {

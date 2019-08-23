@@ -1,20 +1,21 @@
+import framework.ItemComboBox;
 
-public class Assinante {
-	Integer assinanteId;
+public class Assinante implements ItemComboBox {
+	private Integer assinanteId;
 	
-	String nome;
+	private String nome;
 
-	Boolean ativo;
+	private Boolean ativo;
 	
-	String cargo;
+	private String cargo;
 	
-	String setor;
+	private String setor;
 	
-	Boolean superior;
+	private Boolean superior;
 
-	String numeroProcesso;
+	private String numeroProcesso;
 
-	String blocoAssinatura;
+	private String blocoAssinatura;
 
 	public Assinante(Integer assinanteId) {
 		this.assinanteId = assinanteId;
@@ -93,5 +94,20 @@ public class Assinante {
 
 	public void setBlocoAssinatura(String blocoAssinatura) {
 		this.blocoAssinatura = blocoAssinatura;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getAssinanteId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getNome();
 	}
 }

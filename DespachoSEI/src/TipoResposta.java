@@ -1,23 +1,23 @@
 import framework.ItemComboBox;
 
 public class TipoResposta implements ItemComboBox {
-	Integer tipoRespostaId;
+	private Integer tipoRespostaId;
 	
-	String descricao;
+	private String descricao;
 	
-	String tipoDocumento;
+	private String tipoDocumento;
 
-	String numeroDocumentoModelo;
+	private String numeroDocumentoModelo;
 
-	Boolean gerarProcessoIndividual;
+	private Boolean gerarProcessoIndividual;
 	
-	String unidadeAberturaProcesso;
+	private String unidadeAberturaProcesso;
 	
-	String tipoProcesso;
+	private String tipoProcesso;
 
-	Boolean imprimirResposta;
+	private Boolean imprimirResposta;
 	
-	Integer quantidadeAssinaturas;
+	private Integer quantidadeAssinaturas;
 
 	public TipoResposta(Integer tipoRespostaId) {
 		this.tipoRespostaId = tipoRespostaId;

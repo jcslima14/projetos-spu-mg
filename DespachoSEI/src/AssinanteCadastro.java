@@ -31,7 +31,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyTextField txtSetor = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblSetor = new MyLabel("Setor") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyCheckBox chkSuperior = new MyCheckBox("Superior") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyCheckBox chkAtivo = new MyCheckBox("Ativo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyCheckBox chkAtivo = new MyCheckBox("Ativo") {{ setEnabled(false); setInclusao(true); setEdicao(true); setSelected(true); }};
 	private MyTextField txtNumeroProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNumeroProcesso = new MyLabel("Nº Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtBlocoAssinatura = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -85,11 +85,11 @@ public class AssinanteCadastro extends CadastroTemplate {
 				+  "     , setor = '" + txtSetor.getText() + "' "
 				+  "	 , superior = " + (chkSuperior.isSelected() ? "true" : "false") 
 				+  "	 , ativo = " + (chkAtivo.isSelected() ? "true" : "false") 
-				+  "     , numeroprocesso = '" + txtNumeroProcesso.getText() + "' "
+				+  "     , numeroprocessosei = '" + txtNumeroProcesso.getText() + "' "
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
 				+  " where assinanteid = " + txtAssinanteId.getText();
 		} else {
-			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocesso, blocoassinatura) values ("
+			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocessosei, blocoassinatura) values ("
 				+  "'" + txtNome.getText().trim() + "', "
 				+  "'" + txtCargo.getText().trim() + "', "
 				+  "'" + txtSetor.getText().trim() + "', "
@@ -127,7 +127,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' as ativo, numeroprocesso, blocoassinatura from assinante");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' end as ativo, numeroprocessosei, blocoassinatura from assinante");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}

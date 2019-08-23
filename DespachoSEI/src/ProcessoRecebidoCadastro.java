@@ -62,17 +62,17 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private MyComboBox cbbMunicipio = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblMunicipio = new MyLabel("Município") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyCheckBox chkArquivosProcessados = new MyCheckBox("Arquivos processados") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(3, 5));
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 5));
 
-	private MyTextField txtFiltroNumeroUnico = new MyTextField() {{ setExclusao(true); }};
-	private MyLabel lblFiltroNumeroUnico = new MyLabel("Número Único") {{ setExclusao(true); }};
+	private MyTextField txtFiltroNumeroProcesso = new MyTextField() {{ setExclusao(true); }};
+	private MyLabel lblFiltroNumeroProcesso = new MyLabel("Número do Processo") {{ setExclusao(true); }};
 	private MyComboBox cbbFiltroMunicipio = new MyComboBox() {{ setExclusao(true); }};
 	private MyLabel lblFiltroMunicipio = new MyLabel("Município") {{ setExclusao(true); }};
 	private MyComboBox cbbFiltroArquivosProcessados = new MyComboBox() {{ setExclusao(true); }};
 	private MyLabel lblFiltroArquivosProcessados = new MyLabel("Arquivos Processados") {{ setExclusao(true); }};
 	private MyComboBox cbbOrdenacao = new MyComboBox() {{ setExclusao(true); }};
 	private MyLabel lblOrdenacao = new MyLabel("Ordenar por") {{ setExclusao(true); }};
-	private JPanel pnlFiltros = new JPanel(new GridLayout(3, 5));
+	private JPanel pnlFiltros = new JPanel(new GridLayout(2, 5));
 
 	private SolicitacaoEnvio entidadeEditada;
 	
@@ -89,13 +89,13 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		opcoesMunicipio(cbbMunicipio, new ComboBoxItem(0, null, "(Selecione o município)"));
-		opcoesMunicipio(cbbFiltroMunicipio, new ComboBoxItem(0, null, "(Todos)"), new ComboBoxItem(-1, null, "(Somente os vazios)"), new ComboBoxItem(-2, null, "(Todos os preenchidos)"));
+		despachoServico.preencherOpcoesMunicipio(cbbMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Selecione o município)", null, null, null)); }});
+		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); add(new Municipio(-1, "(Somente os vazios)", null, null, null)); add(new Municipio(-2, "(Todos os preenchidos)", null, null, null)); }});
 		opcoesArquivosProcessados();
 		opcoesOrdenacao();
 
-		pnlFiltros.add(lblFiltroNumeroUnico);
-		pnlFiltros.add(txtFiltroNumeroUnico);
+		pnlFiltros.add(lblFiltroNumeroProcesso);
+		pnlFiltros.add(txtFiltroNumeroProcesso);
 		pnlFiltros.add(new JPanel());
 		pnlFiltros.add(lblFiltroMunicipio);
 		pnlFiltros.add(cbbFiltroMunicipio);
@@ -221,7 +221,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
-		cbbOrdenacao.addItem(new ComboBoxItem(null, "numerounico", "Número Único"));
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "datahoramovimentacao desc", "Data Movimentação mais recente"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "m.nome", "Município"));
 	}
@@ -259,10 +259,11 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			txtDataMovimentacao.setText(entidade.getDataHoraMovimentacao());
 			resultadoDownload = entidade.getResultadoDownload();
 			resultadoProcessamento = entidade.getResultadoProcessamento();
-			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidade.getSolicitacao().getMunicipio().getMunicipioId(), null));
+			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidade.getSolicitacao().getMunicipio() == null ? 0 : entidade.getSolicitacao().getMunicipio().getMunicipioId(), null));
 			chkArquivosProcessados.setSelected(entidade.getArquivosProcessados());
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Envio de Solicitação para edição: \n\n" + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -283,8 +284,8 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		sql.append("  left join municipio m using (municipioid) ");
 		sql.append(" where 1 = 1 ");
 
-		if (!txtFiltroNumeroUnico.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroUnico.getText().trim() + "%' ");
+		if (!txtFiltroNumeroProcesso.getText().trim().equals("")) {
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText().trim() + "%' ");
 		}
 
 		Integer filtroMunicipio = MyUtils.idItemSelecionado(cbbFiltroMunicipio);

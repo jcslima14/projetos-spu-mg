@@ -5,6 +5,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Map.Entry;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -142,7 +143,7 @@ public class DespachoSEI extends JFrame {
 		sbmSolicitacaoAnalise.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				DespachoCadastro janela = new DespachoCadastro("Solicitação de Análise", conexao);
+				SolicitacaoCadastro janela = new SolicitacaoCadastro("Solicitação de Análise", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -205,7 +206,7 @@ public class DespachoSEI extends JFrame {
 		sbmTipoResposta.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				TipoDespachoCadastro tipoResposta = new TipoDespachoCadastro("Tipo de Resposta", conexao);
+				TipoRespostaCadastro tipoResposta = new TipoRespostaCadastro("Tipo de Resposta", conexao);
 				desktop.add(tipoResposta);
 				tipoResposta.abrirJanela();
 			}
@@ -256,6 +257,7 @@ public class DespachoSEI extends JFrame {
 		criarTabelaTipoProcesso(conexao);
 		criarTabelaMunicipio(conexao);
 		criarTabelaParametro(conexao);
+		criarTabelaOrigem(conexao);
 	}
 
 	private void criarTabelaAssinante(Connection conexao) throws Exception {
@@ -320,17 +322,17 @@ public class DespachoSEI extends JFrame {
 						 "(" +
 						 "  solicitacaorespostaid integer primary key autoincrement not null," +
 						 "  solicitacaoid integer not null," +
-						 "  tiporespostaid integer," + 
-						 "  observacao varchar," + 
-						 "  assinanteid integer," + 
+						 "  tiporespostaid integer not null," + 
+						 "  observacao varchar not null," + 
+						 "  assinanteid integer not null," + 
 						 "  assinanteidsuperior integer," + 
 						 "  numerodocumentosei varchar," + 
 						 "  datahoraresposta datetime," + 
 						 "  numeroprocessosei varchar," + 
-						 "  respostaimpressa boolean," + 
+						 "  respostaimpressa boolean not null," + 
 						 "  datahoraimpressao datetime," + 
 						 "  blocoassinatura varchar," + 
-						 "  respostanoblocoassinatura boolean" + 
+						 "  respostanoblocoassinatura boolean not null" + 
 						 ")";
 
 			MyUtils.execute(conexao, sql);
@@ -344,7 +346,8 @@ public class DespachoSEI extends JFrame {
 						 "  destinoid integer primary key autoincrement not null," +
 						 "  abreviacao varchar NOT NULL," + 
 						 "  artigo varchar NOT NULL," + 
-						 "  descricao varchar NOT NULL" + 
+						 "  descricao varchar NOT NULL," + 
+						 "  usarcartorio boolean NOT NULL" + 
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
@@ -362,8 +365,8 @@ public class DespachoSEI extends JFrame {
 						 "  gerarprocessoindividual boolean NOT NULL," + 
 						 "  unidadeaberturaprocesso varchar," + 
 						 "  tipoprocesso varchar," + 
-						 "  imprimirresposta boolean," +
-						 "  quantidadeassinaturas integer NOT NULL" +
+						 "  imprimirresposta boolean not null," +
+						 "  quantidadeassinaturas integer" +
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
@@ -409,10 +412,10 @@ public class DespachoSEI extends JFrame {
 	}
 
 	private void criarTabelaSolicitacaoTramite(Connection conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "solicitacaotramite")) {
-			String sql = "CREATE TABLE solicitacaotramite " + 
+		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
+			String sql = "CREATE TABLE solicitacaoenvio " + 
 						 "(" +
-						 "  solicitacaotramiteid integer primary key autoincrement not null," +
+						 "  solicitacaoenvioid integer primary key autoincrement not null," +
 						 "  solicitacaoid integer not null," +
 						 "  datahoramovimentacao integer NOT NULL," +
 						 "  resultadodownload varchar," + 
@@ -431,10 +434,38 @@ public class DespachoSEI extends JFrame {
 						 "  parametroid integer primary key not null," + 
 						 "  descricao varchar NOT NULL," + 
 						 "  conteudo varchar NOT NULL," +
-						 "  situacao boolean NOT NULL" +
+						 "  ativo boolean NOT NULL" +
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaParametro(conexao);
+		}
+	}
+	
+	private void preencherTabelaParametro(Connection conexao) throws Exception {
+		for (Entry<Integer, String[]> parametro : Parametro.DESCRICOES.entrySet()) {
+			MyUtils.execute(conexao, "insert into parametro (parametroid, descricao, conteudo, ativo) values (" + parametro.getKey() + ", '" + parametro.getValue()[0] + "', '" + parametro.getValue()[1] + "', true)");
+		}
+	}
+
+	private void criarTabelaOrigem(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "origem")) {
+			String sql = "CREATE TABLE origem " + 
+						 "(" + 
+						 "  origemid integer primary key not null," + 
+						 "  descricao varchar NOT NULL" + 
+						 ")"; 
+
+			MyUtils.execute(conexao, sql);
+
+			preencherTabelaOrigem(conexao);
+		}
+	}
+
+	private void preencherTabelaOrigem(Connection conexao) throws Exception {
+		for (Origem origem : Origem.ORIGENS) {
+			MyUtils.execute(conexao, "insert into origem (origemid, descricao) values (" + origem.getOrigemId() + ", '" + origem.getDescricao() + "')");
 		}
 	}
 }

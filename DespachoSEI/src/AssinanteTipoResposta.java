@@ -1,12 +1,12 @@
 
 public class AssinanteTipoResposta {
-	Integer assinanteTipoRespostaId;
+	private Integer assinanteTipoRespostaId;
 	
-	Assinante assinante;
+	private Assinante assinante;
 	
-	TipoResposta tipoResposta;
+	private TipoResposta tipoResposta;
 	
-	String blocoAssinatura;
+	private String blocoAssinatura;
 
 	public AssinanteTipoResposta() {
 	}

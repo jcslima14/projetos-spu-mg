@@ -1,15 +1,15 @@
 public class SolicitacaoEnvio {
-	Integer solictacaoEnvioId;
+	private Integer solictacaoEnvioId;
 	
-	Solicitacao solicitacao;
+	private Solicitacao solicitacao;
 	
-	String dataHoraMovimentacao;
+	private String dataHoraMovimentacao;
 	
-	String resultadoDownload;
+	private String resultadoDownload;
 	
-	Boolean arquivosProcessados;
+	private Boolean arquivosProcessados;
 	
-	String resultadoProcessamento;
+	private String resultadoProcessamento;
 
 	public SolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, String dataHoraMovimentacao, String resultadoDownload, Boolean arquivosProcessados, String resultadoProcessamento) {
 		this.solictacaoEnvioId = solicitacaoEnvioId;

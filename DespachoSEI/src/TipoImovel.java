@@ -1,8 +1,8 @@
 
 public class TipoImovel {
-	Integer tipoImovelId;
+	private Integer tipoImovelId;
 	
-	String descricao;
+	private String descricao;
 
 	public TipoImovel(Integer tipoImovel, String descricao) {
 		this.tipoImovelId = tipoImovel;

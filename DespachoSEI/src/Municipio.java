@@ -1,15 +1,15 @@
 import framework.ItemComboBox;
 
 public class Municipio implements ItemComboBox {
-	Integer municipioId;
+	private Integer municipioId;
 	
-	String nome;
+	private String nome;
 	
-	Municipio municipioComarca;
+	private Municipio municipioComarca;
 
-	Destino destino;
+	private Destino destino;
 
-	TipoResposta tipoResposta;
+	private TipoResposta tipoResposta;
 	
 	public Municipio(Integer municipioId) {
 		this.municipioId = municipioId;

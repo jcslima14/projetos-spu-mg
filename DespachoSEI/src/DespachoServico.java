@@ -42,12 +42,12 @@ public class DespachoServico {
 					obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
 					rs.getString("numeroprocesso"), 
 					rs.getString("autor"),
-					obterMunicipio(false, rs.getInt("municipioid"), null).iterator().next(),
-					obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
+					MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioid"), null)),
+					MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null)),
 					rs.getString("cartorio"),
-					obterTipoImovel(rs.getInt("tipoimovelid"), null).iterator().next(),
+					MyUtils.entidade(obterTipoImovel(rs.getInt("tipoimovelid"), null)),
 					rs.getString("endereco"),
-					rs.getString("cooredenada"),
+					rs.getString("coordenada"),
 					rs.getString("area"),
 					rs.getString("numeroprocessosei"),
 					rs.getBoolean("arquivosanexados")
@@ -75,10 +75,10 @@ public class DespachoServico {
 				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "'");
 			}
 			if (dataHoraMovimentacao != null) {
-				sql.append(" and sr.datahoramovimentacao = '" + dataHoraMovimentacao + "'");
+				sql.append(" and se.datahoramovimentacao = '" + dataHoraMovimentacao + "'");
 			}
 			if (arquivosProcessados != null) {
-				sql.append(" and sr.arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
+				sql.append(" and se.arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
 			}
 			if (somenteMunicipiosPreenchidos) {
 				sql.append(" and s.municipioid is not null");
@@ -149,7 +149,7 @@ public class DespachoServico {
 					obterTipoResposta(rs.getInt("tipoprocessoid"), null).iterator().next(),
 					rs.getString("observacao"), 
 					obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
-					obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null).iterator().next(),
+					MyUtils.entidade(obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null)),
 					rs.getString("numerodocumentosei"),
 					rs.getString("datahoraresposta"),
 					rs.getString("numeroprocessosei"),
@@ -348,7 +348,7 @@ public class DespachoServico {
 			retorno.add(new TipoResposta(rs.getInt("tiporespostaid"),
 					rs.getString("descricao"), 
 					rs.getString("tipodocumento"), 
-					rs.getString("numerodocumentosei"), 
+					rs.getString("numerodocumentomodelo"), 
 					rs.getBoolean("gerarprocessoindividual"), 
 					rs.getString("unidadeaberturaprocesso"), 
 					rs.getString("tipoprocesso"), 
@@ -377,16 +377,16 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			List<Municipio> comarcas = new ArrayList<Municipio>();
+			Municipio comarca = null;
 			if (obterComarca) {
-				comarcas = obterMunicipio(false, rs.getInt("municipioidcomarca"), null);
+				comarca = MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioidcomarca"), null));
 			}
 
 			retorno.add(new Municipio(rs.getInt("municipioid"),
 									  rs.getString("nome"),
-									  (comarcas.size() > 0 ? comarcas.iterator().next() : null),
-									  obterDestino(rs.getInt("destinoid"), null, null, null, null).iterator().next(),
-									  obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next()
+									  comarca,
+									  MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null)),
+									  MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null))
 					));
 		}
 		
@@ -415,7 +415,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocesso"), rs.getString("blocoassinatura")));
+			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocessosei"), rs.getString("blocoassinatura")));
 		}
 		
 		return retorno;
@@ -507,6 +507,7 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbTipoResposta, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Resposta: \n\n" + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -517,6 +518,7 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbAssinante, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Assinante: \n\n" + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -527,6 +529,7 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbMunicipio, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Município: \n\n" + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -537,6 +540,7 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbDestino, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Destino: \n\n" + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -558,7 +562,7 @@ public class DespachoServico {
 			sql.append("	 , " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
 			sql.append("	 , " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
 			sql.append("	 , " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
-			sql.append(" where not exists (select 1 from solicitacao where origem = " + solicitacao.getOrigem().getOrigemId() + " and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "')");
+			sql.append(" where not exists (select 1 from solicitacao where origemid = " + solicitacao.getOrigem().getOrigemId() + " and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "')");
 		} else {
 			sql.append("update solicitacao ");
 			sql.append("   set origemid = " + solicitacao.getOrigem().getOrigemId());
@@ -605,7 +609,7 @@ public class DespachoServico {
 
 		MyUtils.execute(conexao, sql.toString());
 		
-		return obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, solicitacaoEnvio.getDataHoraMovimentacao(), null, null, false).iterator().next();
+		return obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, null, solicitacaoEnvio.getDataHoraMovimentacao(), null, false).iterator().next();
 	}
 
 	public void salvarSolicitacaoResposta(SolicitacaoResposta resposta) throws Exception {

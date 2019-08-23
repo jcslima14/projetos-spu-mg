@@ -1,15 +1,23 @@
+import java.util.ArrayList;
+import java.util.List;
 
 public class Origem {
 	
 	static int SAPIENS_ID = 1;
 	static int SPUNET_ID = 2;
 
-	static Origem SAPIENS = new Origem(SAPIENS_ID, null);
-	static Origem SPUNET = new Origem(SPUNET_ID, null);
+	static Origem SAPIENS = new Origem(SAPIENS_ID, "Sapiens");
+	static Origem SPUNET = new Origem(SPUNET_ID, "SPUNet");
+
+	@SuppressWarnings("serial")
+	static List<Origem> ORIGENS = new ArrayList<Origem>() {{ 
+		add(SAPIENS); 
+		add(SPUNET); 
+		}};
 	
-	Integer origemId;
+	private Integer origemId;
 	
-	String descricao;
+	private String descricao;
 
 	public Origem(Integer origemId, String descricao) {
 		this.origemId = origemId;

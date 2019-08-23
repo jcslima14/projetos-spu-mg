@@ -298,7 +298,12 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        	TimeUnit.SECONDS.sleep(2);
 
 		        	// busca o nome do autor da solicitação
-		        	String autor = MyUtils.encontrarElemento(wait30, By.xpath("//div[@id = 'dadosInteressadosFC-innerCt']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td/div[text() = 'REQUERENTE (PÓLO ATIVO)']]/td[2]")).getText();
+		        	String autor = null;
+		        	try {
+		        		autor = MyUtils.encontrarElemento(wait30, By.xpath("//div[@id = 'dadosInteressadosFC-innerCt']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td/div[text() = 'REQUERENTE (PÓLO ATIVO)']]/td[2]")).getText();
+		        	} catch (Exception e) {
+		        		autor = "";
+		        	}
 
 	        		boolean encontrouRemessaDocumentos = false;
 
@@ -431,11 +436,10 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
 		TipoProcesso tipoProcesso = despachoServico.obterTipoProcesso(null, "Eletrônico").iterator().next();
-		List<Solicitacao> solicitacoes = despachoServico.obterSolicitacao(null, Origem.SAPIENS, tipoProcesso, numeroProcesso);
-		Solicitacao solicitacao;
+		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, tipoProcesso, numeroProcesso));
 
-		if (solicitacoes == null || solicitacoes.isEmpty()) {
-			solicitacao = solicitacoes.iterator().next();
+		// se a solicitação já existe, atualiza o nome do autor; se não, cria uma nova solicitação que será gravada
+		if (solicitacao != null) {
 			solicitacao.setAutor(autor);
 		} else {
 			solicitacao = new Solicitacao(Origem.SAPIENS, tipoProcesso, numeroProcesso, autor);

@@ -14,30 +14,34 @@ public class Parametro {
 	static int UNIDADE_PADRAO_SEI = 10;
 
 	@SuppressWarnings("serial")
-	static Map<Integer, String> DESCRICOES = new LinkedHashMap<Integer, String>() {{ 
-		put(PASTA_DOWNLOAD_SAPIENS, "Pasta de download dos arquivos do Sapiens");
-		put(PASTA_DESTINO_PROCESSOS_SAPIENS, "Pasta de destino dos processos do Sapiens");
-		put(ENDERECO_SEI, "Endereço do SEI");
-		put(ENDERECO_SAPIENS, "Endereço do Sapiens");
-		put(PASTA_DESPACHOS_SALVOS, "Pasta de despachos impressos (salvos em PDF)");
-		put(PASTA_PLANILHA_IMPORTACAO, "Pasta da planilha de importação");
-		put(DEFAULT_BROWSER, "Navegador padrão");
-		put(ENDERECO_SPUNET, "Endereço do SPUNet");
-		put(PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS, "Pasta dos arquivos de processos individuais");
-		put(UNIDADE_PADRAO_SEI, "Unidade padrão ao acessar o SEI");
+	static Map<Integer, String[]> DESCRICOES = new LinkedHashMap<Integer, String[]>() {{ 
+		put(PASTA_DOWNLOAD_SAPIENS, new String[] { "Pasta de download dos arquivos do Sapiens", "" });
+		put(PASTA_DESTINO_PROCESSOS_SAPIENS, new String[] { "Pasta de destino dos processos do Sapiens (após identificação dos municípios)", "" });
+		put(ENDERECO_SEI, new String[] { "Endereço do SEI", "https://sei.fazenda.gov.br/sei/inicializar.php" });
+		put(ENDERECO_SAPIENS, new String[] { "Endereço do Sapiens", "https://sapiens.agu.gov.br/login" });
+		put(PASTA_DESPACHOS_SALVOS, new String[] { "Pasta de respostas impressas em PDF para resposta ao Sapiens", "" });
+		put(PASTA_PLANILHA_IMPORTACAO, new String[] { "Pasta da planilha de importação", "" });
+		put(DEFAULT_BROWSER, new String[] { "Navegador padrão", "Chrome" });
+		put(ENDERECO_SPUNET, new String[] { "Endereço do SPUNet", "http://spunet.planejamento.gov.br" });
+		put(PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS, new String[] { "Pasta de arquivos para anexar aos processos individuais", "" });
+		put(UNIDADE_PADRAO_SEI, new String[] { "Unidade padrão ao acessar o SEI", "SPU-MG-NUSUC" });
 	}};
 
 	public static String obterDescricao(int parametroId) {
-		return DESCRICOES.get(parametroId);
+		return DESCRICOES.get(parametroId)[0];
 	}
 
-	Integer parametroId;
+	public static String obterValorDefault(int parametroId) {
+		return DESCRICOES.get(parametroId)[1];
+	}
 
-	String descricao;
+	private Integer parametroId;
 
-	String conteudo;
+	private String descricao;
 
-	Boolean ativo;
+	private String conteudo;
+
+	private Boolean ativo;
 	
 	public Parametro(Integer parametroId, String descricao, String conteudo, Boolean ativo) {
 		this.parametroId = parametroId;
