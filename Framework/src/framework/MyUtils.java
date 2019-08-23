@@ -336,4 +336,9 @@ public class MyUtils {
 				.replace("º", "o")
 				.replace("°", "o");
 	}
+	
+	public static <T> T entidade(List<T> listaEntidades) {
+		if (listaEntidades == null || listaEntidades.isEmpty()) return null;
+		else return listaEntidades.iterator().next();
+	}
 }

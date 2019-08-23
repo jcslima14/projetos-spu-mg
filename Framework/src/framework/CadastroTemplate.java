@@ -66,6 +66,10 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	}
 
 	public void inicializar() {
+		inicializar(true);
+	}
+	
+	public void inicializar(boolean mostrarAreaEdicao) {
 		JScrollPane areaRolavel = new JScrollPane(tabela);
 		areaRolavel.setVisible(true);
 		add(areaRolavel, BorderLayout.CENTER);
@@ -96,15 +100,17 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		
 		add(pnlPainelSuperior, BorderLayout.NORTH);
 
-		JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
-		pnlBotoesAbaixo.add(btnSalvar);
-		pnlBotoesAbaixo.add(btnCancelar);
-		JPanel pnlAreaEdicao = new JPanel();
-		pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
-		pnlAreaEdicao.add(this.pnlCamposEditaveis);
-		pnlAreaEdicao.add(pnlBotoesAbaixo);
-
-		add(pnlAreaEdicao, BorderLayout.SOUTH);
+		if (mostrarAreaEdicao) {
+			JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
+			pnlBotoesAbaixo.add(btnSalvar);
+			pnlBotoesAbaixo.add(btnCancelar);
+			JPanel pnlAreaEdicao = new JPanel();
+			pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
+			pnlAreaEdicao.add(this.pnlCamposEditaveis);
+			pnlAreaEdicao.add(pnlBotoesAbaixo);
+	
+			add(pnlAreaEdicao, BorderLayout.SOUTH);
+		}
 
 		btnAtualizar.addActionListener(new ActionListener() {
 			@Override
