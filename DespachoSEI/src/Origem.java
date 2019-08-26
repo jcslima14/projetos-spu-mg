@@ -1,7 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Origem {
+import framework.ItemComboBox;
+
+public class Origem implements ItemComboBox {
 	
 	static int SAPIENS_ID = 1;
 	static int SPUNET_ID = 2;
@@ -42,5 +44,20 @@ public class Origem {
 
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getOrigemId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getDescricao();
 	}
 }

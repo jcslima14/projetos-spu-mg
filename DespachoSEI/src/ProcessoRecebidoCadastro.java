@@ -8,7 +8,6 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -226,11 +225,6 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "m.nome", "Município"));
 	}
 
-	private void opcoesMunicipio(MyComboBox comboMunicipio, ComboBoxItem... itensAdicionais) {
-		comboMunicipio.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, comboMunicipio, "select municipioid, nome from municipio order by nome", Arrays.asList(itensAdicionais));
-	}
-
 	public void salvarRegistro() throws Exception {
 		List<Municipio> municipios = despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null);
 		Municipio municipio = (municipios != null && !municipios.isEmpty() ? municipios.iterator().next() : null);
@@ -251,16 +245,16 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		try {
 			txtSolicitacaoEnvioId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 
-			SolicitacaoEnvio entidade = despachoServico.obterSolicitacaoEnvio(Integer.parseInt(txtSolicitacaoEnvioId.getText()), null, null, null, null, null, false).iterator().next();
+			entidadeEditada = despachoServico.obterSolicitacaoEnvio(Integer.parseInt(txtSolicitacaoEnvioId.getText()), null, null, null, null, null, false).iterator().next();
 
-			txtOrigem.setText(entidade.getSolicitacao().getOrigem().getDescricao());
-			txtNumeroProcesso.setText(entidade.getSolicitacao().getNumeroProcesso());
-			txtAutor.setText(entidade.getSolicitacao().getAutor());
-			txtDataMovimentacao.setText(entidade.getDataHoraMovimentacao());
-			resultadoDownload = entidade.getResultadoDownload();
-			resultadoProcessamento = entidade.getResultadoProcessamento();
-			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidade.getSolicitacao().getMunicipio() == null ? 0 : entidade.getSolicitacao().getMunicipio().getMunicipioId(), null));
-			chkArquivosProcessados.setSelected(entidade.getArquivosProcessados());
+			txtOrigem.setText(entidadeEditada.getSolicitacao().getOrigem().getDescricao());
+			txtNumeroProcesso.setText(entidadeEditada.getSolicitacao().getNumeroProcesso());
+			txtAutor.setText(entidadeEditada.getSolicitacao().getAutor());
+			txtDataMovimentacao.setText(entidadeEditada.getDataHoraMovimentacao());
+			resultadoDownload = entidadeEditada.getResultadoDownload();
+			resultadoProcessamento = entidadeEditada.getResultadoProcessamento();
+			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidadeEditada.getSolicitacao().getMunicipio() == null ? 0 : entidadeEditada.getSolicitacao().getMunicipio().getMunicipioId(), null));
+			chkArquivosProcessados.setSelected(entidadeEditada.getArquivosProcessados());
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Envio de Solicitação para edição: \n\n" + e.getMessage());
 			e.printStackTrace();

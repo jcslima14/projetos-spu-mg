@@ -1,5 +1,6 @@
+import framework.ItemComboBox;
 
-public class TipoImovel {
+public class TipoImovel implements ItemComboBox {
 	private Integer tipoImovelId;
 	
 	private String descricao;
@@ -27,5 +28,20 @@ public class TipoImovel {
 
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getTipoImovelId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getDescricao();
 	}
 }

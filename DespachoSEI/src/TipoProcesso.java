@@ -1,4 +1,6 @@
-public class TipoProcesso {
+import framework.ItemComboBox;
+
+public class TipoProcesso implements ItemComboBox {
 	private Integer tipoProcessoId;
 	
 	private String descricao;
@@ -26,5 +28,20 @@ public class TipoProcesso {
 
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getTipoProcessoId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getDescricao();
 	}
 }

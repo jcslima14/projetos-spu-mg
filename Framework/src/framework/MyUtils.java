@@ -341,4 +341,9 @@ public class MyUtils {
 		if (listaEntidades == null || listaEntidades.isEmpty()) return null;
 		else return listaEntidades.iterator().next();
 	}
+
+	public static String emptyStringIfNull(Object obj) {
+		if (obj == null) return "";
+		else return obj.toString();
+	}
 }

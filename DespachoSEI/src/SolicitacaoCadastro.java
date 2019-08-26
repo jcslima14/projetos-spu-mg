@@ -3,7 +3,9 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JDesktopPane;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
@@ -17,10 +19,14 @@ public class SolicitacaoCadastro extends CadastroTemplate {
 	private Connection conexao;
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
+	private JDesktopPane desktop;
 
-	public SolicitacaoCadastro(String tituloJanela, Connection conexao) {
+	public SolicitacaoCadastro(String tituloJanela, Connection conexao, JDesktopPane desktop) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		this.desktop = desktop;
+		
+		this.desktop.add(this);
 
 		despachoServico = new DespachoServico(conexao);
 		this.inicializar(false);
@@ -44,6 +50,16 @@ public class SolicitacaoCadastro extends CadastroTemplate {
 	}
 
 	public void prepararParaEdicao() {
+		Integer solicitacaoId = Integer.parseInt(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
+		try {
+			Solicitacao entidade = MyUtils.entidade(despachoServico.obterSolicitacao(solicitacaoId, null, null, null));
+			SolicitacaoCompletaCadastro janela = new SolicitacaoCompletaCadastro("Dados da Solicitação", despachoServico, entidade);
+			this.desktop.add(janela);
+			janela.abrirJanela();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao obter os dados da solicitação: \n\n" + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	public TableModel obterDados() throws Exception {
@@ -80,17 +96,17 @@ public class SolicitacaoCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Id", 40, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Origem", 75, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Tipo Processo", 75, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Nº Processo", 130));
-			colunas.add(new MyTableColumn("Autor", 200));
+			colunas.add(new MyTableColumn("Nº Processo", 150, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Autor", 250));
 			colunas.add(new MyTableColumn("Município", 200));
-			colunas.add(new MyTableColumn("Destino", 150));
+			colunas.add(new MyTableColumn("Destino", 200));
 			colunas.add(new MyTableColumn("Cartório", 150));
 			colunas.add(new MyTableColumn("Tipo Imóvel", 60, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Endereço", 200));
 			colunas.add(new MyTableColumn("Coordenada", 80));
 			colunas.add(new MyTableColumn("Área", 80));
 			colunas.add(new MyTableColumn("Nº Processo SEI", 150, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Arq. Anex.?", 100, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Arq. Anex.?", 60, JLabel.CENTER));
 		}
 		return this.colunas;
 	}

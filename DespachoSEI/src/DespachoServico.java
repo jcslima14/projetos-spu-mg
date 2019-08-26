@@ -296,6 +296,8 @@ public class DespachoServico {
 			}
 		}
 
+		sql.append(" order by descricao ");
+		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
@@ -318,6 +320,8 @@ public class DespachoServico {
 			}
 		}
 
+		sql.append(" order by descricao ");
+		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
@@ -540,6 +544,39 @@ public class DespachoServico {
 			MyUtils.insereOpcoesComboBox(cbbDestino, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Destino: \n\n" + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	public void preencherOpcoesTipoImovel(MyComboBox cbbTipoImovel, List<TipoImovel> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoImovel>();
+			opcoesIniciais.addAll(obterTipoImovel(null, null));
+			MyUtils.insereOpcoesComboBox(cbbTipoImovel, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Imóvel: \n\n" + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	public void preencherOpcoesTipoProcesso(MyComboBox cbbTipoProcesso, List<TipoProcesso> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoProcesso>();
+			opcoesIniciais.addAll(obterTipoProcesso(null, null));
+			MyUtils.insereOpcoesComboBox(cbbTipoProcesso, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Processo: \n\n" + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	public void preencherOpcoesOrigem(MyComboBox cbbOrigem, List<Origem> opcoesIniciais) {
+		try {
+			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Origem>();
+			opcoesIniciais.addAll(obterOrigem(null, null));
+			MyUtils.insereOpcoesComboBox(cbbOrigem, opcoesIniciais);
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Origem: \n\n" + e.getMessage());
 			e.printStackTrace();
 		}
 	}
