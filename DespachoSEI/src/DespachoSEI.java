@@ -143,7 +143,7 @@ public class DespachoSEI extends JFrame {
 		sbmSolicitacaoAnalise.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				SolicitacaoCadastro janela = new SolicitacaoCadastro("Solicitação de Análise", conexao, desktop);
+				SolicitacaoAnaliseConsulta janela = new SolicitacaoAnaliseConsulta("Solicitação de Análise", conexao, desktop);
 				janela.abrirJanela();
 			}
 		});

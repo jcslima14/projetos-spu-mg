@@ -1,113 +1,198 @@
-import java.sql.Connection;
-import java.sql.ResultSet;
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
-import framework.CadastroTemplate;
+import framework.CadastroController;
+import framework.MyCheckBox;
+import framework.MyComboBox;
+import framework.MyLabel;
 import framework.MyTableColumn;
-import framework.MyTableModel;
+import framework.MyTextField;
 import framework.MyUtils;
 
 @SuppressWarnings("serial")
-public class SolicitacaoCadastro extends CadastroTemplate {
+public class SolicitacaoCadastro extends CadastroController {
 
-	private Connection conexao;
-	private List<MyTableColumn> colunas;
+	private SolicitacaoAnaliseConsulta solicitacaoCadastro;
+	
+	private JTextField txtSolicitacaoId = new JTextField() {{ setEnabled(false); }};
+	private MyLabel lblSolicitacaoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbOrigem = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblOrigem = new MyLabel("Origem") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbTipoProcesso = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblTipoProcesso = new MyLabel("Tipo Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtNumeroProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblNumeroProcesso = new MyLabel("Nº do Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtAutor = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblAutor = new MyLabel("Autor") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbMunicipio = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblMunicipio = new MyLabel("Município") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbDestino = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblDestino = new MyLabel("Destino") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtCartorio = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblCartorio = new MyLabel("Cartório") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbTipoImovel = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblTipoImovel = new MyLabel("Tipo do Imóvel") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtEndereco = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblEndereco = new MyLabel("Endereço") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtCoordenada = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblCoordenada = new MyLabel("Coordenada") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtArea = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblArea = new MyLabel("Área") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtNumeroProcessoSEI = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblNumeroProcessoSEI = new MyLabel("Nº de Processo do SEI") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyCheckBox chkArquivosAnexados = new MyCheckBox("Arquivos Anexados") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 5));
+
 	private DespachoServico despachoServico;
-	private JDesktopPane desktop;
+	private Solicitacao entidade;
 
-	public SolicitacaoCadastro(String tituloJanela, Connection conexao, JDesktopPane desktop) {
-		super(tituloJanela);
-		this.conexao = conexao;
-		this.desktop = desktop;
+	public SolicitacaoCadastro(DespachoServico despachoServico, Solicitacao entidade, SolicitacaoAnaliseConsulta solicitacaoCadastro) {
+		this.setExibirBotoesCadastro(false);
+		this.setExibirTabelaDados(false);
+		this.setExibirBotaoCancelarEdicao(false);
+		this.solicitacaoCadastro = solicitacaoCadastro;
 		
-		this.desktop.add(this);
+		this.despachoServico = despachoServico;
+		this.entidade = entidade;
 
-		despachoServico = new DespachoServico(conexao);
-		this.inicializar(false);
+		this.despachoServico.preencherOpcoesOrigem(cbbOrigem, null);
+		this.despachoServico.preencherOpcoesTipoImovel(cbbTipoImovel, new ArrayList<TipoImovel>() {{ add(new TipoImovel(0, "(Selecione o tipo do imóvel)")); }});
+		this.despachoServico.preencherOpcoesTipoProcesso(cbbTipoProcesso, null);
+		this.despachoServico.preencherOpcoesMunicipio(cbbMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Selecione o município)", null, null, null)); }});
+		this.despachoServico.preencherOpcoesDestino(cbbDestino, new ArrayList<Destino>() {{ add(new Destino(0, "(Selecione o destino)", null, null, null)); }});
+
+		pnlCamposEditaveis.add(lblSolicitacaoId);
+		pnlCamposEditaveis.add(txtSolicitacaoId);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblOrigem);
+		pnlCamposEditaveis.add(cbbOrigem);
+		//
+		pnlCamposEditaveis.add(lblTipoProcesso);
+		pnlCamposEditaveis.add(cbbTipoProcesso);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblNumeroProcesso);
+		pnlCamposEditaveis.add(txtNumeroProcesso);
+		//
+		pnlCamposEditaveis.add(lblAutor);
+		pnlCamposEditaveis.add(txtAutor);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblTipoImovel);
+		pnlCamposEditaveis.add(cbbTipoImovel);
+		//
+		pnlCamposEditaveis.add(lblMunicipio);
+		pnlCamposEditaveis.add(cbbMunicipio);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblDestino);
+		pnlCamposEditaveis.add(cbbDestino);
+		//
+		pnlCamposEditaveis.add(lblCartorio);
+		pnlCamposEditaveis.add(txtCartorio);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblEndereco);
+		pnlCamposEditaveis.add(txtEndereco);
+		//
+		pnlCamposEditaveis.add(lblCoordenada);
+		pnlCamposEditaveis.add(txtCoordenada);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblArea);
+		pnlCamposEditaveis.add(txtArea);
+		//
+		pnlCamposEditaveis.add(lblNumeroProcessoSEI);
+		pnlCamposEditaveis.add(txtNumeroProcessoSEI);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(chkArquivosAnexados);
+		pnlCamposEditaveis.add(new JPanel());
+
+		this.setPnlCamposEditaveis(pnlCamposEditaveis);
+		this.inicializar();
 	}
 
 	public void limparCamposEditaveis() {
+		txtSolicitacaoId.setText("");
+		cbbOrigem.setSelectedIndex(0);
+		cbbTipoProcesso.setSelectedIndex(0);
+		txtNumeroProcesso.setText("");
+		txtAutor.setText("");
+		cbbMunicipio.setSelectedIndex(0);
+		cbbDestino.setSelectedIndex(0);
+		txtCartorio.setText("");
+		cbbTipoImovel.setSelectedIndex(0);
+		txtEndereco.setText("");
+		txtCoordenada.setText("");
+		txtArea.setText("");
+		txtNumeroProcessoSEI.setText("");
+		chkArquivosAnexados.setSelected(false);
 	}
 
 	public void salvarRegistro() throws Exception {
+		Origem origem = MyUtils.entidade(despachoServico.obterOrigem(MyUtils.idItemSelecionado(cbbOrigem), null));
+		TipoProcesso tipoProcesso = MyUtils.entidade(despachoServico.obterTipoProcesso(MyUtils.idItemSelecionado(cbbTipoProcesso), null));
+		TipoImovel tipoImovel = MyUtils.entidade(despachoServico.obterTipoImovel(MyUtils.idItemSelecionado(cbbTipoImovel), null));
+		Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null));
+		Destino destino = null;
+
+		if (origem.getOrigemId().equals(Origem.SAPIENS_ID)) {
+			if (municipio == null || municipio.getDestino() == null) {
+				destino = null;
+			} else {
+				destino = municipio.getDestino();
+			}
+		} else {
+			destino = MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null));
+		}
+		
+		entidade.setOrigem(origem);
+		entidade.setTipoProcesso(tipoProcesso);
+		entidade.setNumeroProcesso(txtNumeroProcesso.getText());
+		entidade.setAutor(txtAutor.getText());
+		entidade.setMunicipio(municipio);
+		entidade.setDestino(destino);
+		entidade.setCartorio(txtCartorio.getText());
+		entidade.setTipoImovel(tipoImovel);
+		entidade.setEndereco(txtEndereco.getText());
+		entidade.setCoordenada(txtCoordenada.getText());
+		entidade.setArea(txtArea.getText());
+		entidade.setNumeroProcessoSEI(txtNumeroProcessoSEI.getText());
+		entidade.setArquivosAnexados(chkArquivosAnexados.isSelected());
+
+		entidade = despachoServico.salvarSolicitacao(entidade);
+		
+		prepararParaEdicao();
+
+		this.solicitacaoCadastro.executarAtualizar();
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "delete from solicitacaoresposta where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
-
-		sql = "delete from solicitacaoenvio where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
-
-		sql = "delete from solicitacao where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
-		Integer solicitacaoId = Integer.parseInt(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
-		try {
-			Solicitacao entidade = MyUtils.entidade(despachoServico.obterSolicitacao(solicitacaoId, null, null, null));
-			SolicitacaoCompletaCadastro janela = new SolicitacaoCompletaCadastro("Dados da Solicitação", despachoServico, entidade);
-			this.desktop.add(janela);
-			janela.abrirJanela();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Erro ao obter os dados da solicitação: \n\n" + e.getMessage());
-			e.printStackTrace();
-		}
+		txtSolicitacaoId.setText(MyUtils.emptyStringIfNull(entidade.getSolicitacaoId()));
+		cbbOrigem.setSelectedIndex(MyUtils.itemSelecionado(cbbOrigem, entidade.getOrigem().getOrigemId(), null));
+		cbbTipoProcesso.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoProcesso, entidade.getTipoProcesso().getTipoProcessoId(), null));
+		txtNumeroProcesso.setText(entidade.getNumeroProcesso());
+		txtAutor.setText(MyUtils.emptyStringIfNull(entidade.getAutor()));
+		cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, (entidade.getMunicipio() == null ? 0 : entidade.getMunicipio().getMunicipioId()), null));
+		cbbDestino.setSelectedIndex(MyUtils.itemSelecionado(cbbDestino, (entidade.getDestino() == null ? 0 : entidade.getDestino().getDestinoId()), null));
+		txtCartorio.setText(MyUtils.emptyStringIfNull(entidade.getCartorio()));
+		cbbTipoImovel.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoImovel, (entidade.getTipoImovel() == null ? 0 : entidade.getTipoImovel().getTipoImovelId()), null));
+		txtEndereco.setText(MyUtils.emptyStringIfNull(entidade.getEndereco()));
+		txtCoordenada.setText(MyUtils.emptyStringIfNull(entidade.getCoordenada()));
+		txtArea.setText(MyUtils.emptyStringIfNull(entidade.getArea()));
+		txtNumeroProcessoSEI.setText(MyUtils.emptyStringIfNull(entidade.getNumeroProcessoSEI()));
+		chkArquivosAnexados.setSelected(entidade.getArquivosAnexados());
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, 
-										"select s.solicitacaoid "
-									  + "	  , o.descricao as origem "
-									  + "	  , tp.descricao as tipoprocesso "
-									  + "	  , s.numeroprocesso "
-									  + "	  , s.autor "
-									  + "	  , m.nome as municipio "
-									  + "	  , d.descricao as destino "
-									  + "	  , s.cartorio "
-									  + "	  , ti.descricao as tipoimovel "
-									  + "	  , s.endereco "
-									  + "	  , s.coordenada "
-									  + "	  , s.area "
-									  + "	  , s.numeroprocessosei "
-									  + "	  , case when s.arquivosanexados then 'Sim' else 'Não' end as arquivosanexados "
-									  + "  from solicitacao s "
-									  + " inner join origem o using (origemid) "
-									  + " inner join tipoprocesso tp using (tipoprocessoid) "
-									  + "  left join municipio m using (municipioid) "
-									  + "  left join destino d using (destinoid) "
-									  + "  left join tipoimovel ti using (tipoimovelid) ");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
-		return tm;
+		return null;
 	}
 
 	@Override
 	public List<MyTableColumn> getColunas() {
-		if (this.colunas == null) {
-			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
-			colunas.add(new MyTableColumn("Id", 40, JLabel.RIGHT));
-			colunas.add(new MyTableColumn("Origem", 75, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Tipo Processo", 75, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Nº Processo", 150, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Autor", 250));
-			colunas.add(new MyTableColumn("Município", 200));
-			colunas.add(new MyTableColumn("Destino", 200));
-			colunas.add(new MyTableColumn("Cartório", 150));
-			colunas.add(new MyTableColumn("Tipo Imóvel", 60, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Endereço", 200));
-			colunas.add(new MyTableColumn("Coordenada", 80));
-			colunas.add(new MyTableColumn("Área", 80));
-			colunas.add(new MyTableColumn("Nº Processo SEI", 150, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Arq. Anex.?", 60, JLabel.CENTER));
-		}
-		return this.colunas;
+		return null;
 	}
 }

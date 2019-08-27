@@ -321,65 +321,44 @@ public class RecepcaoProcesso extends JInternalFrame {
 			        		String dataHoraDocumento = regDocumento.findElement(By.xpath("./td[2]")).getText();
 	
 			        		if (movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (") && dataHoraDocumento.startsWith(dataHoraDocumento)) {
+		        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao, dataHora);
+
+			        			// clica no ícone de download de arquivos
+			        			WebElement btnDownloadDocumentos = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Download dos Documentos']"));
+			        			passarMouse.moveToElement(btnDownloadDocumentos	).click().build().perform();
+
+			        			// encontra o objeto de marcar download parcial
+			        			WebElement chkParcial = MyUtils.encontrarElemento(wait5, By.xpath("//div[contains(@id, 'edicaodownloadwindow')]//input[@type = 'button' and @role = 'checkbox']"));
+			        			chkParcial.click();
+
+			        			TimeUnit.SECONDS.sleep(1);
+			        			
+			        			// preenche o campo de quais documentos imprimir
+			        			WebElement txtDocsAImprimir = MyUtils.encontrarElemento(wait5, By.xpath("//input[@name = 'parcial']"));
+			        			
+			        			Integer seqDocInicial = Integer.parseInt(regDocumento.findElement(By.xpath("./td[1]")).getText().split(" ")[0]);
+			        			List<WebElement> listaLinks = regDocumento.findElements(By.xpath("./td[4]//i[@class = 'icon-link']"));
+			        			Integer seqDocFinal = seqDocInicial.intValue() + listaLinks.size();
+
+			        			txtDocsAImprimir.sendKeys(seqDocInicial.toString() + "-" + seqDocFinal.toString());
+			        			
+			        			// clica no botão para gerar o PDF
+			        			WebElement btnGerar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Gerar']]"));
+			        			passarMouse.moveToElement(btnGerar).click().build().perform();
+
 			        			encontrouRemessaDocumentos = true;
-				        		List<WebElement> lnkArquivos = regDocumento.findElements(By.xpath("./td[4]/*/a"));
+			        			
 				        		boolean arquivosOk = false;
 				        		String resultadoDownload = "";
-		
+
 				        		do {
-					        		int quantArquivos = 0;
-					        		int linkLido = 0;
-			        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao, dataHora);
-					        		
-					        		for (WebElement lnkArquivo : lnkArquivos) {
-					        			linkLido ++;
-					        			String nomeArquivo = lnkArquivo.getAttribute("data-qtip");
-					        			String tipoArquivo = lnkArquivo.getText();
-					        			MyUtils.appendLogArea(logArea, "Documento " + linkLido + "/" + lnkArquivos.size() + ": " + tipoArquivo + " (" + nomeArquivo + ")");
-			
-					        			if (nomeArquivo != null && (nomeArquivo.toLowerCase().endsWith(".pdf)") || nomeArquivo.toUpperCase().startsWith("OUTROS"))) {
-					        				passarMouse.moveToElement(lnkArquivo).perform();
-					        				boolean clicou = false;
-					        				int tentativa = 1;
-					        				int tentativas = 5;
-					        				do {
-						        				try {
-						        					lnkArquivo.click();
-						        					clicou = true;
-						        					break;
-						        				} catch (Exception e) {
-						        					MyUtils.appendLogArea(logArea, "- A tentativa " + tentativa + "/" + tentativas + " de abrir o arquivo falhou...");
-						        					((JavascriptExecutor) driver).executeScript("window.scrollBy(0,75)", "");
-						        				}
-					        				} while (tentativa++ <= tentativas);
-					        				if (clicou) {
-						        				TimeUnit.SECONDS.sleep(3);
-						        				if (driver.getWindowHandles().size() > 2) {
-						        					driver.switchTo().window(driver.getWindowHandles().toArray()[2].toString());
-						        					// se deu erro ao fechar a janela, indica que o Chrome fechou a aba que é rapidamente aberta quando se inicia o download
-						        					try {
-						        						driver.close();
-						        						resultadoDownload += "- " + tipoArquivo + "(" + nomeArquivo + "): não é PDF \n";
-									        			MyUtils.appendLogArea(logArea, "- O arquivo não é do tipo PDF...");
-						        					} catch (Exception e) {
-						        						quantArquivos ++;
-						        					} finally {
-							        					driver.switchTo().window(janelaAberta);
-						        					}
-						        				} else {
-						        					resultadoDownload += "- " + tipoArquivo + "(" + nomeArquivo + "): download realizado \n";
-							        				quantArquivos ++;
-						        				}
-					        				}
-					        			} else {
-					        				resultadoDownload += "- " + tipoArquivo + "(" + nomeArquivo + "): arquivo não elegível \n";
-						        			MyUtils.appendLogArea(logArea, "- Arquivo não elegível para download (nome não possui extensão PDF e não é do tipo OUTROS)");
-					        			}
-					        		}
-		
 					        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
-					        		arquivosOk = arquivosBaixadosERenomeados(logArea, quantArquivos, pastaDeDownload, numeroSemFormatacao, dataHora);
+					        		arquivosOk = arquivosBaixadosERenomeados(logArea, 1, pastaDeDownload, numeroSemFormatacao, dataHora);
 				        		} while (!arquivosOk);
+
+			        			// clica no botão fechar
+			        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
+			        			passarMouse.moveToElement(btnFechar).click().build().perform();
 	
 				        		receberProcessoSapiens(numeroSemFormatacao, autor, dataHora, resultadoDownload);
 	

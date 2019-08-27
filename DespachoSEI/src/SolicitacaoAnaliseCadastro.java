@@ -1,4 +1,5 @@
 import java.beans.PropertyVetoException;
+import java.sql.Connection;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
@@ -7,14 +8,11 @@ import javax.swing.JTabbedPane;
 import framework.CadastroController;
 
 @SuppressWarnings("serial")
-public class SolicitacaoCompletaCadastro extends JInternalFrame {
+public class SolicitacaoAnaliseCadastro extends JInternalFrame {
 
 	private JTabbedPane tabs = new JTabbedPane();
 	
-	private DespachoServico despachoServico;
-	private Solicitacao solicitacao;
-
-	public SolicitacaoCompletaCadastro(String tituloJanela, DespachoServico despachoServico, Solicitacao solicitacao) {
+	public SolicitacaoAnaliseCadastro(String tituloJanela, Connection conexao, DespachoServico despachoServico, Solicitacao solicitacao, SolicitacaoAnaliseConsulta solicitacaoCadastro) {
 		super(tituloJanela);
 
 		setResizable(true);
@@ -23,13 +21,10 @@ public class SolicitacaoCompletaCadastro extends JInternalFrame {
 		setClosable(true);
 		setSize(1000, 500);
 
-		this.despachoServico = despachoServico;
-		this.solicitacao = solicitacao;
-
-		CadastroController painelSolicitacao = new SolicitacaoEntidadeCadastro(this.despachoServico, this.solicitacao);
+		CadastroController painelSolicitacao = new SolicitacaoCadastro(despachoServico, solicitacao, solicitacaoCadastro);
 		painelSolicitacao.doEditarRegistro();
-		JPanel painelSolicitacaoEnvio = new JPanel();
-		JPanel painelSolicitacaoResposta = new JPanel();
+		JPanel painelSolicitacaoEnvio = new SolicitacaoEnvioCadastro(conexao, despachoServico, solicitacao);
+		JPanel painelSolicitacaoResposta = new SolicitacaoRespostaCadastro(conexao, despachoServico, solicitacao);
 		
 		tabs.addTab("Solicitação", painelSolicitacao);
 		tabs.addTab("Recepção", painelSolicitacaoEnvio);

@@ -30,6 +30,8 @@ public abstract class CadastroController extends JPanel {
 	private JPanel pnlFiltros = null;
 	private boolean exibirTabelaDados = true;
 	private boolean exibirBotoesCadastro = true;
+	private boolean exibirBotaoCancelarEdicao = true;
+	private boolean exibirBotaoIncluir = true;
 
 	public MyTable getTabela() {
 		return this.tabela;
@@ -55,7 +57,16 @@ public abstract class CadastroController extends JPanel {
 		this.exibirBotoesCadastro = exibirBotoesCadastro;
 	}
 	
+	public void setExibirBotaoCancelarEdicao(boolean exibirBotaoCancelarEdicao) {
+		this.exibirBotaoCancelarEdicao = exibirBotaoCancelarEdicao;
+	}
+
+	public void setExibirBotaoIncluir(boolean exibirBotaoIncluir) {
+		this.exibirBotaoIncluir = exibirBotaoIncluir;
+	}
+
 	public void inicializar() {
+		this.setLayout(new BorderLayout());
 		// define se deve ser exibida a tabela de dados
 		if (exibirTabelaDados) {
 			JScrollPane areaRolavel = new JScrollPane(tabela);
@@ -80,7 +91,7 @@ public abstract class CadastroController extends JPanel {
 
 				if (exibirBotoesCadastro) {
 					pnlBotoesAcima.add(btnAtualizar);
-					pnlBotoesAcima.add(btnIncluir);
+					if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
 					pnlBotoesAcima.add(btnExcluir);
 				}
 	
@@ -103,10 +114,11 @@ public abstract class CadastroController extends JPanel {
 
 		// verifica se o painel de campos editáveis deve ser exibido
 		if (pnlCamposEditaveis != null) {
-			System.out.println("Adicionou os campos editáveis...");
 			JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
 			pnlBotoesAbaixo.add(btnSalvar);
-			pnlBotoesAbaixo.add(btnCancelar);
+			if (exibirBotaoCancelarEdicao) {
+				pnlBotoesAbaixo.add(btnCancelar);
+			}
 			JPanel pnlAreaEdicao = new JPanel();
 			pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
 			pnlAreaEdicao.add(this.pnlCamposEditaveis);
@@ -151,8 +163,10 @@ public abstract class CadastroController extends JPanel {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				cancelarEdicao();
-				limparCamposEditaveis();
+				if (exibirTabelaDados) {
+					cancelarEdicao();
+					limparCamposEditaveis();
+				}
 			}
 		});
 
