@@ -493,21 +493,21 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {
 		Map<String, String> retorno = new LinkedHashMap<String, String>();
 		retorno.put("<numero_processo>", resposta.getSolicitacao().getNumeroProcesso());
-		retorno.put("<autor>", resposta.getSolicitacao().getAutor());
-		retorno.put("<comarca>", resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase());
-		retorno.put("<cartorio>", resposta.getSolicitacao().getCartorio());
+		retorno.put("<autor>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getAutor()));
+		retorno.put("<comarca>", (resposta.getSolicitacao().getMunicipio() == null || resposta.getSolicitacao().getMunicipio().getMunicipioComarca() == null ? "" : resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase()));
+		retorno.put("<cartorio>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCartorio()));
 		String destino = resposta.getSolicitacao().getDestino().getUsarCartorio() ? resposta.getSolicitacao().getCartorio() : resposta.getSolicitacao().getDestino().getDescricao();
 		retorno.put("<destino_inicial>", resposta.getSolicitacao().getDestino().getArtigo() + " " + destino);
 		if (resposta.getSolicitacao().getTipoImovel().getDescricao().equalsIgnoreCase("rural") && !resposta.getSolicitacao().getEndereco().equalsIgnoreCase("")) {
-			retorno.put("<tipo_imovel>", resposta.getSolicitacao().getEndereco());
+			retorno.put("<tipo_imovel>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getEndereco()));
 			retorno.put("<endereco>", "");
 		} else {
-			retorno.put("<tipo_imovel>", resposta.getSolicitacao().getTipoImovel().getDescricao().toLowerCase());
+			retorno.put("<tipo_imovel>", (resposta.getSolicitacao().getTipoImovel() == null ? "" : resposta.getSolicitacao().getTipoImovel().getDescricao().toLowerCase()));
 			retorno.put("<endereco>", resposta.getSolicitacao().getEndereco() == null || resposta.getSolicitacao().getEndereco().trim().equals("") ? "" : "localizado na " + resposta.getSolicitacao().getEndereco() + ", ");
 		}
-		retorno.put("<municipio>", resposta.getSolicitacao().getMunicipio().getNome());
-		retorno.put("<area>", resposta.getSolicitacao().getArea() == null || resposta.getSolicitacao().getArea().trim().equals("") ? "" : "com área de " + resposta.getSolicitacao().getArea() + ", ");
-		retorno.put("<coordenada>", resposta.getSolicitacao().getCoordenada() == null || resposta.getSolicitacao().getCoordenada().trim().equals("") ? "" : "cuja poligonal possui um dos vértices com coordenada " + resposta.getSolicitacao().getCoordenada() + ", ");
+		retorno.put("<municipio>", resposta.getSolicitacao().getMunicipio() == null ? "" : resposta.getSolicitacao().getMunicipio().getNome());
+		retorno.put("<area>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getArea()).trim().equals("") ? "" : "com área de " + resposta.getSolicitacao().getArea() + ", ");
+		retorno.put("<coordenada>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCoordenada()).trim().equals("") ? "" : "cuja poligonal possui um dos vértices com coordenada " + resposta.getSolicitacao().getCoordenada() + ", ");
 		retorno.put("<destino_final>", resposta.getSolicitacao().getDestino().getArtigo().toLowerCase() + " " + (destino.startsWith("Procuradoria") ? "Procuradoria" : destino));
 		retorno.put("<assinante>", resposta.getAssinante().getNome());
 		retorno.put("<assinante_cargo>", resposta.getAssinante().getCargo());
@@ -515,7 +515,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		retorno.put("<assinante_superior>", superior.getNome());
 		retorno.put("<assinante_superior_cargo>", superior.getCargo());
 		retorno.put("<assinante_superior_setor>", superior.getSetor());
-		retorno.put("<observacao>", resposta.getObservacao() == null || resposta.getObservacao().trim().equals("") ? "" : resposta.getObservacao());
+		retorno.put("<observacao>", MyUtils.emptyStringIfNull(resposta.getObservacao().trim()));
 		return retorno;
 	}
 

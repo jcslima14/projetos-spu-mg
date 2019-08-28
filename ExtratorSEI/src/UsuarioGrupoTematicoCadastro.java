@@ -98,8 +98,8 @@ public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
 			rs = MyUtils.executeQuery(conexao, "select * from usuariogrupotematico where usuariogrupotematicoid = " + txtUsuarioGrupoTematicoId.getText());
 			rs.next();
 
-			cbbGrupoTematico.setSelectedIndex(MyUtils.itemSelecionado(cbbGrupoTematico, rs.getInt("grupotematicoid"), null));
-			cbbUsuario.setSelectedIndex(MyUtils.itemSelecionado(cbbUsuario, rs.getInt("usuarioid"), null));
+			cbbGrupoTematico.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbGrupoTematico, rs.getInt("grupotematicoid"), null));
+			cbbUsuario.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbUsuario, rs.getInt("usuarioid"), null));
 			chkAtivo.setSelected(rs.getBoolean("ativo"));
 		} catch (Exception e) {
 			e.printStackTrace();

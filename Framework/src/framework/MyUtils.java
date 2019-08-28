@@ -102,7 +102,7 @@ public class MyUtils {
 		return retorno;
 	}
 
-	public static int itemSelecionado(MyComboBox comboBox, Integer intId, String stringId) {
+	public static int comboBoxItemIndex(MyComboBox comboBox, Integer intId, String stringId) {
 		int retorno = 0;
 		for (int i = 0; i < comboBox.getItemCount(); i++) {
 			ComboBoxItem item = (ComboBoxItem) comboBox.getItemAt(i);

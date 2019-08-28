@@ -103,9 +103,9 @@ public class MunicipioCadastro extends CadastroTemplate {
 			Municipio entidade = despachoServico.obterMunicipio(true, Integer.parseInt(txtMunicipioId.getText()), null).iterator().next();
 
 			txtNome.setText(entidade.getNome());
-			cbbMunicipioComarca.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipioComarca, entidade.getMunicipioComarca() == null ? 0 : entidade.getMunicipioComarca().getMunicipioId(), null));
-			cbbDestino.setSelectedIndex(MyUtils.itemSelecionado(cbbDestino, entidade.getDestino() == null ? 0 : entidade.getDestino().getDestinoId(), null));
-			cbbTipoResposta.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoResposta, entidade.getTipoResposta() == null ? 0 : entidade.getTipoResposta().getTipoRespostaId(), null));
+			cbbMunicipioComarca.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbMunicipioComarca, entidade.getMunicipioComarca() == null ? 0 : entidade.getMunicipioComarca().getMunicipioId(), null));
+			cbbDestino.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbDestino, entidade.getDestino() == null ? 0 : entidade.getDestino().getDestinoId(), null));
+			cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta() == null ? 0 : entidade.getTipoResposta().getTipoRespostaId(), null));
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter as informações do Município para edição: \n\n" + e.getMessage());
 			e.printStackTrace();

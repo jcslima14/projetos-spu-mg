@@ -142,7 +142,13 @@ public abstract class CadastroController extends JPanel {
 		btnIncluir.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				incluirRegistro();
+				try {
+					incluirRegistro();
+					definirPermissoesInclusao();
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null, "Erro ao tentar incluir registro: \n\n" + e1.getMessage());
+					e1.printStackTrace();
+				}
 			}
 		});
 
@@ -198,12 +204,14 @@ public abstract class CadastroController extends JPanel {
 		        JTable table = (JTable) mouseEvent.getSource();
 		        if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
 		        	prepararParaEdicao();
-					editarRegistro();
+					definirPermissoesEdicao();
 		        }
 			}
 		});
 	}
 
+	public abstract void incluirRegistro() throws Exception;
+	
 	public abstract void excluirRegistro(Integer id) throws Exception;
 
 	public abstract void salvarRegistro() throws Exception;
@@ -218,14 +226,14 @@ public abstract class CadastroController extends JPanel {
 
 	public void doEditarRegistro() {
 		prepararParaEdicao();
-		editarRegistro();
+		definirPermissoesEdicao();
 	}
 	
-	private void editarRegistro() {
+	private void definirPermissoesEdicao() {
 		componentesEmEdicao(this, true);
 	}
 
-	private void incluirRegistro() {
+	private void definirPermissoesInclusao() {
 		componentesEmInclusao(this, true);
 	}
 

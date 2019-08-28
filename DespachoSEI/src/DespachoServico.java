@@ -146,14 +146,14 @@ public class DespachoServico {
 		while (rs.next()) {
 			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
 					obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null).iterator().next(),
-					obterTipoResposta(rs.getInt("tipoprocessoid"), null).iterator().next(),
+					obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next(),
 					rs.getString("observacao"), 
 					obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
 					MyUtils.entidade(obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null)),
 					rs.getString("numerodocumentosei"),
 					rs.getString("datahoraresposta"),
 					rs.getString("numeroprocessosei"),
-					rs.getBoolean("repostaimpressa"),
+					rs.getBoolean("respostaimpressa"),
 					rs.getString("datahoraimpressao"),
 					rs.getString("blocoassinatura"),
 					rs.getBoolean("respostanoblocoassinatura")

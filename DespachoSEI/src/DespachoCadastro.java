@@ -192,18 +192,18 @@ public class DespachoCadastro extends CadastroTemplate {
 			rs = MyUtils.executeQuery(conexao, "select * from despacho where despachoid = " + txtDespachoId.getText());
 			rs.next();
 
-			cbbTipoProcesso.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoProcesso, rs.getInt("tipoprocessoid"), null));
+			cbbTipoProcesso.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoProcesso, rs.getInt("tipoprocessoid"), null));
 			txtNumeroProcesso.setText(rs.getString("numeroprocesso"));
 			txtAutor.setText(rs.getString("autor"));
 			txtComarca.setText(rs.getString("comarca"));
-			cbbTipoImovel.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoImovel, rs.getInt("tipoimovelid"), null));
+			cbbTipoImovel.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoImovel, rs.getInt("tipoimovelid"), null));
 			txtEndereco.setText(rs.getString("endereco"));
 			txtMunicipio.setText(rs.getString("municipio"));
 			txtCoordenada.setText(rs.getString("coordenada"));
 			txtArea.setText(rs.getString("area"));
-			cbbTipoDespacho.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoDespacho, rs.getInt("tipodespachoid"), null));
-			cbbAssinante.setSelectedIndex(MyUtils.itemSelecionado(cbbAssinante, rs.getInt("assinanteid"), null));
-			cbbDestino.setSelectedIndex(MyUtils.itemSelecionado(cbbDestino, rs.getInt("destinoid"), null));
+			cbbTipoDespacho.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoDespacho, rs.getInt("tipodespachoid"), null));
+			cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, rs.getInt("assinanteid"), null));
+			cbbDestino.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbDestino, rs.getInt("destinoid"), null));
 			txtObservacao.setText(rs.getString("observacao"));
 			txtNumeroDocumentoSEI.setText(rs.getString("numerodocumentosei"));
 			chkDespachoImpresso.setSelected(rs.getBoolean("despachoimpresso"));

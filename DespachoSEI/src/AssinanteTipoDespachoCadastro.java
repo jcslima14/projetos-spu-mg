@@ -90,8 +90,8 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 		AssinanteTipoResposta entidade = null;
 		try {
 			entidade = despachoServico.obterAssinanteTipoResposta(Integer.parseInt(txtAssinanteTipoRespostaId.getText()), null, null).iterator().next();
-			cbbTipoResposta.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoResposta, entidade.getTipoResposta().getTipoRespostaId(), null));
-			cbbAssinante.setSelectedIndex(MyUtils.itemSelecionado(cbbAssinante, entidade.getAssinante().getAssinanteId(), null));
+			cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta().getTipoRespostaId(), null));
+			cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, entidade.getAssinante().getAssinanteId(), null));
 			txtBlocoAssinatura.setText(entidade.getBlocoAssinatura());
 		} catch (Exception e) {
 			e.printStackTrace();

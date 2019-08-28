@@ -253,7 +253,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			txtDataMovimentacao.setText(entidadeEditada.getDataHoraMovimentacao());
 			resultadoDownload = entidadeEditada.getResultadoDownload();
 			resultadoProcessamento = entidadeEditada.getResultadoProcessamento();
-			cbbMunicipio.setSelectedIndex(MyUtils.itemSelecionado(cbbMunicipio, entidadeEditada.getSolicitacao().getMunicipio() == null ? 0 : entidadeEditada.getSolicitacao().getMunicipio().getMunicipioId(), null));
+			cbbMunicipio.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbMunicipio, entidadeEditada.getSolicitacao().getMunicipio() == null ? 0 : entidadeEditada.getSolicitacao().getMunicipio().getMunicipioId(), null));
 			chkArquivosProcessados.setSelected(entidadeEditada.getArquivosProcessados());
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Envio de Solicitação para edição: \n\n" + e.getMessage());

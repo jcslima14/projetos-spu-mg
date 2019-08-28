@@ -203,7 +203,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		componentesEmEdicao(this, true);
 	}
 
-	private void incluirRegistro() {
+	public void incluirRegistro() {
 		componentesEmInclusao(this, true);
 	}
 

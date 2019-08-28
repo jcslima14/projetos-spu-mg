@@ -2,7 +2,6 @@ import java.beans.PropertyVetoException;
 import java.sql.Connection;
 
 import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import framework.CadastroController;
@@ -12,23 +11,20 @@ public class SolicitacaoAnaliseCadastro extends JInternalFrame {
 
 	private JTabbedPane tabs = new JTabbedPane();
 	
-	public SolicitacaoAnaliseCadastro(String tituloJanela, Connection conexao, DespachoServico despachoServico, Solicitacao solicitacao, SolicitacaoAnaliseConsulta solicitacaoCadastro) {
-		super(tituloJanela);
-
+	public SolicitacaoAnaliseCadastro(Connection conexao, DespachoServico despachoServico, Solicitacao solicitacao, SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta) {
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);
 		setClosable(true);
 		setSize(1000, 500);
 
-		CadastroController painelSolicitacao = new SolicitacaoCadastro(despachoServico, solicitacao, solicitacaoCadastro);
-		painelSolicitacao.doEditarRegistro();
-		JPanel painelSolicitacaoEnvio = new SolicitacaoEnvioCadastro(conexao, despachoServico, solicitacao);
-		JPanel painelSolicitacaoResposta = new SolicitacaoRespostaCadastro(conexao, despachoServico, solicitacao);
-		
+		CadastroController painelSolicitacao = new SolicitacaoCadastro(conexao, despachoServico, solicitacao, solicitacaoAnaliseConsulta, this);
+
 		tabs.addTab("Solicitação", painelSolicitacao);
-		tabs.addTab("Recepção", painelSolicitacaoEnvio);
-		tabs.addTab("Resposta", painelSolicitacaoResposta);
+		tabs.addTab("Recepção",  ((SolicitacaoCadastro) painelSolicitacao).getSolicitacaoEnvioCadastro());
+		tabs.addTab("Resposta", ((SolicitacaoCadastro) painelSolicitacao).getSolicitacaoRespostaCadastro());
+
+		painelSolicitacao.doEditarRegistro();
 
 		this.add(tabs);
 	}

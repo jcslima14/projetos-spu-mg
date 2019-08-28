@@ -79,6 +79,14 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		this.inicializar(false);
 	}
 
+	@Override
+	public void incluirRegistro() {
+		Solicitacao entidade = new Solicitacao();
+		SolicitacaoAnaliseCadastro janela = new SolicitacaoAnaliseCadastro(conexao, despachoServico, entidade, this);
+		this.desktop.add(janela);
+		janela.abrirJanela();
+	}
+	
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
@@ -107,9 +115,8 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		Integer solicitacaoId = Integer.parseInt(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		try {
 			Solicitacao entidade = MyUtils.entidade(despachoServico.obterSolicitacao(solicitacaoId, null, null, null));
-			StringBuilder titulo = new StringBuilder("Solicitação de Análise - Nº Processo: ").append(entidade.getNumeroProcesso()).append(" - Autor: ").append(entidade.getAutor()).append(" - Município: ").append(entidade.getMunicipio() == null ? "(Não identificado ainda)" : entidade.getMunicipio().getNome());
 
-			SolicitacaoAnaliseCadastro janela = new SolicitacaoAnaliseCadastro(titulo.toString(), conexao, despachoServico, entidade, this);
+			SolicitacaoAnaliseCadastro janela = new SolicitacaoAnaliseCadastro(conexao, despachoServico, entidade, this);
 			this.desktop.add(janela);
 			janela.abrirJanela();
 		} catch (Exception e) {

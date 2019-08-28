@@ -87,7 +87,7 @@ public class GrupoTematicoCadastro extends CadastroTemplate {
 			rs = MyUtils.executeQuery(conexao, "select * from grupotematico where grupotematicoid = " + txtGrupoTematicoId.getText());
 			rs.next();
 
-			cbbUnidade.setSelectedIndex(MyUtils.itemSelecionado(cbbUnidade, rs.getInt("unidadeid"), null));
+			cbbUnidade.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbUnidade, rs.getInt("unidadeid"), null));
 			txtDescricao.setText(rs.getString("descricao"));
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -27,6 +27,9 @@ public class Solicitacao {
 
 	private Boolean arquivosAnexados;
 
+	public Solicitacao() {
+	}
+	
 	public Solicitacao(Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor) {
 		this.origem = origem;
 		this.tipoProcesso = tipoProcesso;
