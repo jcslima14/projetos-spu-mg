@@ -206,7 +206,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			for (SolicitacaoResposta respostaAGerar : respostasDaUnidade) {
 				// processamento....
 				MyUtils.appendLogArea(logArea, "Processo: " + respostaAGerar.getSolicitacao().getNumeroProcesso());
-	
+
+				// verifica se há pendências
+				if (respostaAGerar.getPendenciasParaGeracao() != null) {
+					MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: " + respostaAGerar.getPendenciasParaGeracao());
+					continue;
+				}
+				
 				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
 					List<File> anexos = obterArquivos(pastaProcessosIndividuais, respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
 					if (respostaAGerar.getSolicitacao().getNumeroProcessoSEI() == null || respostaAGerar.getSolicitacao().getNumeroProcessoSEI().trim().equalsIgnoreCase("")) {
@@ -222,12 +228,11 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						anexarArquivosProcesso(respostaAGerar, anexos, driver, wait);
 					}
 
-					respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
+					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
 				} else {
 					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcesso());
-					respostaAGerar.setBlocoAssinatura(respostaAGerar.getAssinante().getBlocoAssinatura());
 				}
-	
+
 				// pesquisa o processo onde deverá ser incluído a resposta
 				WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtPesquisaRapida']"));
 				txtPesquisaRapida.sendKeys(respostaAGerar.getNumeroProcessoSEI());
@@ -345,8 +350,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				driver.close();
 				driver.switchTo().window(janelaPrincipal);
-				
+
 				// clica no botão adicionar ao bloco interno
+				respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
+				
 				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
 				WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
 				btnIncluirBlocoAssinatura.click();
@@ -556,7 +563,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar() throws Exception {
 		Map<String, List<SolicitacaoResposta>> retorno = new TreeMap<String, List<SolicitacaoResposta>>();
 
-		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, true, false, null, null, null, null);
+		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAGerar();
 		
 		for (SolicitacaoResposta resposta : respostas) {
 			String unidadeAberturaProcesso = resposta.getTipoResposta().getUnidadeAberturaProcesso();

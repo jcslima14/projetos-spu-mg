@@ -11,6 +11,7 @@ import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
 import framework.MyCheckBox;
+import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -37,7 +38,9 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	private MyLabel lblUnidadeAberturaProcesso = new MyLabel("Unidade para abertura de processo individual") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtTipoProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblTipoProcesso = new MyLabel("Tipo de Processo no SEI") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(8, 2));
+	private MyComboBox cbbOrigem = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblOrigem = new MyLabel("Origem") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(9, 2));
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
@@ -46,6 +49,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 		this.conexao = conexao;
 
 		despachoServico = new DespachoServico(conexao);
+		
+		despachoServico.preencherOpcoesOrigem(cbbOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Qualquer origem)")); }});
 		
 		pnlCamposEditaveis.add(lblTipoRespostaId);
 		pnlCamposEditaveis.add(txtTipoRespostaId);
@@ -63,6 +68,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtUnidadeAberturaProcesso);
 		pnlCamposEditaveis.add(lblTipoProcesso);
 		pnlCamposEditaveis.add(txtTipoProcesso);
+		pnlCamposEditaveis.add(lblOrigem);
+		pnlCamposEditaveis.add(cbbOrigem);
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -78,6 +85,7 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 		txtQuantidadeAssinaturas.setText("");
 		txtUnidadeAberturaProcesso.setText("");
 		txtTipoProcesso.setText("");
+		cbbOrigem.setSelectedIndex(0);
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -92,9 +100,10 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 				+  "     , tipoprocesso = '" + txtTipoProcesso.getText() + "' "
 				+  "     , imprimirresposta = " + (chkImprimirResposta.isSelected() ? "true" : "false")
 				+  "     , quantidadeassinaturas = " + (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText())
+				+  "     , origemid = " + (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem))
 				+  " where tiporespostaid = " + txtTipoRespostaId.getText();
 		} else {
-			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas) values (";
+			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas, origemid) values (";
 			sql += "'" + txtDescricao.getText().trim() + "', ";
 			sql += "'" + txtTipoDocumento.getText() + "', ";
 			sql += "'" + txtNumeroDocumentoModelo.getText() + "', ";
@@ -102,7 +111,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			sql += "'" + txtUnidadeAberturaProcesso.getText() + "', ";
 			sql += "'" + txtTipoProcesso.getText() + "', ";
 			sql += (chkImprimirResposta.isSelected() ? "true" : "false") + ", ";
-			sql += (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText()) + ") ";
+			sql += (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText()) + ", ";
+			sql += (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem)) + ") ";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -126,13 +136,28 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			txtTipoProcesso.setText(entidade.getTipoProcesso());
 			chkImprimirResposta.setSelected(entidade.getImprimirResposta());
 			txtQuantidadeAssinaturas.setText(entidade.getQuantidadeAssinaturas().equals(0) ? "" : entidade.getQuantidadeAssinaturas().toString());
+			cbbOrigem.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbOrigem, (entidade.getOrigem() == null ? 0 : entidade.getOrigem().getOrigemId()), null));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select tiporespostaid, descricao, tipodocumento, numerodocumentomodelo, case when gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual, coalesce(unidadeaberturaprocesso, '') as unidadeaberturaprocesso, tipoprocesso, case when imprimirresposta then 'Sim' else 'Não' end as imprimirresposta, quantidadeassinaturas from tiporesposta");
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select tr.tiporespostaid "
+				+ "		 , tr.descricao "
+				+ "		 , tr.tipodocumento "
+				+ "		 , tr.numerodocumentomodelo "
+				+ "		 , case when tr.gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual "
+				+ "		 , coalesce(tr.unidadeaberturaprocesso, '') as unidadeaberturaprocesso "
+				+ "		 , tr.tipoprocesso "
+				+ "		 , case when tr.imprimirresposta then 'Sim' else 'Não' end as imprimirresposta "
+				+ "		 , tr.quantidadeassinaturas "
+				+ "		 , o.descricao as origem "
+				+ "   from tiporesposta tr "
+				+ "   left join origem o using (origemid) "
+				+ " order by tr.descricao ");
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -150,7 +175,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Unidade Abertura Processo", 150, true));
 			colunas.add(new MyTableColumn("Tipo de Processo no SEI", 250, true));
 			colunas.add(new MyTableColumn("Imprimir resposta?", 100, true, JLabel.CENTER));
-			colunas.add(new MyTableColumn("Quantidade Assinaturas", 100, true, JLabel.RIGHT));
+			colunas.add(new MyTableColumn("Quantidade Assinaturas", 80, true, JLabel.RIGHT));
+			colunas.add(new MyTableColumn("Origem", 100, true, JLabel.CENTER));
 		}
 		return this.colunas;
 	}

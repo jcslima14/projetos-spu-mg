@@ -90,8 +90,8 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
-		cbbOrdenacao.addItem(new ComboBoxItem(null, "autor", "Autor"));
-		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio", "Município"));
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "autor collate nocase", "Autor"));
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio collate nocase ", "Município"));
 	}
 
 	public void limparCamposEditaveis() {

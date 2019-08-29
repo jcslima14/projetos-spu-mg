@@ -1,6 +1,7 @@
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -42,7 +43,7 @@ public class DespachoServico {
 					obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
 					rs.getString("numeroprocesso"), 
 					rs.getString("autor"),
-					MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioid"), null)),
+					MyUtils.entidade(obterMunicipio(true, rs.getInt("municipioid"), null)),
 					MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null)),
 					rs.getString("cartorio"),
 					MyUtils.entidade(obterTipoImovel(rs.getInt("tipoimovelid"), null)),
@@ -100,8 +101,38 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, boolean somenteDocumentosNaoGerados, boolean somenteDocumentosGerados,
-			Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
+	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, null, null, null, null);
+		Iterator<SolicitacaoResposta> i = respostas.iterator();
+		while (i.hasNext()) {
+			// se o nº de documento do SEI estiver preenchido, não retorna a resposta
+			SolicitacaoResposta resposta = i.next();
+			if (!MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("")) {
+				i.remove();
+			}
+		}
+		return  respostas;
+	}
+
+	public List<SolicitacaoResposta> obterRespostasAImprimir(Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, tipoRespostaImprimirResposta);
+		Iterator<SolicitacaoResposta> i = respostas.iterator();
+		while (i.hasNext()) {
+			// se o nº de documento do SEI estiver vazio, não retorna a resposta
+			SolicitacaoResposta resposta = i.next();
+			if (MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("")) {
+				i.remove();
+			}
+		}
+		return  respostas;
+	}
+
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId) throws Exception {
+		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null);
+	}
+	
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
+			Boolean tipoRespostaImprimirResposta) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -120,12 +151,6 @@ public class DespachoServico {
 			}
 			if (numeroProcesso != null) {
 				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "' ");
-			}
-			if (somenteDocumentosNaoGerados) {
-				sql.append(" and coalesce(sr.numerodocumentosei, '' ) = '' ");
-			}
-			if (somenteDocumentosGerados) {
-				sql.append(" and coalesce(sr.numerodocumentosei, '' ) <> '' ");
 			}
 			if (respostaImpressa != null) {
 				sql.append(" and sr.respostaimpressa = " + (respostaImpressa ? "true" : "false"));
@@ -296,7 +321,7 @@ public class DespachoServico {
 			}
 		}
 
-		sql.append(" order by descricao ");
+		sql.append(" order by descricao collate nocase ");
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
@@ -320,7 +345,7 @@ public class DespachoServico {
 			}
 		}
 
-		sql.append(" order by descricao ");
+		sql.append(" order by descricao collate nocase ");
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
@@ -332,6 +357,10 @@ public class DespachoServico {
 	}
 
 	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao) throws Exception {
+		return obterTipoResposta(tipoRespostaId, descricao, null);
+	}
+
+	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Origem origem) throws Exception {
 		List<TipoResposta> retorno = new ArrayList<TipoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -342,9 +371,12 @@ public class DespachoServico {
 			if (descricao != null) {
 				sql.append(" and descricao like '" + descricao + "'");
 			}
+			if (origem != null && origem.getOrigemId() != null) {
+				sql.append(" and origemid = " + origem.getOrigemId());
+			}
 		}
 
-		sql.append(" order by descricao ");
+		sql.append(" order by descricao collate nocase ");
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
@@ -357,7 +389,8 @@ public class DespachoServico {
 					rs.getString("unidadeaberturaprocesso"), 
 					rs.getString("tipoprocesso"), 
 					rs.getBoolean("imprimirresposta"), 
-					rs.getInt("quantidadeassinaturas")));
+					rs.getInt("quantidadeassinaturas"),
+					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null))));
 		}
 		
 		return retorno;
@@ -376,7 +409,7 @@ public class DespachoServico {
 			}
 		}
 
-		sql.append(" order by nome ");
+		sql.append(" order by nome collate nocase ");
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
@@ -397,11 +430,49 @@ public class DespachoServico {
 		return retorno;
 	}
 
+	public List<MunicipioTipoResposta> obterMunicipioTipoResposta(Integer municipioTipoRespostaId, Municipio municipio, Origem origem, TipoResposta tipoResposta) throws Exception {
+		List<MunicipioTipoResposta> retorno = new ArrayList<MunicipioTipoResposta>();
+
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select mtr.* from municipiotiporesposta mtr ");
+		sql.append(" inner join municipio m using (municipioid) ");
+		sql.append(" inner join origem o using (origemid) ");
+		sql.append(" inner join tiporesposta tr using (tiporespostaid) ");
+		sql.append(" where 1 = 1 ");
+		if (municipioTipoRespostaId != null) {
+			sql.append(" and municipiotiporespostaid = " + municipioTipoRespostaId);
+		} else {
+			if (municipio != null && municipio.getMunicipioId() != null) {
+				sql.append(" and mtr.municipioid = " + municipio.getMunicipioId());
+			}
+			if (origem != null && origem.getOrigemId() != null) {
+				sql.append(" and mtr.origemid = " + origem.getOrigemId());
+			}
+			if (tipoResposta != null && tipoResposta.getTipoRespostaId() != null) {
+				sql.append(" and mtr.tiporespostaid = " + tipoResposta.getTipoRespostaId());
+			}
+		}
+
+		sql.append(" order by m.nome collate nocase, o.descricao collate nocase ");
+		
+		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		while (rs.next()) {
+			retorno.add(new MunicipioTipoResposta(rs.getInt("municipiotiporespostaid"),
+										MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioid"), null)),
+										MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
+										MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null))
+					));
+		}
+		
+		return retorno;
+	}
+
 	public List<Assinante> obterAssinante(Integer assinanteId, String nome, Boolean superior, Boolean ativo) throws Exception {
 		List<Assinante> retorno = new ArrayList<Assinante>();
 
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from assinante where 1= 1");
+		sql.append("select * from assinante where 1 = 1");
 		if (assinanteId != null) {
 			sql.append(" and assinanteid = " + assinanteId);
 		} else {
@@ -447,7 +518,7 @@ public class DespachoServico {
 		}
 
 		if (orderBy == null) orderBy = "descricao";
-		sql.append(" order by " + orderBy);
+		sql.append(" order by " + orderBy + " collate nocase ");
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 

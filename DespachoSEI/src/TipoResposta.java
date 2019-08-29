@@ -18,6 +18,8 @@ public class TipoResposta implements ItemComboBox {
 	private Boolean imprimirResposta;
 	
 	private Integer quantidadeAssinaturas;
+	
+	private Origem origem;
 
 	public TipoResposta(Integer tipoRespostaId) {
 		this.tipoRespostaId = tipoRespostaId;
@@ -28,7 +30,8 @@ public class TipoResposta implements ItemComboBox {
 		this.descricao = descricao;
 	}
 
-	public TipoResposta(Integer tipoRespostaId, String descricao, String tipoDocumento, String numeroDocumentoSEI, Boolean gerarProcessoIndividual, String unidadeAberturaProcesso, String tipoProcesso, Boolean imprimirResposta, Integer quantidadeAssinaturas) {
+	public TipoResposta(Integer tipoRespostaId, String descricao, String tipoDocumento, String numeroDocumentoSEI, Boolean gerarProcessoIndividual, String unidadeAberturaProcesso, String tipoProcesso, 
+			Boolean imprimirResposta, Integer quantidadeAssinaturas, Origem origem) {
 		this.tipoRespostaId = tipoRespostaId;
 		this.descricao = descricao;
 		this.tipoDocumento = tipoDocumento;
@@ -38,6 +41,7 @@ public class TipoResposta implements ItemComboBox {
 		this.tipoProcesso = tipoProcesso;
 		this.imprimirResposta = imprimirResposta;
 		this.quantidadeAssinaturas = quantidadeAssinaturas;
+		this.origem = origem;
 	}
 
 	public Integer getTipoRespostaId() {
@@ -110,6 +114,14 @@ public class TipoResposta implements ItemComboBox {
 
 	public void setQuantidadeAssinaturas(Integer quantidadeAssinaturas) {
 		this.quantidadeAssinaturas = quantidadeAssinaturas;
+	}
+
+	public Origem getOrigem() {
+		return origem;
+	}
+
+	public void setOrigem(Origem origem) {
+		this.origem = origem;
 	}
 
 	@Override

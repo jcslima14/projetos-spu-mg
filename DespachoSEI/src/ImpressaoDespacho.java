@@ -376,7 +376,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			respostaNoBlocoAssinatura = true;
 		}
 		
-		List<SolicitacaoResposta> respostas = despachoServico.obterSolicitacaoResposta(null, null, null, null, false, true, respostaImpressa, respostaNoBlocoAssinatura, assinante, true);
+		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAImprimir(respostaImpressa, respostaNoBlocoAssinatura, assinante, true);
 
 		for (SolicitacaoResposta resposta : respostas) {
 			String chave = (tipoFiltro == 1 ? resposta.getNumeroProcessoSEI() : resposta.getBlocoAssinatura());

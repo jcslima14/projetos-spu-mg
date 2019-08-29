@@ -374,7 +374,7 @@ public class SolicitacaoCadastro extends CadastroController {
 			if (txtSolicitacaoRespostaId.getText().equals("")) {
 				entidade = new SolicitacaoResposta(null, SolicitacaoCadastro.this.entidade, tipoResposta, txtObservacao.getText(), assinante, null, txtNumeroDocumentoSEI.getText(), null, txtNumeroProcessoSEI.getText(), chkRespostaImpressa.isSelected(), null, txtBlocoAssinatura.getText(), chkRespostaNoBlocoAssinatura.isSelected());
 			} else {
-				entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText()), null, null, null, false, false, null, null, null, null));
+				entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText())));
 				entidade.setTipoResposta(tipoResposta);
 				entidade.setObservacao(txtObservacao.getText());
 				entidade.setAssinante(assinante);
@@ -396,7 +396,7 @@ public class SolicitacaoCadastro extends CadastroController {
 			txtSolicitacaoRespostaId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 
 			try {
-				SolicitacaoResposta entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText()), null, null, null, false, false, null, null, null, null));
+				SolicitacaoResposta entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText())));
 				cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta() == null ? 0 : entidade.getTipoResposta().getTipoRespostaId(), null));
 				txtObservacao.setText(entidade.getObservacao());
 				cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, entidade.getAssinante() == null ? 0 : entidade.getAssinante().getAssinanteId(), null));
@@ -462,8 +462,18 @@ public class SolicitacaoCadastro extends CadastroController {
 
 		@Override
 		public void incluirRegistro() throws Exception {
-			if (SolicitacaoCadastro.this.entidade.getMunicipio() != null && SolicitacaoCadastro.this.entidade.getMunicipio().getTipoResposta() != null) {
-				cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, SolicitacaoCadastro.this.entidade.getMunicipio().getTipoResposta().getTipoRespostaId(), null));
+			Solicitacao s = SolicitacaoCadastro.this.entidade;
+			MunicipioTipoResposta municipioTipoResposta = MyUtils.entidade(despachoServico.obterMunicipioTipoResposta(null, s.getMunicipio() == null ? new Municipio(0) : s.getMunicipio(), s.getOrigem(), null));
+			TipoResposta tipoRespostaPadrao = null;
+			if (municipioTipoResposta != null) {
+				tipoRespostaPadrao = municipioTipoResposta.getTipoResposta();
+			} else {
+				if (s.getMunicipio() != null && s.getMunicipio().getTipoResposta() != null) {
+					tipoRespostaPadrao = s.getMunicipio().getTipoResposta();
+				}
+			}
+			if (tipoRespostaPadrao != null) {
+				cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, tipoRespostaPadrao.getTipoRespostaId(), null));
 			}
 		}
 	}

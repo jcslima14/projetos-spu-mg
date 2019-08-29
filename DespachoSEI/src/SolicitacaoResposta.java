@@ -1,3 +1,5 @@
+import framework.MyUtils;
+
 public class SolicitacaoResposta {
 	private Integer solicitacaoRespostaId;
 	
@@ -144,5 +146,26 @@ public class SolicitacaoResposta {
 
 	public void setRespostaNoBlocoAssinatura(Boolean respostaNoBlocoAssinatura) {
 		this.respostaNoBlocoAssinatura = respostaNoBlocoAssinatura;
+	}
+
+	public String getPendenciasParaGeracao() {
+		String retorno = "";
+		if (MyUtils.emptyStringIfNull(getSolicitacao().getAutor()).equals("")) {
+			retorno.concat("Autor não informado\n");
+		}
+		if (getSolicitacao().getMunicipio() == null) {
+			retorno.concat("Município não informado\n");
+		}
+		if (getSolicitacao().getDestino() == null) {
+			retorno.concat("Destino não informado\n");
+		} else {
+			if (getSolicitacao().getDestino().getUsarCartorio() && MyUtils.emptyStringIfNull(getSolicitacao().getCartorio()).contentEquals("")) {
+				retorno.concat("Cartório não informado\n");
+			}
+		}
+		if (getSolicitacao().getTipoImovel() == null) {
+			retorno.concat("Tipo de Imóvel não informado\n");
+		}
+		return retorno;
 	}
 }

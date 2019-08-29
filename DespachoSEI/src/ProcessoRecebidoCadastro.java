@@ -220,9 +220,9 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
-		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso collate nocase", "Número do Processo"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "datahoramovimentacao desc", "Data Movimentação mais recente"));
-		cbbOrdenacao.addItem(new ComboBoxItem(null, "m.nome", "Município"));
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio collate nocase", "Município"));
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -284,18 +284,18 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 		Integer filtroMunicipio = MyUtils.idItemSelecionado(cbbFiltroMunicipio);
 		if (filtroMunicipio.equals(-2)) {
-			sql.append(" and se.municipioid is not null ");
+			sql.append(" and s.municipioid is not null ");
 		} else if (filtroMunicipio.equals(-1)) {
-			sql.append(" and se.municipioid is null ");
+			sql.append(" and s.municipioid is null ");
 		} else if (filtroMunicipio.intValue() > 0) {
-			sql.append(" and se.municipioid = " + filtroMunicipio);
+			sql.append(" and s.municipioid = " + filtroMunicipio);
 		}
 
 		Integer filtroArquivosProcessados = MyUtils.idItemSelecionado(cbbFiltroArquivosProcessados);
 		if (filtroArquivosProcessados.equals(0)) {
-			sql.append(" and not arquivosprocessados ");
+			sql.append(" and not s.arquivosprocessados ");
 		} else if (filtroArquivosProcessados.equals(1)) {
-			sql.append(" and arquivosprocessados ");
+			sql.append(" and s.arquivosprocessados ");
 		}
 
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));

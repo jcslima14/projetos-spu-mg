@@ -30,6 +30,8 @@ public class DespachoSEI extends JFrame {
 
 		JMenuItem sbmSolicitacaoAnalise = new JMenuItem("Solicitação de Análise");
 		JMenuItem sbmMunicipio = new JMenuItem("Município");
+		JMenuItem sbmMunicipioTipoResposta = new JMenuItem("Tipo de Resposta por Município");
+		JMenuItem sbmMunicipioMenu = new JMenu("Município") {{ add(sbmMunicipio); add(sbmMunicipioTipoResposta); }};
 		JMenuItem sbmAssinante = new JMenuItem("Assinante");
 		JMenuItem sbmAssinanteTipoResposta = new JMenuItem("Tipo de Resposta por Assinante");
 		JMenuItem sbmAssinanteMenu = new JMenu("Assinante") {{ add(sbmAssinante); add(sbmAssinanteTipoResposta); }};
@@ -47,7 +49,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnalise); addSeparator();
-													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipio); addSeparator(); 
+													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
 													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); addSeparator();
 													 add(sbmProcessoRecebido); }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
@@ -175,6 +177,15 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 		
+		sbmMunicipioTipoResposta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MunicipioTipoRespostaCadastro janela = new MunicipioTipoRespostaCadastro("Tipo de Resposta x Município", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
 		sbmMunicipio.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -255,6 +266,7 @@ public class DespachoSEI extends JFrame {
 		criarTabelaTipoImovel(conexao);
 		criarTabelaTipoProcesso(conexao);
 		criarTabelaMunicipio(conexao);
+		criarTabelaMunicipioTipoResposta(conexao);
 		criarTabelaParametro(conexao);
 		criarTabelaOrigem(conexao);
 	}
@@ -365,7 +377,8 @@ public class DespachoSEI extends JFrame {
 						 "  unidadeaberturaprocesso varchar," + 
 						 "  tipoprocesso varchar," + 
 						 "  imprimirresposta boolean not null," +
-						 "  quantidadeassinaturas integer" +
+						 "  quantidadeassinaturas integer," +
+						 "  origemid integer" +
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
@@ -404,6 +417,20 @@ public class DespachoSEI extends JFrame {
 						 "  municipioidcomarca integer," +
 						 "  destinoid integer," +
 						 "  tiporespostaid integer" +
+						 ")"; 
+
+			MyUtils.execute(conexao, sql);
+		}
+	}
+
+	private void criarTabelaMunicipioTipoResposta(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "municipiotiporesposta")) {
+			String sql = "CREATE TABLE municipiotiporesposta " + 
+						 "(" + 
+						 "  municipiotiporespostaid integer primary key autoincrement not null," + 
+						 "  municipioid integer not null," + 
+						 "  origemid integer not null," +
+						 "  tiporespostaid integer not null" +
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
