@@ -39,7 +39,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null);
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null, null);
 		despachoServico.preencherOpcoesAssinante(cbbAssinante, null, false, null);
 
 		pnlCamposEditaveis.add(lblAssinanteTipoRespostaId);

@@ -256,9 +256,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					} else {
 						origemProcesso = "Cartório da Comarca";
 					}
-					destinos = despachoServico.obterDestino(null, null, origemProcesso, null, null);
+					destinos = despachoServico.obterDestino(null, null, origemProcesso, null, null, null);
 				} else {
-					destinos = despachoServico.obterDestino(null, null, null, municipio, null);
+					destinos = despachoServico.obterDestino(null, null, null, null, municipio, null);
 					if (municipios != null && !municipios.isEmpty() && municipios.iterator().next().getMunicipioComarca() != null) cartorio = municipios.iterator().next().getMunicipioComarca().getNome();
 				}
 

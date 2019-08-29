@@ -95,7 +95,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		this.despachoServico.preencherOpcoesTipoImovel(cbbTipoImovel, new ArrayList<TipoImovel>() {{ add(new TipoImovel(0, "(Selecione o tipo do imóvel)")); }});
 		this.despachoServico.preencherOpcoesTipoProcesso(cbbTipoProcesso, null);
 		this.despachoServico.preencherOpcoesMunicipio(cbbMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Selecione o município)", null, null, null)); }});
-		this.despachoServico.preencherOpcoesDestino(cbbDestino, new ArrayList<Destino>() {{ add(new Destino(0, null, "(Selecione o destino)", null, null)); }});
+		// this.despachoServico.preencherOpcoesDestino(cbbDestino, new ArrayList<Destino>() {{ add(new Destino(0, null, "(Selecione o destino)", null, null)); }});
 		
 		pnlCamposEditaveis.add(lblSolicitacaoId);
 		pnlCamposEditaveis.add(txtSolicitacaoId);
@@ -139,10 +139,24 @@ public class SolicitacaoCadastro extends CadastroController {
 		pnlCamposEditaveis.add(chkArquivosAnexados);
 		pnlCamposEditaveis.add(new JPanel());
 
+		cbbOrigem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					alterarOpcoesDestino();
+					alterarSelecaoDestino();
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Erro ao verificar se o destino deve ser selecionado automaticamente: \n\n" + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		});
+
 		cbbMunicipio.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				try {
+					alterarOpcoesDestino();
 					alterarSelecaoDestino();
 				} catch (Exception e) {
 					JOptionPane.showMessageDialog(null, "Erro ao verificar se o destino deve ser selecionado automaticamente: \n\n" + e.getMessage());
@@ -155,6 +169,10 @@ public class SolicitacaoCadastro extends CadastroController {
 		this.inicializar();
 	}
 
+	private void alterarOpcoesDestino() {
+		despachoServico.preencherOpcoesDestino(cbbDestino, new ArrayList<Destino>() {{ add(new Destino(0, null, "(Selecione o destino)", null, null)); }}, new Origem(MyUtils.idItemSelecionado(cbbOrigem)));
+	}
+	
 	private void alterarSelecaoDestino() throws Exception {
 		boolean habilitado = true;
 		if (MyUtils.idItemSelecionado(cbbOrigem).equals(Origem.SAPIENS_ID)) {
@@ -168,6 +186,9 @@ public class SolicitacaoCadastro extends CadastroController {
 		cbbDestino.setEnabled(habilitado);
 		cbbDestino.setInclusao(habilitado);
 		cbbDestino.setEdicao(habilitado);
+		txtCartorio.setEnabled(habilitado);
+		txtCartorio.setInclusao(habilitado);
+		txtCartorio.setEdicao(habilitado);
 	}
 
 	public void limparCamposEditaveis() {
@@ -201,7 +222,7 @@ public class SolicitacaoCadastro extends CadastroController {
 				destino = municipio.getDestino();
 			}
 		} else {
-			destino = MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null));
+			destino = MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null, null));
 		}
 
 		entidade.setOrigem(origem);
@@ -210,7 +231,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		entidade.setAutor(txtAutor.getText());
 		entidade.setMunicipio(municipio);
 		entidade.setDestino(destino);
-		entidade.setCartorio(txtCartorio.getText());
+		entidade.setCartorio(destino.getUsarCartorio() ? txtCartorio.getText() : null);
 		entidade.setTipoImovel(tipoImovel);
 		entidade.setEndereco(txtEndereco.getText());
 		entidade.setCoordenada(txtCoordenada.getText());
@@ -302,7 +323,6 @@ public class SolicitacaoCadastro extends CadastroController {
 			this.despachoServico = despachoServico;
 			this.conexao = conexao;
 
-			despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Selecione o tipo de resposta)")); }});
 			despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Selecione o assinante)", null, null, null, null, null, null)); }}, false, true); 
 
 			pnlCamposEditaveis.add(lblSolicitacaoRespostaId);
@@ -397,6 +417,9 @@ public class SolicitacaoCadastro extends CadastroController {
 
 			try {
 				SolicitacaoResposta entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText())));
+
+				despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Selecione o tipo de resposta)")); }}, entidade.getSolicitacao().getOrigem());
+
 				cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta() == null ? 0 : entidade.getTipoResposta().getTipoRespostaId(), null));
 				txtObservacao.setText(entidade.getObservacao());
 				cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, entidade.getAssinante() == null ? 0 : entidade.getAssinante().getAssinanteId(), null));
@@ -465,6 +488,8 @@ public class SolicitacaoCadastro extends CadastroController {
 			Solicitacao s = SolicitacaoCadastro.this.entidade;
 			MunicipioTipoResposta municipioTipoResposta = MyUtils.entidade(despachoServico.obterMunicipioTipoResposta(null, s.getMunicipio() == null ? new Municipio(0) : s.getMunicipio(), s.getOrigem(), null));
 			TipoResposta tipoRespostaPadrao = null;
+			despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Selecione o tipo de resposta)")); }}, s.getOrigem());
+
 			if (municipioTipoResposta != null) {
 				tipoRespostaPadrao = municipioTipoResposta.getTipoResposta();
 			} else {

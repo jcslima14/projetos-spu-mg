@@ -42,9 +42,9 @@ public class MunicipioCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 		
-		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Nenhuma)")); }});
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Nenhuma)")); }}, null);
 		despachoServico.preencherOpcoesMunicipio(cbbMunicipioComarca, null);
-		despachoServico.preencherOpcoesDestino(cbbDestino, null);
+		despachoServico.preencherOpcoesDestino(cbbDestino, null, null);
 		
 		pnlCamposEditaveis.add(lblMunicipioId);
 		pnlCamposEditaveis.add(txtMunicipioId);

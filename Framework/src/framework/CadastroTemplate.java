@@ -30,6 +30,11 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	private MyButton[] btnBotoesPosteriores = null;
 	private JPanel pnlCamposEditaveis;
 	private JPanel pnlFiltros = null;
+	private boolean exibirBotaoIncluir = true;
+
+	public void setExibirBotaoIncluir(boolean exibirBotaoIncluir) {
+		this.exibirBotaoIncluir = exibirBotaoIncluir;
+	}
 
 	public MyTable getTabela() {
 		return this.tabela;
@@ -84,7 +89,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		pnlPainelSuperior.setLayout(new BoxLayout(pnlPainelSuperior, BoxLayout.Y_AXIS));
 		JPanel pnlBotoesAcima = new JPanel(new FlowLayout());
 		pnlBotoesAcima.add(btnAtualizar);
-		pnlBotoesAcima.add(btnIncluir);
+		if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
 		pnlBotoesAcima.add(btnExcluir);
 
 		if (btnBotoesPosteriores != null) {

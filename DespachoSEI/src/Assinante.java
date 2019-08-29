@@ -21,6 +21,11 @@ public class Assinante implements ItemComboBox {
 		this.assinanteId = assinanteId;
 	}
 
+	public Assinante(Integer assinanteId, String nome) {
+		this.assinanteId = assinanteId;
+		this.nome = nome;
+	}
+
 	public Assinante(Integer assinanteId, String nome, Boolean ativo, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
 		this.assinanteId = assinanteId;
 		this.nome = nome;

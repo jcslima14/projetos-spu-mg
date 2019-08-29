@@ -44,7 +44,7 @@ public class DespachoServico {
 					rs.getString("numeroprocesso"), 
 					rs.getString("autor"),
 					MyUtils.entidade(obterMunicipio(true, rs.getInt("municipioid"), null)),
-					MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null)),
+					MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null, null)),
 					rs.getString("cartorio"),
 					MyUtils.entidade(obterTipoImovel(rs.getInt("tipoimovelid"), null)),
 					rs.getString("endereco"),
@@ -357,10 +357,10 @@ public class DespachoServico {
 	}
 
 	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao) throws Exception {
-		return obterTipoResposta(tipoRespostaId, descricao, null);
+		return obterTipoResposta(tipoRespostaId, descricao, null, false);
 	}
 
-	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Origem origem) throws Exception {
+	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Origem origem, boolean incluirSemOrigem) throws Exception {
 		List<TipoResposta> retorno = new ArrayList<TipoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -372,7 +372,9 @@ public class DespachoServico {
 				sql.append(" and descricao like '" + descricao + "'");
 			}
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and origemid = " + origem.getOrigemId());
+				sql.append(" and (origemid = " + origem.getOrigemId());
+				if (incluirSemOrigem) sql.append(" or origemid is null");
+				sql.append(")");
 			}
 		}
 
@@ -422,7 +424,7 @@ public class DespachoServico {
 			retorno.add(new Municipio(rs.getInt("municipioid"),
 									  rs.getString("nome"),
 									  comarca,
-									  MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null)),
+									  MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null, null)),
 									  MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null))
 					));
 		}
@@ -496,7 +498,7 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public List<Destino> obterDestino(Integer destinoId, String descricao, String abreviacao, String municipio, String orderBy) throws Exception {
+	public List<Destino> obterDestino(Integer destinoId, String descricao, String abreviacao, Boolean usarCartorio, String municipio, String orderBy) throws Exception {
 		List<Destino> retorno = new ArrayList<Destino>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -510,6 +512,10 @@ public class DespachoServico {
 
 			if (abreviacao != null) {
 				sql.append(" and abreviacao like '" + abreviacao + "'");
+			}
+
+			if (usarCartorio != null) {
+				sql.append(" and usarcartorio = " + usarCartorio);
 			}
 
 			if (municipio != null) {
@@ -575,10 +581,10 @@ public class DespachoServico {
 		MyUtils.execute(conexao, sql);
 	}
 
-	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais) {
+	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais, Origem origem) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoResposta>();
-			opcoesIniciais.addAll(obterTipoResposta(null, null));
+			opcoesIniciais.addAll(obterTipoResposta(null, null, origem, true));
 			MyUtils.insereOpcoesComboBox(cbbTipoResposta, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Resposta: \n\n" + e.getMessage());
@@ -608,10 +614,10 @@ public class DespachoServico {
 		}
 	}
 
-	public void preencherOpcoesDestino(MyComboBox cbbDestino, List<Destino> opcoesIniciais) {
+	public void preencherOpcoesDestino(MyComboBox cbbDestino, List<Destino> opcoesIniciais, Origem origem) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Destino>();
-			opcoesIniciais.addAll(obterDestino(null, null, null, null, "abreviacao"));
+			opcoesIniciais.addAll(obterDestino(null, null, null, origem == null ? null : (origem.getOrigemId().equals(Origem.SAPIENS_ID) ? false : true), null, "abreviacao"));
 			MyUtils.insereOpcoesComboBox(cbbDestino, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Destino: \n\n" + e.getMessage());

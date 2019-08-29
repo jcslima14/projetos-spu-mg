@@ -28,7 +28,10 @@ public class DespachoSEI extends JFrame {
 
 		Connection conexao = obterConexao();
 
+		JMenuItem sbmProcessoRecebido = new JMenuItem("Processamento de Solicitação de Análise Recebida");
 		JMenuItem sbmSolicitacaoAnalise = new JMenuItem("Solicitação de Análise");
+		JMenuItem sbmSolicitacaoResposta = new JMenuItem("Resposta à Solicitação de Análise");
+		JMenuItem sbmSolicitacaoAnaliseMenu = new JMenu("Solicitação de Análise") {{ add(sbmSolicitacaoAnalise); add(sbmSolicitacaoResposta); add(sbmProcessoRecebido); }};
 		JMenuItem sbmMunicipio = new JMenuItem("Município");
 		JMenuItem sbmMunicipioTipoResposta = new JMenuItem("Tipo de Resposta por Município");
 		JMenuItem sbmMunicipioMenu = new JMenu("Município") {{ add(sbmMunicipio); add(sbmMunicipioTipoResposta); }};
@@ -44,14 +47,13 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
 		JMenuItem sbmImpressaoRespostas = new JMenuItem("Impressão de Respostas");
 		JMenuItem sbmRecepcaoProcessos = new JMenuItem("Recepção de Processos do Sapiens");
-		JMenuItem sbmProcessoRecebido = new JMenuItem("Processos Recebidos do Sapiens");
 		JMenuItem sbmInclusaoSPUNet = new JMenuItem("Inclusão de Geometadados no SPUNet");
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
-		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnalise); addSeparator();
+		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
-													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); addSeparator();
-													 add(sbmProcessoRecebido); }};
+													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); 
+												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 //															   addSeparator(); add(sbmInclusaoSPUNet);  
@@ -91,7 +93,16 @@ public class DespachoSEI extends JFrame {
 		sbmProcessoRecebido.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ProcessoRecebidoCadastro janela = new ProcessoRecebidoCadastro("Processos Recebidos do Sapiens", conexao);
+				ProcessoRecebidoCadastro janela = new ProcessoRecebidoCadastro("Processamento de Solicitação de Análise Recebida", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmSolicitacaoResposta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				DespachoCadastro janela = new DespachoCadastro("Resposta à Solicitação de Análise", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}

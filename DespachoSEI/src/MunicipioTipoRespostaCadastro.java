@@ -1,4 +1,6 @@
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 		
 		despachoServico.preencherOpcoesMunicipio(cbbMunicipio, null);
 		despachoServico.preencherOpcoesOrigem(cbbOrigem, null);
-		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null);
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null, null);
 
 		pnlCamposEditaveis.add(lblMunicipioTipoRespostaId);
 		pnlCamposEditaveis.add(txtMunicipioTipoRespostaId);
@@ -52,8 +54,24 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(lblTipoResposta);
 		pnlCamposEditaveis.add(cbbTipoResposta);
 
+		cbbOrigem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					alterarOpcoesTipoResposta();
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Erro ao atualizar os tipos de resposta de acordo com a origem selecionada: \n\n" + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		});
+
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
+	}
+
+	private void alterarOpcoesTipoResposta() throws Exception {
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null, new Origem(MyUtils.idItemSelecionado(cbbOrigem)));
 	}
 
 	public void limparCamposEditaveis() {

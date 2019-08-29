@@ -174,6 +174,9 @@ public class MyUtils {
 	}
 	
 	public static void insereOpcoesComboBox(Connection conexao, MyComboBox comboBox, String sql, List<ComboBoxItem> itensInicioLista) {
+		// limpa os itens da lista
+		comboBox.removeAllItems();
+
 		// insere os itens adicionais ao início da lista
 		for (ComboBoxItem itemInicioLista : itensInicioLista) {
 			comboBox.addItem(itemInicioLista);
@@ -280,6 +283,8 @@ public class MyUtils {
 	}
 
 	public static <T> void insereOpcoesComboBox(MyComboBox comboBox, List<T> opcoes) {
+		comboBox.removeAllItems();
+
 		for (T opcao : opcoes) {
 			ItemComboBox item = (ItemComboBox) opcao;
 			comboBox.addItem(new ComboBoxItem(item.getIntegerItemValue(), item.getStringItemValue(), item.getItemLabel()));
