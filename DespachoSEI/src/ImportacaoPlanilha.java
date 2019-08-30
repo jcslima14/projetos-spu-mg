@@ -266,8 +266,8 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Destino não encontrado";
 				}
 
-				List<TipoResposta> tiposResposta = despachoServico.obterTipoResposta(null, tipoResposta.toLowerCase());
-				if (tiposResposta.isEmpty()) {
+				TipoResposta tpResposta = MyUtils.entidade(despachoServico.obterTipoResposta(null, tipoResposta.toLowerCase()));
+				if (tpResposta == null) {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Tipo de Resposta não encontrado";
 				}
 
@@ -292,7 +292,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						SolicitacaoResposta resposta = new SolicitacaoResposta(
 								null, 
 								solicitacao, 
-								tiposResposta.iterator().next(), 
+								tpResposta, 
 								observacao, 
 								new Assinante(MyUtils.idItemSelecionado(cbbAssinante)), 
 								null, 

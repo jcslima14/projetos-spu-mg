@@ -406,6 +406,8 @@ public class SolicitacaoCadastro extends CadastroController {
 			}
 
 			despachoServico.salvarSolicitacaoResposta(entidade);
+
+			SolicitacaoCadastro.this.solicitacaoAnaliseConsulta.executarAtualizar();
 		}
 
 		public void excluirRegistro(Integer id) throws Exception {
@@ -486,20 +488,13 @@ public class SolicitacaoCadastro extends CadastroController {
 		@Override
 		public void incluirRegistro() throws Exception {
 			Solicitacao s = SolicitacaoCadastro.this.entidade;
-			MunicipioTipoResposta municipioTipoResposta = MyUtils.entidade(despachoServico.obterMunicipioTipoResposta(null, s.getMunicipio() == null ? new Municipio(0) : s.getMunicipio(), s.getOrigem(), null));
-			TipoResposta tipoRespostaPadrao = null;
+			SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(s));
+			if (resposta != null) {
+				throw new Exception("Esta solicitação de análise de usucapião já possui uma resposta pendente de finalização. Altere a resposta pendente ao invés de incluir uma nova.");
+			}
 			despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Selecione o tipo de resposta)")); }}, s.getOrigem());
-
-			if (municipioTipoResposta != null) {
-				tipoRespostaPadrao = municipioTipoResposta.getTipoResposta();
-			} else {
-				if (s.getMunicipio() != null && s.getMunicipio().getTipoResposta() != null) {
-					tipoRespostaPadrao = s.getMunicipio().getTipoResposta();
-				}
-			}
-			if (tipoRespostaPadrao != null) {
-				cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, tipoRespostaPadrao.getTipoRespostaId(), null));
-			}
+			despachoServico.selecionarRespostaPadraoPorMunicipio(cbbTipoResposta, s.getMunicipio(), s.getOrigem());
+			despachoServico.selecionarAssinantePadrao(cbbAssinante);
 		}
 	}
 

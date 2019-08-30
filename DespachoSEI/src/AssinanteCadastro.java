@@ -1,4 +1,5 @@
 import java.awt.GridLayout;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.MyButton;
 import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -37,6 +39,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyTextField txtBlocoAssinatura = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblBlocoAssinatura = new MyLabel("Bloco de Assinatura") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 2));
+	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão") {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
@@ -61,6 +64,15 @@ public class AssinanteCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(lblBlocoAssinatura);
 		pnlCamposEditaveis.add(txtBlocoAssinatura);
 		
+		btnTornarPadrao.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+				despachoServico.salvarAssinantePadrao(Integer.parseInt(txtAssinanteId.getText()));
+			}
+		});
+
+		this.setBtnBotoesAbaixoPosteriores(btnTornarPadrao);
+
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
 	}

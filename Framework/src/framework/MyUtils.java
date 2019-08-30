@@ -34,6 +34,11 @@ import com.sun.rowset.CachedRowSetImpl;
 
 public class MyUtils {
 
+	public static boolean arquivoExiste(String arquivo) {
+		File file = new File(arquivo);
+		return file.exists();
+	}
+	
 	public static Properties obterPropriedades(String nomeArquivo) {
 		Properties retorno = new Properties();
 		InputStream input = null;

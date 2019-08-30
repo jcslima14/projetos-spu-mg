@@ -170,7 +170,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.setPnlFiltros(pnlFiltros);
-		this.setBtnBotoesPosteriores(new MyButton[] { btnProcessarArquivos });
+		this.setBtnBotoesAcimaPosteriores(new MyButton[] { btnProcessarArquivos });
 		this.inicializar();
 	}
 

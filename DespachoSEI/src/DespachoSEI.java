@@ -270,7 +270,7 @@ public class DespachoSEI extends JFrame {
 		criarTabelaAssinante(conexao);
 		criarTabelaAssinanteTipoResposta(conexao);
 		criarTabelaSolicitacao(conexao);
-		criarTabelaSolicitacaoTramite(conexao);
+		criarTabelaSolicitacaoEnvio(conexao);
 		criarTabelaSolicitacaoResposta(conexao);
 		criarTabelaDestino(conexao);
 		criarTabelaTipoResposta(conexao);
@@ -344,8 +344,8 @@ public class DespachoSEI extends JFrame {
 						 "(" +
 						 "  solicitacaorespostaid integer primary key autoincrement not null," +
 						 "  solicitacaoid integer not null," +
-						 "  tiporespostaid integer not null," + 
-						 "  observacao varchar not null," + 
+						 "  tiporespostaid integer null," + 
+						 "  observacao varchar null," + 
 						 "  assinanteid integer not null," + 
 						 "  assinanteidsuperior integer," + 
 						 "  numerodocumentosei varchar," + 
@@ -448,7 +448,7 @@ public class DespachoSEI extends JFrame {
 		}
 	}
 
-	private void criarTabelaSolicitacaoTramite(Connection conexao) throws Exception {
+	private void criarTabelaSolicitacaoEnvio(Connection conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
 			String sql = "CREATE TABLE solicitacaoenvio " + 
 						 "(" +

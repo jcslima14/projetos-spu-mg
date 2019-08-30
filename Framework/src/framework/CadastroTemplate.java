@@ -27,7 +27,8 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	private MyButton btnExcluir = new MyButton("Excluir") {{ setExclusao(true); }};
 	private MyButton btnSalvar = new MyButton("Salvar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyButton btnCancelar = new MyButton("Cancelar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyButton[] btnBotoesPosteriores = null;
+	private MyButton[] btnBotoesAcimaPosteriores = null;
+	private MyButton[] btnBotoesAbaixoPosteriores = null;
 	private JPanel pnlCamposEditaveis;
 	private JPanel pnlFiltros = null;
 	private boolean exibirBotaoIncluir = true;
@@ -48,10 +49,14 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		this.pnlFiltros = pnlFiltros;
 	}
 
-	public void setBtnBotoesPosteriores(MyButton... btnBotoesPosteriores) {
-		this.btnBotoesPosteriores = btnBotoesPosteriores;
+	public void setBtnBotoesAcimaPosteriores(MyButton... btnBotoesAcimaPosteriores) {
+		this.btnBotoesAcimaPosteriores = btnBotoesAcimaPosteriores;
 	}
-	
+
+	public void setBtnBotoesAbaixoPosteriores(MyButton... btnBotoesAbaixoPosteriores) {
+		this.btnBotoesAbaixoPosteriores = btnBotoesAbaixoPosteriores;
+	}
+
 	public CadastroTemplate() {
 		super();
 		setResizable(true);
@@ -92,8 +97,8 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
 		pnlBotoesAcima.add(btnExcluir);
 
-		if (btnBotoesPosteriores != null) {
-			for (MyButton botao : btnBotoesPosteriores) {
+		if (btnBotoesAcimaPosteriores != null) {
+			for (MyButton botao : btnBotoesAcimaPosteriores) {
 				pnlBotoesAcima.add(botao);
 			}
 		}
@@ -109,6 +114,13 @@ public abstract class CadastroTemplate extends JInternalFrame {
 			JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
 			pnlBotoesAbaixo.add(btnSalvar);
 			pnlBotoesAbaixo.add(btnCancelar);
+
+			if (btnBotoesAbaixoPosteriores != null) {
+				for (MyButton botao : btnBotoesAbaixoPosteriores) {
+					pnlBotoesAbaixo.add(botao);
+				}
+			}
+
 			JPanel pnlAreaEdicao = new JPanel();
 			pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
 			pnlAreaEdicao.add(this.pnlCamposEditaveis);

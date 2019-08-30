@@ -38,9 +38,15 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 	private MyLabel lblFiltroAutor = new MyLabel("Autor") {{ setExclusao(true); }};
 	private MyTextField txtFiltroNumeroProcessoSEI = new MyTextField() {{ setExclusao(true); }};
 	private MyLabel lblFiltroNumeroProcessoSEI = new MyLabel("Nº Processo SEI") {{ setExclusao(true); }};
+	private MyComboBox cbbFiltroAssinante = new MyComboBox() {{ setExclusao(true); }};
+	private MyLabel lblFiltroAssinante = new MyLabel("Assinante") {{ setExclusao(true); }};
+	private MyComboBox cbbFiltroSituacao = new MyComboBox() {{ setExclusao(true); }};
+	private MyLabel lblFiltroSituacao = new MyLabel("Situação") {{ setExclusao(true); }};
+	private MyComboBox cbbFiltroPendencias = new MyComboBox() {{ setExclusao(true); }};
+	private MyLabel lblFiltroPendencias = new MyLabel("Pendências") {{ setExclusao(true); }};
 	private MyComboBox cbbOrdenacao = new MyComboBox() {{ setExclusao(true); }};
 	private MyLabel lblOrdenacao = new MyLabel("Ordenar por") {{ setExclusao(true); }};
-	private JPanel pnlFiltros = new JPanel(new GridLayout(3, 5));
+	private JPanel pnlFiltros = new JPanel(new GridLayout(5, 5));
 
 	public SolicitacaoAnaliseConsulta(String tituloJanela, Connection conexao, JDesktopPane desktop) {
 		super(tituloJanela);
@@ -53,8 +59,11 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
 		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)")); }});
 		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); }});
+		despachoServico.preencherOpcoesAssinante(cbbFiltroAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
 
 		opcoesOrdenacao();
+		opcoesFiltroSituacao();
+		opcoesFiltroPendencias();
 		
 		pnlFiltros.add(lblFiltroOrigem);
 		pnlFiltros.add(cbbFiltroOrigem);
@@ -68,8 +77,20 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		pnlFiltros.add(lblFiltroAutor);
 		pnlFiltros.add(txtFiltroAutor);
 
+		pnlFiltros.add(lblFiltroSituacao);
+		pnlFiltros.add(cbbFiltroSituacao);
+		pnlFiltros.add(new JPanel());
+		pnlFiltros.add(lblFiltroPendencias);
+		pnlFiltros.add(cbbFiltroPendencias);
+
 		pnlFiltros.add(lblFiltroNumeroProcessoSEI);
 		pnlFiltros.add(txtFiltroNumeroProcessoSEI);
+		pnlFiltros.add(new JPanel());
+		pnlFiltros.add(lblFiltroAssinante);
+		pnlFiltros.add(cbbFiltroAssinante);
+
+		pnlFiltros.add(new JPanel());
+		pnlFiltros.add(new JPanel());
 		pnlFiltros.add(new JPanel());
 		pnlFiltros.add(lblOrdenacao);
 		pnlFiltros.add(cbbOrdenacao);
@@ -92,6 +113,23 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "autor collate nocase", "Autor"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio collate nocase ", "Município"));
+	}
+	
+	private void opcoesFiltroSituacao() {
+		cbbFiltroSituacao.setModel(new MyComboBoxModel());
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "(Todas)", "(Todas)"));
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "Indeterminado", "Indeterminado"));
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "Pendente de Análise", "Pendente de Análise"));
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "Em Análise", "Em Análise"));
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "Aguardando Geração da Resposta", "Aguardando Geração da Resposta"));
+		cbbFiltroSituacao.addItem(new ComboBoxItem(null, "Respondido", "Respondido"));
+	}
+	
+	private void opcoesFiltroPendencias() {
+		cbbFiltroPendencias.setModel(new MyComboBoxModel());
+		cbbFiltroPendencias.addItem(new ComboBoxItem(0, null, "(Todos)"));
+		cbbFiltroPendencias.addItem(new ComboBoxItem(1, null, "Com pendências"));
+		cbbFiltroPendencias.addItem(new ComboBoxItem(2, null, "Sem pendências"));
 	}
 
 	public void limparCamposEditaveis() {
@@ -127,12 +165,21 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
 	public TableModel obterDados() throws Exception {
 		StringBuilder sql = new StringBuilder("");
+		sql.append("select * from (");
 		sql.append("select s.solicitacaoid ");
 		sql.append("	  , o.descricao as origem ");
 		sql.append("	  , tp.descricao as tipoprocesso ");
 		sql.append("	  , s.numeroprocesso ");
 		sql.append("	  , s.autor ");
+		sql.append("	  , case when datahoramovimentacao is null then 'Indeterminado' ");
+		sql.append("         	 when datahoramovimentacao is not null and (datahoraresposta is null or datahoraresposta < datahoramovimentacao) then 'Pendente de Análise' ");
+		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta = '9999-12-31' and (select tiporespostaid from solicitacaoresposta sr2 where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) is null then 'Em Análise' ");
+		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta = '9999-12-31' and (select tiporespostaid from solicitacaoresposta sr2 where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) is not null then 'Aguardando Geração da Resposta' ");
+		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta <> '9999-12-31' and datahoraresposta > datahoramovimentacao then 'Respondido' ");
+		sql.append("    	end as situacao ");
+		sql.append("	  , (select a.nome from solicitacaoresposta sr2 inner join assinante a using (assinanteid) where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) as assinante ");
 		sql.append("	  , m.nome as municipio ");
+		sql.append("	  , coalesce((select tr.descricao from municipiotiporesposta mtr inner join tiporesposta tr using (tiporespostaid) where mtr.municipioid = s.municipioid and mtr.origemid = s.origemid limit 1), tr.descricao) as tiporespostapadrao ");
 		sql.append("	  , d.descricao as destino ");
 		sql.append("	  , s.cartorio ");
 		sql.append("	  , ti.descricao as tipoimovel ");
@@ -140,13 +187,43 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append("	  , s.coordenada ");
 		sql.append("	  , s.area ");
 		sql.append("	  , s.numeroprocessosei ");
+		sql.append("	  , (select group_concat(pendencia, ', ') from ");
+		sql.append("	    	       (select 'Autor não informado' as pendencia ");
+		sql.append("	    	          from solicitacao s2 ");
+		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
+		sql.append("	    	           and coalesce(autor, '') = '' ");
+		sql.append("	    	         union ");
+		sql.append("	    	        select 'Município não informado' as pendencia ");
+		sql.append("	    	          from solicitacao s2 ");
+		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
+		sql.append("	    	           and coalesce(municipioid, 0) = 0 ");
+		sql.append("	    	         union ");
+		sql.append("	    	        select 'Destino não informado' as pendencia ");
+		sql.append("	    	          from solicitacao s2 ");
+		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
+		sql.append("	    	           and coalesce(destinoid, 0) = 0 ");
+		sql.append("	    	         union ");
+		sql.append("	    	        select 'Cartório não informado' as pendencia ");
+		sql.append("	    	          from solicitacao s2 ");
+		sql.append("	    	         inner join destino d2 using (destinoid) ");
+		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
+		sql.append("	    	           and usarcartorio ");
+		sql.append("	    	           and coalesce(cartorio, '') = '' ");
+		sql.append("	    	         union ");
+		sql.append("	    	        select 'Tipo de Imóvel não informado' as pendencia ");
+		sql.append("	    	          from solicitacao s2 ");
+		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
+		sql.append("	    	           and coalesce(tipoimovelid, 0) = 0) as pendencias) as pendencias ");
 		sql.append("	  , case when s.arquivosanexados then 'Sim' else 'Não' end as arquivosanexados ");
 		sql.append("  from solicitacao s ");
 		sql.append(" inner join origem o using (origemid) ");
 		sql.append(" inner join tipoprocesso tp using (tipoprocessoid) ");
 		sql.append("  left join municipio m using (municipioid) ");
+		sql.append("  left join tiporesposta tr using (tiporespostaid) ");
 		sql.append("  left join destino d using (destinoid) ");
 		sql.append("  left join tipoimovel ti using (tipoimovelid) ");
+		sql.append("  left join (select solicitacaoid, max(datahoramovimentacao) as datahoramovimentacao from solicitacaoenvio se group by 1) as ue using (solicitacaoid) ");
+		sql.append("  left join (select solicitacaoid, max(coalesce(datahoraresposta, '9999-12-31')) as datahoraresposta from solicitacaoresposta sr group by 1) as ur using (solicitacaoid) ");
 		sql.append(" where 1 = 1");
 
 		if (!MyUtils.idItemSelecionado(cbbFiltroOrigem).equals(0)) {
@@ -169,6 +246,20 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 			sql.append(" and numeroprocessosei like '%" + txtFiltroNumeroProcessoSEI.getText() + "%'");
 		}
 
+		sql.append(") as t where 1 = 1 "); 
+		
+		if (cbbFiltroSituacao.getSelectedIndex() != 0) {
+			sql.append(" and situacao = '" + MyUtils.idStringItemSelecionado(cbbFiltroSituacao) + "' ");
+		}
+		
+		if (cbbFiltroPendencias.getSelectedIndex() > 0) {
+			sql.append(" and pendencias is " + (MyUtils.idItemSelecionado(cbbFiltroPendencias).equals(1) ? "not" : "") + " null ");
+		}
+
+		if (cbbFiltroAssinante.getSelectedIndex() > 0) {
+			sql.append(" and assinante = '" + cbbFiltroAssinante.getSelectedItem().toString() + "'");
+		}
+		
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
@@ -186,7 +277,10 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Tipo Processo", 75, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Nº Processo", 150, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Autor", 250));
+			colunas.add(new MyTableColumn("Situação", 150));
+			colunas.add(new MyTableColumn("Assinante", 200));
 			colunas.add(new MyTableColumn("Município", 200));
+			colunas.add(new MyTableColumn("Tipo de Resposta Padrão", 150));
 			colunas.add(new MyTableColumn("Destino", 200));
 			colunas.add(new MyTableColumn("Cartório", 150));
 			colunas.add(new MyTableColumn("Tipo Imóvel", 60, JLabel.CENTER));
@@ -194,8 +288,10 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Coordenada", 80));
 			colunas.add(new MyTableColumn("Área", 80));
 			colunas.add(new MyTableColumn("Nº Processo SEI", 150, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Pendências", 200));
 			colunas.add(new MyTableColumn("Arq. Anex.?", 60, JLabel.CENTER));
 		}
+
 		return this.colunas;
 	}
 }

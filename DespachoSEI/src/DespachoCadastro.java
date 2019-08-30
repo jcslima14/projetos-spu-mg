@@ -41,7 +41,7 @@ public class DespachoCadastro extends CadastroTemplate {
 	private MyLabel lblTipoImovel = new MyLabel("Tipo Imóvel") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtEndereco = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblEndereco = new MyLabel("Endereço") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyTextField txtTipoResposta = new MyTextField() {{ setEnabled(false); }};
+	private MyComboBox cbbTipoResposta = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblTipoResposta = new MyLabel("Tipo de Resposta") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbAssinante = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblAssinante = new MyLabel("Assinado por") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -154,7 +154,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtEndereco);
 
 		pnlCamposEditaveis.add(lblTipoResposta);
-		pnlCamposEditaveis.add(txtTipoResposta);
+		pnlCamposEditaveis.add(cbbTipoResposta);
 		pnlCamposEditaveis.add(new JPanel());
 		pnlCamposEditaveis.add(lblAssinante);
 		pnlCamposEditaveis.add(cbbAssinante);
@@ -198,7 +198,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		txtMunicipio.setText("");
 		txtTipoImovel.setText("");
 		txtEndereco.setText("");
-		txtTipoResposta.setText("");
+		cbbTipoResposta.setSelectedIndex(0);
 		cbbAssinante.setSelectedIndex(0);
 		txtObservacao.setText("");
 		chkRespostaImpressa.setSelected(false);
@@ -235,6 +235,8 @@ public class DespachoCadastro extends CadastroTemplate {
 
 			SolicitacaoResposta entidade = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(Integer.parseInt(txtSolicitacaoRespostaId.getText())));
 
+			despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Selecione o tipo de resposta)")); }}, entidade.getSolicitacao().getOrigem());
+
 			txtOrigem.setText(entidade.getSolicitacao().getOrigem().getDescricao());
 			txtTipoProcesso.setText(entidade.getSolicitacao().getTipoProcesso().getDescricao());
 			txtNumeroProcesso.setText(entidade.getSolicitacao().getNumeroProcesso());
@@ -242,13 +244,17 @@ public class DespachoCadastro extends CadastroTemplate {
 			txtMunicipio.setText(entidade.getSolicitacao().getMunicipio() == null ? "" : entidade.getSolicitacao().getMunicipio().getNome());
 			txtTipoImovel.setText(entidade.getSolicitacao().getTipoImovel() == null ? "" : entidade.getSolicitacao().getTipoImovel().getDescricao());
 			txtEndereco.setText(MyUtils.emptyStringIfNull(entidade.getSolicitacao().getEndereco()));
-			txtTipoResposta.setText(entidade.getTipoResposta().getDescricao());
+			cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta() == null ? 0 : entidade.getTipoResposta().getTipoRespostaId(), null));
 			cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, entidade.getAssinante().getAssinanteId(), null));
 			txtObservacao.setText(MyUtils.emptyStringIfNull(entidade.getObservacao()));
 			txtNumeroProcessoSEI.setText(MyUtils.emptyStringIfNull(entidade.getSolicitacao().getNumeroProcessoSEI()));
 			txtNumeroDocumentoSEI.setText(MyUtils.emptyStringIfNull(entidade.getNumeroDocumentoSEI()));
 			chkRespostaImpressa.setSelected(entidade.getRespostaImpressa());
 			chkRespostaNoBlocoAssinatura.setSelected(entidade.getRespostaNoBlocoAssinatura());
+
+			if (cbbTipoResposta.getSelectedIndex() == 0) {
+				despachoServico.selecionarRespostaPadraoPorMunicipio(cbbTipoResposta, entidade.getSolicitacao().getMunicipio(), entidade.getSolicitacao().getOrigem());
+			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter informações da resposta à solicitação de análise: \n\n" + e.getMessage());
 			e.printStackTrace();

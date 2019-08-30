@@ -1,8 +1,10 @@
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
@@ -39,8 +41,8 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new Solicitacao(rs.getInt("solicitacaoid"), 
-					obterOrigem(rs.getInt("origemid"), null).iterator().next(),
-					obterTipoProcesso(rs.getInt("tipoprocessoid"), null).iterator().next(),
+					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
+					MyUtils.entidade(obterTipoProcesso(rs.getInt("tipoprocessoid"), null)),
 					rs.getString("numeroprocesso"), 
 					rs.getString("autor"),
 					MyUtils.entidade(obterMunicipio(true, rs.getInt("municipioid"), null)),
@@ -90,7 +92,7 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoEnvio(rs.getInt("solicitacaoenvioid"), 
-					obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null).iterator().next(),
+					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null)),
 					rs.getString("datahoramovimentacao"), 
 					rs.getString("resultadodownload"),
 					rs.getBoolean("arquivosprocessados"),
@@ -170,10 +172,10 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
-					obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null).iterator().next(),
-					obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next(),
+					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null)),
+					MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null)),
 					rs.getString("observacao"), 
-					obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next(),
+					MyUtils.entidade(obterAssinante(rs.getInt("assinanteid"), null, null, null)),
 					MyUtils.entidade(obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null)),
 					rs.getString("numerodocumentosei"),
 					rs.getString("datahoraresposta"),
@@ -249,7 +251,7 @@ public class DespachoServico {
 		if (parametros == null || parametros.isEmpty()) {
 			return valorDefault;
 		} else {
-			return parametros.iterator().next().getConteudo();
+			return MyUtils.entidade(parametros).getConteudo();
 		}
 	}
 
@@ -300,8 +302,8 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			Assinante assinante = obterAssinante(rs.getInt("assinanteid"), null, null, null).iterator().next();
-			TipoResposta tipoResposta = obterTipoResposta(rs.getInt("tiporespostaid"), null).iterator().next();
+			Assinante assinante = MyUtils.entidade(obterAssinante(rs.getInt("assinanteid"), null, null, null));
+			TipoResposta tipoResposta = MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null));
 			retorno.add(new AssinanteTipoResposta(rs.getInt("assinantetiporespostaid"), assinante, tipoResposta, rs.getString("blocoassinatura")));
 		}
 
@@ -535,52 +537,6 @@ public class DespachoServico {
 		return retorno;
 	}
 
-	public void salvarDespacho(Despacho despacho) throws Exception {
-		String sql = "";
-		if (despacho.getDespachoId() != null) {
-			sql += "update despacho "
-				+  "   set tipoprocessoid = " + despacho.getTipoProcesso().getTipoProcessoId() 
-				+  "     , numeroprocesso = '" + despacho.getNumeroProcesso() + "' " 
-				+  "     , autor = '" + despacho.getAutor().replaceAll("'", "''") + "' " 
-				+  "     , comarca = '" + despacho.getComarca().replaceAll("'", "''") + "' " 
-				+  "     , tipoimovelid = " + despacho.getTipoImovel().getTipoImovelId() 
-				+  "     , endereco = '" + despacho.getEndereco().replaceAll("'", "''") + "' " 
-				+  "     , municipio = '" + despacho.getMunicipio().replaceAll("'", "''") + "' " 
-				+  "     , coordenada = '" + despacho.getCoordenada().replaceAll("'", "''") + "' " 
-				+  "     , area = '" + despacho.getArea().replaceAll("'", "''") + "' " 
-				+  "     , tipodespachoid = " + despacho.getTipoDespacho().getTipoDespachoId() 
-				+  "     , assinanteid = " + despacho.getAssinante().getAssinanteId() 
-				+  "     , destinoid = " + despacho.getDestino().getDestinoId() 
-				+  "     , observacao = '" + despacho.getObservacao().replaceAll("'", "''") + "' " 
-				+  "     , numerodocumentosei = '" + despacho.getNumeroDocumentoSEI() + "' "
-				+  "     , despachoimpresso = " + (despacho.getDespachoImpresso() ? "true" : "false")
-				+  "     , despachonoblocoassinatura = " + (despacho.getDespachoNoBlocoAssinatura() ? "true" : "false")
-				+  " where despachoid = " + despacho.getDespachoId();
-		} else {
-			sql += "insert into despacho (datadespacho, tipoprocessoid, numeroprocesso, autor, comarca, tipoimovelid, endereco, municipio, coordenada, area, tipodespachoid, assinanteid, destinoid, "
-				+  "observacao, numerodocumentosei, arquivosanexados, despachoimpresso, despachonoblocoassinatura) values ("
-				+  (despacho.getDataDespacho() == null ? "date('now','localtime')" : "'" + despacho.getDataDespacho() + "'") + ", " 
-				+  despacho.getTipoProcesso().getTipoProcessoId() + ", " 
-				+  "'" + despacho.getNumeroProcesso() + "', " 
-				+  "'" + despacho.getAutor().replaceAll("'", "''") + "', " 
-				+  "'" + despacho.getComarca().replaceAll("'", "''") + "', " 
-				+  despacho.getTipoImovel().getTipoImovelId() + ", " 
-				+  "'" + despacho.getEndereco().replaceAll("'", "''") + "', " 
-				+  "'" + despacho.getMunicipio().replaceAll("'", "''") + "', " 
-				+  "'" + despacho.getCoordenada().replaceAll("'", "''") + "', " 
-				+  "'" + despacho.getArea().replaceAll("'", "''") + "', " 
-				+  despacho.getTipoDespacho().getTipoDespachoId() + ", " 
-				+  despacho.getAssinante().getAssinanteId() + ", "
-				+  despacho.getDestino().getDestinoId() + ", " 
-				+  "'" + despacho.getObservacao().replaceAll("'", "''") + "', " 
-				+  "'" + despacho.getNumeroDocumentoSEI() + "', " 
-				+  "false, " 
-				+  "false, " 
-				+  "false) "; 
-		}
-		MyUtils.execute(conexao, sql);
-	}
-
 	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais, Origem origem) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoResposta>();
@@ -697,7 +653,7 @@ public class DespachoServico {
 
 		MyUtils.execute(conexao, sql.toString());
 		
-		return obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso()).iterator().next();
+		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso()));
 	}
 
 	public SolicitacaoEnvio salvarSolicitacaoEnvio(SolicitacaoEnvio solicitacaoEnvio) throws Exception {
@@ -723,7 +679,7 @@ public class DespachoServico {
 
 		MyUtils.execute(conexao, sql.toString());
 		
-		return obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, null, solicitacaoEnvio.getDataHoraMovimentacao(), null, false).iterator().next();
+		return MyUtils.entidade(obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, null, solicitacaoEnvio.getDataHoraMovimentacao(), null, false));
 	}
 
 	public void salvarSolicitacaoResposta(SolicitacaoResposta resposta) throws Exception {
@@ -732,7 +688,7 @@ public class DespachoServico {
 		if (resposta.getSolicitacaoRespostaId() == null || resposta.getSolicitacaoRespostaId().equals(0)) {
 			sql.append("insert into solicitacaoresposta (solicitacaoid, tiporespostaid, observacao, assinanteid, assinanteidsuperior, numerodocumentosei, datahoraresposta, numeroprocessosei, respostaimpressa, datahoraimpressao, blocoassinatura, respostanoblocoassinatura) ");
 			sql.append("select " + resposta.getSolicitacao().getSolicitacaoId());
-			sql.append("     , " + resposta.getTipoResposta().getTipoRespostaId());
+			sql.append("     , " + (resposta.getTipoResposta() == null ? "null" : resposta.getTipoResposta().getTipoRespostaId()));
 			sql.append("	 , " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
 			sql.append("	 , " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
 			sql.append("	 , " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
@@ -746,7 +702,7 @@ public class DespachoServico {
 		} else {
 			sql.append("update solicitacaoresposta ");
 			sql.append("   set solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
-			sql.append("     , tiporespostaid = " + resposta.getTipoResposta().getTipoRespostaId());
+			sql.append("     , tiporespostaid = " + (resposta.getTipoResposta() == null ? "null" : resposta.getTipoResposta().getTipoRespostaId()));
 			sql.append("	 , observacao = " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
 			sql.append("	 , assinanteid = " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
 			sql.append("	 , assinanteidsuperior = " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
@@ -761,5 +717,83 @@ public class DespachoServico {
 		}
 
 		MyUtils.execute(conexao, sql.toString());
+	}
+
+	public void selecionarRespostaPadraoPorMunicipio(MyComboBox cbbTipoResposta, Municipio municipio, Origem origem) throws Exception {
+		MunicipioTipoResposta municipioTipoResposta = MyUtils.entidade(obterMunicipioTipoResposta(null, municipio == null ? new Municipio(0) : municipio, origem, null));
+		TipoResposta tipoRespostaPadrao = null;
+
+		if (municipioTipoResposta != null) {
+			tipoRespostaPadrao = municipioTipoResposta.getTipoResposta();
+		} else {
+			if (municipio != null && municipio.getTipoResposta() != null) {
+				tipoRespostaPadrao = municipio.getTipoResposta();
+			}
+		}
+		if (tipoRespostaPadrao != null) {
+			cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, tipoRespostaPadrao.getTipoRespostaId(), null));
+		}
+	}
+
+	public List<SolicitacaoResposta> obterSolicitacaoRespostaPendente(Solicitacao solicitacao) throws Exception {
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null);
+		Iterator<SolicitacaoResposta> i = respostas.iterator();
+
+		while (i.hasNext()) {
+			if (!MyUtils.emptyStringIfNull(i.next().getDataHoraResposta()).equals("")) {
+				i.remove();
+			}
+		}
+
+		return respostas;
+	}
+
+	public void selecionarAssinantePadrao(MyComboBox cbbAssinante) {
+		String arquivoPropriedades = System.getProperty("user.home");
+		// se retornou o nome do diretório, continua
+		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
+			// continua se o diretório existir
+			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+				// adiciona o nome da pasta escondida de ferramentas SPU
+				arquivoPropriedades += "\\.ferramentasspu";
+				// continua se a pasta existe
+				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+					// verifica se o arquivo de propriedades existe
+					arquivoPropriedades += "\\ferramentasspu.properties";
+					if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+						Properties props = MyUtils.obterPropriedades(arquivoPropriedades);
+						cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, Integer.parseInt(props.getProperty("assinantepadrao", "0")),  null));
+					}
+				}
+			}
+		}
+	}
+
+	public void salvarAssinantePadrao(Integer assinanteId) {
+		String arquivoPropriedades = System.getProperty("user.home");
+		// se retornou o nome do diretório, continua
+		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
+			// continua se o diretório existir
+			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+				// adiciona o nome da pasta escondida de ferramentas SPU
+				arquivoPropriedades += "\\.ferramentasspu";
+				// se a pasta não existe, cria antes de continuar
+				if (!MyUtils.arquivoExiste(arquivoPropriedades)) {
+					(new File(arquivoPropriedades)).mkdir();
+				}
+
+				// verifica se o arquivo de propriedades existe
+				arquivoPropriedades += "\\ferramentasspu.properties";
+				Properties props = new Properties();
+				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+					props = MyUtils.obterPropriedades(arquivoPropriedades);
+				}
+				props.setProperty("assinantepadrao", assinanteId.toString());
+				MyUtils.salvarPropriedades(props, arquivoPropriedades);
+				JOptionPane.showMessageDialog(null, "Assinante padrão salvo com sucesso!");
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Não foi possível obter o nome da pasta do usuário desta estação de trabalho");
+		}
 	}
 }
