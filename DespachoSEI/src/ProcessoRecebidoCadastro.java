@@ -375,6 +375,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 			
 			for (File arquivoOrigem : pastaOrigem.listFiles()) {
 				if (!arquivoOrigem.isDirectory()) {
+					boolean isComplementacao = arquivoOrigem.getName().contains("COMPLEMENTAÇÃO");
 					String nomeArquivo = arquivoOrigem.getName().substring(0, arquivoOrigem.getName().lastIndexOf(".")) + " " + envio.getSolicitacao().getMunicipio().getNome();
 					String extensaoArquivo = arquivoOrigem.getName().substring(arquivoOrigem.getName().lastIndexOf(".") + 1);
 					MyUtils.appendLogArea(txtTexto, "Copiando o arquivo '" + arquivoOrigem.getName() + "'");
@@ -386,7 +387,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 						arquivoDestino = new File(pastaDestino, novoNome);
 
 						if (arquivoDestino.exists()) {
-							novoNome = processoFormatado + " (" + (++seqCopia) + ") " + envio.getSolicitacao().getMunicipio().getNome() + "." + extensaoArquivo;
+							novoNome = processoFormatado + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + " (" + (++seqCopia) + ") " + envio.getSolicitacao().getMunicipio().getNome() + "." + extensaoArquivo;
 						}
 					} while (arquivoDestino.exists());
 					Files.copy(arquivoOrigem, arquivoDestino);

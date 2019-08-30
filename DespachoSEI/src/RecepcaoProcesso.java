@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -248,12 +249,14 @@ public class RecepcaoProcesso extends JInternalFrame {
     		TimeUnit.SECONDS.sleep(2);
 
 	        // obtem a lista de processos a ser lida
-	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//table[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
-	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//table/tbody/tr[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
+	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table"));
+	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table/tbody/tr[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
+//	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table"));
+//	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table/tbody/tr[.//*[text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
 	        MyUtils.appendLogArea(logArea, "Página: " + ++pagina + " - Processos encontrados: " + linhas.size());
 
 	        int nLinha = 0;
-	        
+
 	        for (WebElement linha : linhas) {
 	        	boolean numeroProcessoInformado = true;
 	        	WebElement txtProcessoJudicial = null;
@@ -276,7 +279,7 @@ public class RecepcaoProcesso extends JInternalFrame {
         		String dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
 	        	if (numeroProcessoJudicial.indexOf(" (") != -1) numeroProcessoJudicial = numeroProcessoJudicial.substring(0, numeroProcessoJudicial.indexOf(" ("));
 	        	String numeroSemFormatacao = numeroProcessoJudicial.replace(".", "").replace("-", "").replace("/", "");
-	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ")");
+	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ") " + especie);
 	        	// if (!lnkProcessoJudicial.getText().equals("00478.000807/2019-54")) continue;
 	        	// clica no link para abrir a janela do processo
 
@@ -306,6 +309,11 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        	}
 
 	        		boolean encontrouRemessaDocumentos = false;
+	        		boolean isComplementacao = especie.startsWith("COMPLEMENTAÇÃO");
+	        		boolean encontrouComplementacao = !isComplementacao;
+
+	        		List<String> juntadas = new ArrayList<String>();
+	        		Integer seqAnterior = -1;
 
 		        	do {
 		    	        do {
@@ -319,68 +327,85 @@ public class RecepcaoProcesso extends JInternalFrame {
 			        		// busca os dados a serem registrados
 			        		String movimento = regDocumento.findElement(By.xpath("./td[3]")).getText();
 			        		String dataHoraDocumento = regDocumento.findElement(By.xpath("./td[2]")).getText();
-	
-			        		if (movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (") && dataHoraDocumento.startsWith(dataHoraDocumento)) {
-		        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao, dataHora);
-
-			        			// clica no ícone de download de arquivos
-			        			WebElement btnDownloadDocumentos = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Download dos Documentos']"));
-			        			passarMouse.moveToElement(btnDownloadDocumentos	).click().build().perform();
-
-			        			// encontra o objeto de marcar download parcial
-			        			WebElement chkParcial = MyUtils.encontrarElemento(wait5, By.xpath("//div[contains(@id, 'edicaodownloadwindow')]//input[@type = 'button' and @role = 'checkbox']"));
-			        			chkParcial.click();
-
-			        			TimeUnit.SECONDS.sleep(1);
-			        			
-			        			// preenche o campo de quais documentos imprimir
-			        			WebElement txtDocsAImprimir = MyUtils.encontrarElemento(wait5, By.xpath("//input[@name = 'parcial']"));
-			        			
-			        			Integer seqDocInicial = Integer.parseInt(regDocumento.findElement(By.xpath("./td[1]")).getText().split(" ")[0]);
-			        			List<WebElement> listaLinks = regDocumento.findElements(By.xpath("./td[4]//i[@class = 'icon-link']"));
-			        			Integer seqDocFinal = seqDocInicial.intValue() + listaLinks.size();
-
-			        			txtDocsAImprimir.sendKeys(seqDocInicial.toString() + "-" + seqDocFinal.toString());
-			        			
-			        			// clica no botão para gerar o PDF
-			        			WebElement btnGerar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Gerar']]"));
-			        			passarMouse.moveToElement(btnGerar).click().build().perform();
-
-			        			encontrouRemessaDocumentos = true;
-			        			
-				        		boolean arquivosOk = false;
-				        		String resultadoDownload = "";
-
-				        		do {
-					        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
-					        		arquivosOk = arquivosBaixadosERenomeados(logArea, 1, pastaDeDownload, numeroSemFormatacao, dataHora);
-				        		} while (!arquivosOk);
-
-			        			// clica no botão fechar
-			        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
-			        			passarMouse.moveToElement(btnFechar).click().build().perform();
-	
-				        		receberProcessoSapiens(numeroSemFormatacao, autor, dataHora, resultadoDownload);
-	
-				        		break;
+			        		Integer seqDocInicial = Integer.parseInt(regDocumento.findElement(By.xpath("./td[1]")).getText().split(" ")[0]);
+			        		Integer seqDocFinal = null;
+			        		if (seqAnterior.equals(-1)) {
+			        			seqDocFinal = seqDocInicial.intValue() + regDocumento.findElements(By.xpath("./td[4]//i[@class = 'icon-link']")).size();
+			        		} else {
+			        			seqDocFinal = seqAnterior.intValue() - 1;
 			        		}
-		        		}
 
-		        		if (encontrouRemessaDocumentos) break;
+			        		seqAnterior = seqDocInicial;
+			        		
+			        		// busca os sequencias da remessa de comunicação referente à espécie da solicitação e a remessa seguinte de solicitação de subsídios ou reiteração
+			        		if ((movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (") && dataHoraDocumento.startsWith(dataHoraDocumento))
+			        				|| (isComplementacao 
+			        						&& encontrouRemessaDocumentos 
+			        						&& (movimento.toUpperCase().startsWith("SOLICITAÇÃO DE SUBSÍDIOS - REMESSA DE COMUNICAÇÃO") || movimento.toUpperCase().startsWith("REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS - REMESSA DE COMUNICAÇÃO")))) {
+			        			// adiciona a faixa de documentos encontrados aos que devem ser baixados
+			        			juntadas.add(seqDocInicial.toString() + "-" + seqDocFinal.toString());
+			        			if (movimento.toUpperCase().startsWith(especie + " - REMESSA DE COMUNICAÇÃO (") && dataHoraDocumento.startsWith(dataHoraDocumento)) {
+			        				encontrouRemessaDocumentos = true;
+			        			} else {
+			        				encontrouComplementacao = true;
+			        			}
+			        		}
 
+			        		if (encontrouRemessaDocumentos && encontrouComplementacao) break;
+			        	} // fim do loop das linhas de documentos
+
+		        		if (encontrouRemessaDocumentos && encontrouComplementacao) break;
+
+		        		// se ainda existem páginas a ler, busca a próxima página
 				        try {
 				        	WebElement btnProximaPagina = MyUtils.encontrarElemento(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//a[@data-qtip = 'Próxima Página' and not(contains(@class, 'x-item-disabled'))]"));
 				        	passarMouse.moveToElement(btnProximaPagina).click().build().perform();
 				        } catch (Exception e) {
 					        break;
 				        }
-		        	} while (!encontrouRemessaDocumentos);
+		        	} while (!encontrouRemessaDocumentos || !encontrouComplementacao);
 
-		        	// se não encontrou a remessa de documentos, grava log com esta informação
-		        	if (!encontrouRemessaDocumentos) {
-		        		mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + " - Data/Hora: " + dataHora + "\n");
-		        	}
-		        	
+		        	if (encontrouRemessaDocumentos && encontrouComplementacao) {
+		        		// inicia o download dos documentos
+        				preparaPastaProcesso(pastaDeDownload, numeroSemFormatacao, dataHora);
+
+	        			// clica no ícone de download de arquivos
+	        			WebElement btnDownloadDocumentos = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Download dos Documentos']"));
+	        			passarMouse.moveToElement(btnDownloadDocumentos	).click().build().perform();
+
+	        			// encontra o objeto de marcar download parcial
+	        			WebElement chkParcial = MyUtils.encontrarElemento(wait5, By.xpath("//div[contains(@id, 'edicaodownloadwindow')]//input[@type = 'button' and @role = 'checkbox']"));
+	        			chkParcial.click();
+
+	        			TimeUnit.SECONDS.sleep(1);
+
+	        			// preenche o campo de quais documentos imprimir
+	        			WebElement txtDocsAImprimir = MyUtils.encontrarElemento(wait5, By.xpath("//input[@name = 'parcial']"));
+
+	        			txtDocsAImprimir.sendKeys(String.join(",", juntadas));
+
+		        		boolean arquivosOk = false;
+		        		String resultadoDownload = "";
+
+		        		do {
+		        			// clica no botão para gerar o PDF
+		        			WebElement btnGerar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Gerar']]"));
+		        			passarMouse.moveToElement(btnGerar).click().build().perform();
+
+			        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
+			        		arquivosOk = arquivosBaixadosERenomeados(logArea, 1, pastaDeDownload, numeroSemFormatacao, dataHora, isComplementacao);
+		        		} while (!arquivosOk);
+
+	        			// clica no botão fechar
+	        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
+	        			passarMouse.moveToElement(btnFechar).click().build().perform();
+
+		        		receberProcessoSapiens(numeroSemFormatacao, autor, dataHora, resultadoDownload);
+	        		} else {
+			        	// se não encontrou a remessa ou a complementação documentos, grava log com esta informação
+	        			mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + (!encontrouRemessaDocumentos ? " - Remessa não encontrada" : "") + (!encontrouComplementacao ? " - Complementação não encontrada" : "") + " - Data/Hora: " + dataHora + "\n");
+	        		}
+
 		        	driver.close();
 		        	driver.switchTo().window(janelaAtual);
 	        	}
@@ -446,7 +471,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		}
 	}
 
-	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora) throws Exception {
+	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora, boolean isComplementacao) throws Exception {
 		File pasta = null;
 		String pastaProcesso = caminho + "\\" + numeroProcesso + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")";
 		FilenameFilter filtro = new FilenameFilter() {
@@ -491,7 +516,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		quantArquivosBaixados = 0;
 
 		for (File arquivoBaixado : pasta.listFiles(filtro)) {
-			arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + " (" + ++quantArquivosBaixados + ").pdf"));
+			arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + " (" + ++quantArquivosBaixados + ").pdf"));
 		}
 
 		return true;
