@@ -7,7 +7,9 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
@@ -231,7 +233,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		entidade.setAutor(txtAutor.getText());
 		entidade.setMunicipio(municipio);
 		entidade.setDestino(destino);
-		entidade.setCartorio(destino.getUsarCartorio() ? txtCartorio.getText() : null);
+		entidade.setCartorio(destino == null ? null : (destino.getUsarCartorio() ? txtCartorio.getText() : null));
 		entidade.setTipoImovel(tipoImovel);
 		entidade.setEndereco(txtEndereco.getText());
 		entidade.setCoordenada(txtCoordenada.getText());
@@ -239,11 +241,38 @@ public class SolicitacaoCadastro extends CadastroController {
 		entidade.setNumeroProcessoSEI(txtNumeroProcessoSEI.getText());
 		entidade.setArquivosAnexados(chkArquivosAnexados.isSelected());
 
+		String msgVld = validarSolicitacao(entidade);
+		if (msgVld != null) {
+			JOptionPane.showMessageDialog(null, msgVld);
+			return;
+		}
+		
 		entidade = despachoServico.salvarSolicitacao(entidade);
+		
+		SolicitacaoEnvio envio = new SolicitacaoEnvio(null, entidade, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
+		despachoServico.salvarSolicitacaoEnvio(envio);
+		solicitacaoEnvioCadastro.executarAtualizar();
 		
 		prepararParaEdicao();
 
 		this.solicitacaoAnaliseConsulta.executarAtualizar();
+	}
+
+	private String validarSolicitacao(Solicitacao entidade) throws Exception {
+		if (entidade.getOrigem() == null) return "A Origem da Solicitação deve ser informada.";
+		if (entidade.getTipoProcesso() == null) return "O Tipo de Processo deve ser informado.";
+		if (entidade.getTipoProcesso().getTipoProcessoId().equals(1)) {
+			if (entidade.getNumeroProcesso().trim().equals("")) {
+				return "O Número do Processo deve ser informado.";
+			} else {
+				Solicitacao s = MyUtils.entidade(despachoServico.obterSolicitacao(null, entidade.getOrigem(), entidade.getTipoProcesso(), entidade.getNumeroProcesso()));
+				if (s != null && !Objects.equals(s.getSolicitacaoId(), entidade.getSolicitacaoId())) {
+					return "Já existe uma outra solicitação cadastrada com esta origem, tipo e número de processo.";
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {

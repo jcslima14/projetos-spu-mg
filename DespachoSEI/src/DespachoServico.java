@@ -19,6 +19,10 @@ public class DespachoServico {
 	}
 
 	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso) throws Exception {
+		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, null, null, null);
+	}
+
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, String cartorio, String endereco) throws Exception {
 		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -34,6 +38,15 @@ public class DespachoServico {
 			}
 			if (numeroProcesso != null) {
 				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
+			}
+			if (autor != null) {
+				sql.append(" and autor = '" + autor + "'");
+			}
+			if (cartorio != null) {
+				sql.append(" and coalesce(cartorio, '') = '" + cartorio + "'");
+			}
+			if (endereco != null) {
+				sql.append(" and coalesce(endereco, '') = '" + endereco + "'");
 			}
 		}
 
