@@ -205,13 +205,13 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
 			String municipio = MyUtils.obterValorCelula(linha.getCell(6));
 			String coordenada = MyUtils.obterValorCelula(linha.getCell(7));
-			coordenada = (coordenada.trim().length() <= 1 ? "" : coordenada);
+			coordenada = (coordenada == null || coordenada.trim().length() <= 1 ? "" : coordenada);
 			String area = MyUtils.obterValorCelula(linha.getCell(8));
-			area = (area.trim().length() <= 1 ? "" : area);
+			area = (area == null || area.trim().length() <= 1 ? "" : area);
 			String destino = MyUtils.obterValorCelula(linha.getCell(14));
 			String tipoDespacho = MyUtils.obterValorCelula(linha.getCell(15));
 			String observacao = MyUtils.obterValorCelula(linha.getCell(17));
-			observacao = (observacao.trim().length() <= 1 ? "" : observacao);
+			observacao = (observacao == null || observacao.trim().length() <= 1 ? "" : observacao);
 			String statusAtual = "";
 			if (linha.getCell(18) != null) {
 				statusAtual = (new DataFormatter()).formatCellValue(linha.getCell(18));
