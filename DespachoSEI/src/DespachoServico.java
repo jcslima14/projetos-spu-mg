@@ -19,10 +19,10 @@ public class DespachoServico {
 	}
 
 	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso) throws Exception {
-		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, null, null, null);
+		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, null, null, null, null);
 	}
 
-	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, String cartorio, String endereco) throws Exception {
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, Municipio municipio, String cartorio, String endereco) throws Exception {
 		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -39,14 +39,17 @@ public class DespachoServico {
 			if (numeroProcesso != null) {
 				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
 			}
+			if (municipio != null) {
+				sql.append(" and municipioid = " + municipio.getMunicipioId());
+			}
 			if (autor != null) {
-				sql.append(" and autor = '" + autor + "'");
+				sql.append(" and autor like '" + autor + "'");
 			}
 			if (cartorio != null) {
-				sql.append(" and coalesce(cartorio, '') = '" + cartorio + "'");
+				sql.append(" and coalesce(cartorio, '') like '" + cartorio + "'");
 			}
 			if (endereco != null) {
-				sql.append(" and coalesce(endereco, '') = '" + endereco + "'");
+				sql.append(" and coalesce(endereco, '') like '" + endereco + "'");
 			}
 		}
 
@@ -645,7 +648,15 @@ public class DespachoServico {
 			sql.append("	 , " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
 			sql.append("	 , " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
 			sql.append("	 , " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
-			sql.append(" where not exists (select 1 from solicitacao where origemid = " + solicitacao.getOrigem().getOrigemId() + " and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "')");
+			sql.append(" where not exists (select 1 from solicitacao ");
+			sql.append("					where origemid = " + solicitacao.getOrigem().getOrigemId());
+			sql.append("					  and tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
+			sql.append(" 					  and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
+			sql.append("					  and autor like '" + solicitacao.getAutor() + "'");
+			sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
+			sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim() + "'");
+			sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim() + "')");
+			System.out.println(sql.toString());
 		} else {
 			sql.append("update solicitacao ");
 			sql.append("   set origemid = " + solicitacao.getOrigem().getOrigemId());
@@ -665,8 +676,8 @@ public class DespachoServico {
 		}
 
 		MyUtils.execute(conexao, sql.toString());
-		
-		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso()));
+
+		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso(), solicitacao.getAutor(), solicitacao.getMunicipio(), solicitacao.getCartorio(), solicitacao.getEndereco()));
 	}
 
 	public SolicitacaoEnvio salvarSolicitacaoEnvio(SolicitacaoEnvio solicitacaoEnvio) throws Exception {

@@ -27,6 +27,9 @@ public class SolicitacaoResposta {
 	
 	private Boolean respostaNoBlocoAssinatura;
 
+	public SolicitacaoResposta() {
+	}
+	
 	public SolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, TipoResposta tipoResposta, String observacao, Assinante assinante, Assinante assinanteSuperior, 
 			String numeroDocumentoSEI, String dataHoraResposta, String numeroProcessoSEI, Boolean respostaImpressa, String dataHoraImpressao, String blocoAssinatura, Boolean respostaNoBlocoAssinatura) {
 		this.solicitacaoRespostaId = solicitacaoRespostaId;

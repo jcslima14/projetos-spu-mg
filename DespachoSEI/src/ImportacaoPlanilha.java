@@ -197,7 +197,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					sData = MyUtils.formatarData(f1.parse(sData), "yyyy-MM-dd");
 				}
 			}
-			TipoProcesso tipoProcesso = MyUtils.entidade(despachoServico.obterTipoProcesso(null, MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? "Físico" : "Eletrônico"));
+			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcesso = MyUtils.obterValorCelula(linha.getCell(2));
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
@@ -286,15 +286,21 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						}
 
 						Solicitacao solicitacao;
+						SolicitacaoEnvio envio = null;
 
 						if (numeroProcesso.equals("-")) {
-							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso, autor, cartorio, endereco));
+							MyUtils.appendLogArea(logArea, "Busca por autor: " + autor + " - " + cartorio + " - " + endereco + " - " + origem.getDescricao() + " - " + tipoProcesso.getDescricao());
+							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, autor, municipio, cartorio, endereco));
 						} else {
+							MyUtils.appendLogArea(logArea, "Busca por processo: " + origem.getDescricao() + " - " + tipoProcesso.getDescricao() + " - " + numeroProcesso);
 							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso));
 						}
 
+						MyUtils.appendLogArea(logArea, "Resultado: " + (solicitacao == null ? "Nenhuma solicitação encontrada" : solicitacao.getSolicitacaoId()));
+
 						if (solicitacao == null) {
 							solicitacao = new Solicitacao();
+							envio = new SolicitacaoEnvio(null, null, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
 						}
 
 						solicitacao.setOrigem(origem);
@@ -312,20 +318,24 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 						solicitacao = despachoServico.salvarSolicitacao(solicitacao);
 
-						SolicitacaoResposta resposta = new SolicitacaoResposta(
-								null, 
-								solicitacao, 
-								tpResposta, 
-								observacao, 
-								new Assinante(MyUtils.idItemSelecionado(cbbAssinante)), 
-								null, 
-								null, 
-								null, 
-								null, 
-								false,
-								null, 
-								null, 
-								false);
+						if (envio != null) {
+							envio.setSolicitacao(solicitacao);
+							despachoServico.salvarSolicitacaoEnvio(envio);
+						}
+
+						// busca uma solicitacao pendente, se existir
+						SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(solicitacao));
+						
+						if (resposta == null) {
+							resposta = new SolicitacaoResposta();
+						}
+
+						resposta.setSolicitacao(solicitacao);
+						resposta.setTipoResposta(tpResposta);
+						resposta.setObservacao(observacao);
+						resposta.setAssinante(new Assinante(MyUtils.idItemSelecionado(cbbAssinante)));
+						resposta.setRespostaImpressa(false);
+						resposta.setRespostaNoBlocoAssinatura(false);
 
 						despachoServico.salvarSolicitacaoResposta(resposta);
 						msgRetorno = "Automático pelo sistema";

@@ -248,10 +248,12 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 		
 		entidade = despachoServico.salvarSolicitacao(entidade);
-		
-		SolicitacaoEnvio envio = new SolicitacaoEnvio(null, entidade, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
-		despachoServico.salvarSolicitacaoEnvio(envio);
-		solicitacaoEnvioCadastro.executarAtualizar();
+
+		if (txtSolicitacaoId.getText().equals("")) {
+			SolicitacaoEnvio envio = new SolicitacaoEnvio(null, entidade, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
+			despachoServico.salvarSolicitacaoEnvio(envio);
+			solicitacaoEnvioCadastro.executarAtualizar();
+		}
 		
 		prepararParaEdicao();
 

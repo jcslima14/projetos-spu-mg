@@ -405,6 +405,14 @@ public class DespachoSEI extends JFrame {
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaTipoImovel(conexao);
+		}
+	}
+
+	private void preencherTabelaTipoImovel(Connection conexao) throws Exception {
+		for (TipoImovel tipoImovel : TipoImovel.TIPOS_IMOVEIS) {
+			MyUtils.execute(conexao, "insert into tipoimovel (tipoimovelid, descricao) values (" + tipoImovel.getTipoImovelId() + ", '" + tipoImovel.getDescricao() + "')");
 		}
 	}
 
@@ -416,6 +424,14 @@ public class DespachoSEI extends JFrame {
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaTipoProcesso(conexao);
+		}
+	}
+
+	private void preencherTabelaTipoProcesso(Connection conexao) throws Exception {
+		for (TipoProcesso tipoProcesso : TipoProcesso.TIPOS_PROCESSO) {
+			MyUtils.execute(conexao, "insert into tipoprocesso (tipoprocessoid, descricao) values (" + tipoProcesso.getTipoProcessoId() + ", '" + tipoProcesso.getDescricao() + "')");
 		}
 	}
 

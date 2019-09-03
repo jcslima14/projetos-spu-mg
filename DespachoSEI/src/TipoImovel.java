@@ -1,6 +1,22 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import framework.ItemComboBox;
 
 public class TipoImovel implements ItemComboBox {
+	
+	static int URBANO_ID = 1;
+	static int RURAL_ID = 2;
+
+	static TipoImovel ELETRONICO = new TipoImovel(URBANO_ID, "Eletrônico");
+	static TipoImovel FISICO = new TipoImovel(RURAL_ID, "Físico");
+
+	@SuppressWarnings("serial")
+	static List<TipoImovel> TIPOS_IMOVEIS = new ArrayList<TipoImovel>() {{ 
+			add(ELETRONICO); 
+			add(FISICO); 
+		}};
+
 	private Integer tipoImovelId;
 	
 	private String descricao;

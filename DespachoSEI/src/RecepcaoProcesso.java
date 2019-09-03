@@ -207,7 +207,7 @@ public class RecepcaoProcesso extends JInternalFrame {
         weUsuario.sendKeys(usuario);
 
         // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.xpath("//input[@name = 'password']"));
+        WebElement weSenha = driver.findElement(By.name("password"));
         weSenha.sendKeys(senha);
 
         // Find the text input element by its name
