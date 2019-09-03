@@ -439,14 +439,13 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
-		TipoProcesso tipoProcesso = despachoServico.obterTipoProcesso(null, "Eletrônico").iterator().next();
-		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, tipoProcesso, numeroProcesso));
+		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso));
 
 		// se a solicitação já existe, atualiza o nome do autor; se não, cria uma nova solicitação que será gravada
 		if (solicitacao != null) {
 			solicitacao.setAutor(autor);
 		} else {
-			solicitacao = new Solicitacao(Origem.SAPIENS, tipoProcesso, numeroProcesso, autor);
+			solicitacao = new Solicitacao(Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, autor);
 		}
 
 		solicitacao = despachoServico.salvarSolicitacao(solicitacao);
