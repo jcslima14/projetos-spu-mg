@@ -223,7 +223,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 			// se o status do registro (conteúdo da coluna 16 da linha) não estiver vazio, ignora o processamento e retorna ao usuário
 			if (statusAtual.equals("")) {
-				String tipoImovel = endereco.trim().toLowerCase().replace("ó", "o").contains("imovel rural") ? "Rural" : "Urbano";
+				TipoImovel tipoImovel = endereco.trim().toLowerCase().replace("ó", "o").contains("imovel rural") ? TipoImovel.RURAL : TipoImovel.URBANO;
 
 				// ajusta o tipo de resposta para consulta a órgão ambiental (ICMBio, IBAMA, MMA)
 				if (tipoResposta.trim().equalsIgnoreCase("consultar icmbio") || 
@@ -270,9 +270,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Tipo de Resposta não encontrado";
 				}
 
-				if (tipoImovel.equalsIgnoreCase("rural") && endereco.trim().toLowerCase().replace("ó", "o").equalsIgnoreCase("imovel rural")) {
+				if (tipoImovel.getTipoImovelId().equals(TipoImovel.RURAL_ID) && endereco.trim().toLowerCase().replace("ó", "o").equalsIgnoreCase("imovel rural")) {
 					endereco = "";
-				} else if (tipoImovel.equalsIgnoreCase("rural")) {
+				} else if (tipoImovel.getTipoImovelId().equals(TipoImovel.RURAL_ID)) {
 					endereco = endereco.replaceFirst("imóvel ", "").replaceFirst("imovel ", "").replaceFirst("Imóvel ", "").replaceFirst("Imovel ", "");
 				}
 
@@ -310,7 +310,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						solicitacao.setMunicipio(municipio);
 						solicitacao.setDestino(destino);
 						solicitacao.setCartorio(cartorio);
-						solicitacao.setTipoImovel(despachoServico.obterTipoImovel(null, tipoImovel).iterator().next());
+						solicitacao.setTipoImovel(tipoImovel);
 						solicitacao.setEndereco(endereco);
 						solicitacao.setCoordenada(coordenada);
 						solicitacao.setArea(area);
