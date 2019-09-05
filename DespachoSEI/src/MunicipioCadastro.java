@@ -1,16 +1,36 @@
+import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
 import framework.CadastroTemplate;
+import framework.DialogTemplate;
+import framework.MyButton;
 import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -22,6 +42,18 @@ import framework.MyUtils;
 public class MunicipioCadastro extends CadastroTemplate {
 
 	private Connection conexao;
+	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha");
+
+	private JFileChooser filArquivo = new JFileChooser();
+	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
+	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
+	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
+	private JPanel pnlArquivo = new JPanel();
+	private JPanel pnlDialogo = new JPanel();
+	private JTextArea txtTexto = new JTextArea(30, 100);
+	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
+	private JButton btnIniciarImportacaoPlanillha = new JButton("Iniciar Importação da Planilha");
+	
 	private JTextField txtMunicipioId = new JTextField() {{ setEnabled(false); }};
 	private MyLabel lblMunicipioId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtNome = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -33,6 +65,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(5, 2));
 	private MyComboBox cbbTipoResposta = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblTipoResposta = new MyLabel("Tipo de Resposta Padrão") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
@@ -43,8 +76,17 @@ public class MunicipioCadastro extends CadastroTemplate {
 		despachoServico = new DespachoServico(conexao);
 		
 		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Nenhuma)")); }}, null);
-		despachoServico.preencherOpcoesMunicipio(cbbMunicipioComarca, null);
-		despachoServico.preencherOpcoesDestino(cbbDestino, null, null);
+		despachoServico.preencherOpcoesMunicipio(cbbMunicipioComarca, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Selecione a comarca)", null, null, null)); }});
+		despachoServico.preencherOpcoesDestino(cbbDestino, new ArrayList<Destino>() {{ add(new Destino(0, null, "(Selecione o destino das respostas judiciais)", null, null)); }}, Origem.SAPIENS);
+
+		filArquivo.setFileFilter(new FileNameExtensionFilter("Arquivos Excel (xlsx, xls)", "xls", "xlsx"));
+		pnlArquivo.setLayout(new GridLayout(1, 2));
+		pnlArquivo.add(new JPanel() {{ add(lblArquivo); add(btnAbrirArquivo); }});
+		pnlArquivo.add(lblNomeArquivo);
+
+		pnlDialogo.setLayout(new BorderLayout());
+		pnlDialogo.add(pnlArquivo, BorderLayout.NORTH);
+		pnlDialogo.add(scpAreaRolavel, BorderLayout.CENTER);
 		
 		pnlCamposEditaveis.add(lblMunicipioId);
 		pnlCamposEditaveis.add(txtMunicipioId);
@@ -57,8 +99,134 @@ public class MunicipioCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(lblTipoResposta);
 		pnlCamposEditaveis.add(cbbTipoResposta);
 
+		btnImportarPlanilha.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mostrarTelaImportacaoPlanilha();
+			}
+		});
+
+		btnIniciarImportacaoPlanillha.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							importarPlanilha();
+						} catch (Exception e) {
+							e.printStackTrace();
+							JOptionPane.showMessageDialog(null, "Erro ao processar os arquivos: \n" + e.getMessage());
+						}
+					}
+				}).start();
+			}
+		});
+
+		btnAbrirArquivo.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
+				detalhes.actionPerformed(null);
+				int retorno = filArquivo.showOpenDialog(MunicipioCadastro.this);
+				if (retorno == JFileChooser.APPROVE_OPTION) {
+					if (filArquivo.getSelectedFile().exists()) {
+						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
+					}
+				}
+			}
+		});
+
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
+		this.setBtnBotoesAcimaPosteriores(new MyButton[] { btnImportarPlanilha });
 		this.inicializar();
+	}
+
+	private void importarPlanilha() throws Exception {
+		if (lblNomeArquivo.getText().trim().equals("")) {
+			JOptionPane.showMessageDialog(null, "É necessário escolher um arquivo para ser processado.");
+			return;
+		}
+
+		File fileInput = new File(lblNomeArquivo.getText());
+		Workbook wb = WorkbookFactory.create(fileInput);
+		Sheet planilha = wb.getSheetAt(0);
+		
+		Map<String, String[]> municipiosLidos = new LinkedHashMap<String, String[]>();
+
+		MyUtils.appendLogArea(txtTexto, "Lendo as informações da planilha...");
+
+		for (int l = 1; l < planilha.getLastRowNum() - 1; l++) {
+			Row linha = planilha.getRow(l);
+			String nome = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 0)).trim();
+			String comarca = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 1)).trim();
+			String destino = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 2)).trim();
+
+			if (!nome.equals("")) municipiosLidos.put(nome, new String[] { comarca, destino });
+		}
+
+		wb.close();
+		
+		MyUtils.appendLogArea(txtTexto, "Incluindo os municípios novos...");
+		
+		// percorre a lista de municípios lidos, inserindo os que não existirem
+		for (String nome : municipiosLidos.keySet()) {
+			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, null, nome));
+			if (municipio == null) {
+				municipio = new Municipio(null, nome, null, null, null);
+				salvarMunicipio(municipio);
+				MyUtils.appendLogArea(txtTexto, "Município de " + nome + " incluído com sucesso");
+			} else {
+				MyUtils.appendLogArea(txtTexto, "Município de " + nome + " já estava na base de dados");
+			}
+		}
+
+		MyUtils.appendLogArea(txtTexto, "Atualizando as informações de comarca e destino das respostas judiciais...");
+
+		// percorre novamente a lista, atualizando comarca e destino, se tiverem sido informado
+		for (String nome : municipiosLidos.keySet()) {
+			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, null, nome));
+			Municipio oComarca = null;
+			Destino oDestino = null;
+			String comarca = municipiosLidos.get(nome)[0];
+			String destino = municipiosLidos.get(nome)[1];
+			String msgErro = "";
+
+			if (!comarca.equals("")) {
+				oComarca = MyUtils.entidade(despachoServico.obterMunicipio(false, null, comarca));
+				if (oComarca != null) municipio.setMunicipioComarca(oComarca);
+				else msgErro += "A comarca informada (" + comarca + ") não foi encontrada";
+			}
+
+			if (!destino.equals("")) {
+				oDestino = MyUtils.entidade(despachoServico.obterDestino(null, destino, null, false, null, null));
+				if (oDestino == null) {
+					oDestino = MyUtils.entidade(despachoServico.obterDestino(null, null, destino, false, null, null));
+				}
+				if (oDestino != null) municipio.setDestino(oDestino);
+				else msgErro += (msgErro.equals("") ? "" : " - ") + "O destino informado (" + destino + ") não foi encontrado";
+			}
+
+			if ((!comarca.equals("") && oComarca != null) || (!destino.equals("") && oDestino != null)) {
+				salvarMunicipio(municipio);
+				MyUtils.appendLogArea(txtTexto, "O município de " + nome + " foi atualizado na base de dados: " + (msgErro.equals("") ? "Todas as informações adicionais foram atualizadas" : msgErro));
+			} else {
+				if (!msgErro.equals("")) {
+					MyUtils.appendLogArea(txtTexto, "O município de " + nome + " não teve nenhuma informação atualizada: " + msgErro);
+				}
+			}
+		}
+
+		MyUtils.appendLogArea(txtTexto, "Fim do Processamento");
+		executarAtualizar();
+	}
+
+	private void mostrarTelaImportacaoPlanilha() {
+		DialogTemplate janelaDialogo = new DialogTemplate("Importação de Planilha");
+		janelaDialogo.setPnlAreaCentral(new JPanel() {{ add(pnlDialogo); }});
+		janelaDialogo.setPnlBotoes(new JPanel() {{ add(btnIniciarImportacaoPlanillha); }});
+		janelaDialogo.inicializar();
+		janelaDialogo.abrirJanela();
 	}
 
 	public void limparCamposEditaveis() {
@@ -73,24 +241,30 @@ public class MunicipioCadastro extends CadastroTemplate {
 		Municipio municipio = new Municipio(txtMunicipioId.getText().equals("") ? null : Integer.parseInt(txtMunicipioId.getText()), txtNome.getText(), 
 				new Municipio(MyUtils.idItemSelecionado(cbbMunicipioComarca)), new Destino(MyUtils.idItemSelecionado(cbbDestino)), new TipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta)));
 
-		String sql = "";
-		if (municipio.getMunicipioId() != null) {
-			sql += "update municipio "
-				+  "   set nome = '" + municipio.getNome().replace("'", "''") + "' " 
-				+  "     , municipioidcomarca = " + municipio.getMunicipioComarca().getMunicipioId() 
-				+  "     , destinoid = " + municipio.getDestino().getDestinoId() 
-				+  "     , tiporespostaid = " + (municipio.getTipoResposta().getTipoRespostaId().equals(0) ? "null" : municipio.getTipoResposta().getTipoRespostaId())
-				+  " where municipioid = " + municipio.getMunicipioId();
-		} else {
-			sql += "insert into municipio (nome, municipioidcomarca, destinoid, tiporespostaid) values ("
-				+  "'" + municipio.getNome() + "', " 
-				+  municipio.getMunicipioComarca().getMunicipioId() + ", " 
-				+  municipio.getDestino().getDestinoId() + ", "
-				+  (municipio.getTipoResposta().getTipoRespostaId().equals(0) ? "null" : municipio.getTipoResposta().getTipoRespostaId()) + ") "; 
-		}
-		MyUtils.execute(conexao, sql);
+		salvarMunicipio(municipio);
 	}
 
+	private void salvarMunicipio(Municipio entidade) throws Exception {
+		String sql = "";
+
+		if (entidade.getMunicipioId() != null) {
+			sql += "update municipio "
+				+  "   set nome = '" + entidade.getNome().replace("'", "''") + "' " 
+				+  "     , municipioidcomarca = " + (entidade.getMunicipioComarca() == null ? "null" : entidade.getMunicipioComarca().getMunicipioId())
+				+  "     , destinoid = " + (entidade.getDestino() == null ? "null" : entidade.getDestino().getDestinoId())
+				+  "     , tiporespostaid = " + (entidade.getTipoResposta() == null ? "null" : entidade.getTipoResposta().getTipoRespostaId())
+				+  " where municipioid = " + entidade.getMunicipioId();
+		} else {
+			sql += "insert into municipio (nome, municipioidcomarca, destinoid, tiporespostaid) values ("
+				+  "'" + entidade.getNome().replace("'", "''") + "', " 
+				+  (entidade.getMunicipioComarca() == null ? "null" : entidade.getMunicipioComarca().getMunicipioId()) + ", " 
+				+  (entidade.getDestino() == null ? "null" : entidade.getDestino().getDestinoId()) + ", "
+				+  (entidade.getTipoResposta() == null ? "null" : entidade.getTipoResposta().getTipoRespostaId()) + ") "; 
+		}
+
+		MyUtils.execute(conexao, sql);
+	}
+	
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
 		sql += "delete from municipio where municipioid = " + id;
