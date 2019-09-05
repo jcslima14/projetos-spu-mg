@@ -34,6 +34,11 @@ import com.sun.rowset.CachedRowSetImpl;
 
 public class MyUtils {
 
+	public static boolean arquivoExiste(String arquivo) {
+		File file = new File(arquivo);
+		return file.exists();
+	}
+	
 	public static Properties obterPropriedades(String nomeArquivo) {
 		Properties retorno = new Properties();
 		InputStream input = null;
@@ -102,7 +107,7 @@ public class MyUtils {
 		return retorno;
 	}
 
-	public static int itemSelecionado(MyComboBox comboBox, Integer intId, String stringId) {
+	public static int comboBoxItemIndex(MyComboBox comboBox, Integer intId, String stringId) {
 		int retorno = 0;
 		for (int i = 0; i < comboBox.getItemCount(); i++) {
 			ComboBoxItem item = (ComboBoxItem) comboBox.getItemAt(i);
@@ -174,6 +179,9 @@ public class MyUtils {
 	}
 	
 	public static void insereOpcoesComboBox(Connection conexao, MyComboBox comboBox, String sql, List<ComboBoxItem> itensInicioLista) {
+		// limpa os itens da lista
+		comboBox.removeAllItems();
+
 		// insere os itens adicionais ao início da lista
 		for (ComboBoxItem itemInicioLista : itensInicioLista) {
 			comboBox.addItem(itemInicioLista);
@@ -280,6 +288,8 @@ public class MyUtils {
 	}
 
 	public static <T> void insereOpcoesComboBox(MyComboBox comboBox, List<T> opcoes) {
+		comboBox.removeAllItems();
+
 		for (T opcao : opcoes) {
 			ItemComboBox item = (ItemComboBox) opcao;
 			comboBox.addItem(new ComboBoxItem(item.getIntegerItemValue(), item.getStringItemValue(), item.getItemLabel()));
@@ -335,5 +345,15 @@ public class MyUtils {
 				.replace("Ü", "U")
 				.replace("º", "o")
 				.replace("°", "o");
+	}
+	
+	public static <T> T entidade(List<T> listaEntidades) {
+		if (listaEntidades == null || listaEntidades.isEmpty()) return null;
+		else return listaEntidades.iterator().next();
+	}
+
+	public static String emptyStringIfNull(Object obj) {
+		if (obj == null) return "";
+		else return obj.toString();
 	}
 }

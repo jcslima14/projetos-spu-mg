@@ -1,25 +1,26 @@
+import framework.ItemComboBox;
 
-public class Destino {
-	Integer destinoId;
+public class Destino implements ItemComboBox {
+	private Integer destinoId;
 	
-	String artigo;
+	private String artigo;
 	
-	String descricao;
+	private String descricao;
 
-	Boolean usarComarca;
-	
-	String caminhoDespachos;
+	private String abreviacao;
+
+	private Boolean usarCartorio;
 	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;
 	}
 	
-	public Destino(Integer destinoId, String artigo, String descricao, Boolean usarComarca, String caminhoDespachos) {
+	public Destino(Integer destinoId, String artigo, String descricao, String abreviacao, Boolean usarCartorio) {
 		this.destinoId = destinoId;
 		this.artigo = artigo;
 		this.descricao = descricao;
-		this.usarComarca = usarComarca;
-		this.caminhoDespachos = caminhoDespachos;
+		this.abreviacao = abreviacao;
+		this.usarCartorio = usarCartorio;
 	}
 	
 	public Integer getDestinoId() {
@@ -46,19 +47,34 @@ public class Destino {
 		this.descricao = descricao;
 	}
 
-	public Boolean getUsarComarca() {
-		return usarComarca;
+	public String getAbreviacao() {
+		return abreviacao;
 	}
 
-	public void setUsarComarca(Boolean usarComarca) {
-		this.usarComarca = usarComarca;
+	public void setAbreviacao(String abreviacao) {
+		this.abreviacao = abreviacao;
 	}
 
-	public String getCaminhoDespachos() {
-		return caminhoDespachos;
+	@Override
+	public Integer getIntegerItemValue() {
+		return getDestinoId();
 	}
 
-	public void setCaminhoDespachos(String caminhoDespachos) {
-		this.caminhoDespachos = caminhoDespachos;
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getDescricao();
+	}
+
+	public Boolean getUsarCartorio() {
+		return usarCartorio;
+	}
+
+	public void setUsarCartorio(Boolean usarCartorio) {
+		this.usarCartorio = usarCartorio;
 	}
 }

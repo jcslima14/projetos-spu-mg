@@ -1,22 +1,26 @@
+import framework.ItemComboBox;
 
-public class Municipio {
-	Integer municipioId;
+public class Municipio implements ItemComboBox {
+	private Integer municipioId;
 	
-	String nome;
+	private String nome;
 	
-	Municipio municipioComarca;
+	private Municipio municipioComarca;
 
-	Destino destino;
+	private Destino destino;
 
+	private TipoResposta tipoResposta;
+	
 	public Municipio(Integer municipioId) {
 		this.municipioId = municipioId;
 	}
 
-	public Municipio(Integer municipioId, String nome, Municipio municipioComarca, Destino destino) {
+	public Municipio(Integer municipioId, String nome, Municipio municipioComarca, Destino destino, TipoResposta tipoResposta) {
 		this.municipioId = municipioId;
 		this.nome = nome;
 		this.municipioComarca = municipioComarca;
 		this.destino = destino;
+		this.tipoResposta = tipoResposta;
 	}
 
 	public Integer getMunicipioId() {
@@ -49,5 +53,28 @@ public class Municipio {
 
 	public void setDestino(Destino destino) {
 		this.destino = destino;
+	}
+
+	public TipoResposta getTipoResposta() {
+		return tipoResposta;
+	}
+
+	public void setTipoResposta(TipoResposta tipoResposta) {
+		this.tipoResposta = tipoResposta;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getMunicipioId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getNome();
 	}
 }

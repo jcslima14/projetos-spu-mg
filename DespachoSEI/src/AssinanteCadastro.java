@@ -1,15 +1,18 @@
 import java.awt.GridLayout;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.MyButton;
 import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -29,19 +32,23 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyLabel lblCargo = new MyLabel("Cargo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtSetor = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblSetor = new MyLabel("Setor") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyCheckBox chkSuperior = new MyCheckBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyLabel lblSuperior = new MyLabel("Superior") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyCheckBox chkSuperior = new MyCheckBox("Superior") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyCheckBox chkAtivo = new MyCheckBox("Ativo") {{ setEnabled(false); setInclusao(true); setEdicao(true); setSelected(true); }};
 	private MyTextField txtNumeroProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNumeroProcesso = new MyLabel("Nº Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtBlocoAssinatura = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblBlocoAssinatura = new MyLabel("Bloco de Assinatura") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 2));
+	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão") {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
 	public AssinanteCadastro(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
+		despachoServico = new DespachoServico(conexao);
+		
 		pnlCamposEditaveis.add(lblAssinanteId);
 		pnlCamposEditaveis.add(txtAssinanteId);
 		pnlCamposEditaveis.add(lblNome);
@@ -50,13 +57,22 @@ public class AssinanteCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtCargo);
 		pnlCamposEditaveis.add(lblSetor);
 		pnlCamposEditaveis.add(txtSetor);
-		pnlCamposEditaveis.add(lblSuperior);
 		pnlCamposEditaveis.add(chkSuperior);
+		pnlCamposEditaveis.add(chkAtivo);
 		pnlCamposEditaveis.add(lblNumeroProcesso);
 		pnlCamposEditaveis.add(txtNumeroProcesso);
 		pnlCamposEditaveis.add(lblBlocoAssinatura);
 		pnlCamposEditaveis.add(txtBlocoAssinatura);
 		
+		btnTornarPadrao.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(java.awt.event.ActionEvent e) {
+				despachoServico.salvarAssinantePadrao(Integer.parseInt(txtAssinanteId.getText()));
+			}
+		});
+
+		this.setBtnBotoesAbaixoPosteriores(btnTornarPadrao);
+
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
 	}
@@ -67,6 +83,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 		txtCargo.setText("");
 		txtSetor.setText("");
 		chkSuperior.setSelected(false);
+		chkAtivo.setSelected(true);
 		txtNumeroProcesso.setText("");
 		txtBlocoAssinatura.setText("");
 	}
@@ -79,15 +96,17 @@ public class AssinanteCadastro extends CadastroTemplate {
 				+  "     , cargo = '" + txtCargo.getText() + "' "
 				+  "     , setor = '" + txtSetor.getText() + "' "
 				+  "	 , superior = " + (chkSuperior.isSelected() ? "true" : "false") 
-				+  "     , numeroprocesso = '" + txtNumeroProcesso.getText() + "' "
+				+  "	 , ativo = " + (chkAtivo.isSelected() ? "true" : "false") 
+				+  "     , numeroprocessosei = '" + txtNumeroProcesso.getText() + "' "
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
 				+  " where assinanteid = " + txtAssinanteId.getText();
 		} else {
-			sql += "insert into assinante (nome, cargo, setor, superior, numeroprocesso, blocoassinatura) values ("
+			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocessosei, blocoassinatura) values ("
 				+  "'" + txtNome.getText().trim() + "', "
 				+  "'" + txtCargo.getText().trim() + "', "
 				+  "'" + txtSetor.getText().trim() + "', "
 				+  (chkSuperior.isSelected() ? "true" : "false") + ", "
+				+  (chkAtivo.isSelected() ? "true" : "false") + ", "
 				+  "'" + txtNumeroProcesso.getText() + "', "
 				+  "'" + txtBlocoAssinatura.getText() + "') ";
 		}
@@ -102,16 +121,25 @@ public class AssinanteCadastro extends CadastroTemplate {
 
 	public void prepararParaEdicao() {
 		txtAssinanteId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
-		txtNome.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
-		txtCargo.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
-		txtSetor.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 4).toString());
-		chkSuperior.setSelected(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 5).toString().equals("Sim") ? true : false);
-		txtNumeroProcesso.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 6).toString());
-		txtBlocoAssinatura.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 7).toString());
+		
+		try {
+			Assinante entidade = despachoServico.obterAssinante(Integer.parseInt(txtAssinanteId.getText()), null, null, null).iterator().next();
+
+			txtNome.setText(entidade.getNome());
+			txtCargo.setText(entidade.getCargo());
+			txtSetor.setText(entidade.getSetor());
+			chkSuperior.setSelected(entidade.getSuperior());
+			chkAtivo.setSelected(entidade.getAtivo());
+			txtNumeroProcesso.setText(entidade.getNumeroProcesso());
+			txtBlocoAssinatura.setText(entidade.getBlocoAssinatura());
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Assinante para edição: \n\n" + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, numeroprocesso, blocoassinatura from assinante");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' end as ativo, numeroprocessosei, blocoassinatura from assinante");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -126,6 +154,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Cargo", 200, true));
 			colunas.add(new MyTableColumn("Setor", 200, true));
 			colunas.add(new MyTableColumn("Superior?", 80, true, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Ativo?", 80, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Nº Processo", 150, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Bloco Assinatura", 100, true, JLabel.CENTER));
 		}

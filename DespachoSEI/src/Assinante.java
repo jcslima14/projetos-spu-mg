@@ -1,26 +1,35 @@
+import framework.ItemComboBox;
 
-public class Assinante {
-	Integer assinanteId;
+public class Assinante implements ItemComboBox {
+	private Integer assinanteId;
 	
-	String nome;
-	
-	String cargo;
-	
-	String setor;
-	
-	Boolean superior;
+	private String nome;
 
-	String numeroProcesso;
+	private Boolean ativo;
+	
+	private String cargo;
+	
+	private String setor;
+	
+	private Boolean superior;
 
-	String blocoAssinatura;
+	private String numeroProcesso;
+
+	private String blocoAssinatura;
 
 	public Assinante(Integer assinanteId) {
 		this.assinanteId = assinanteId;
 	}
 
-	public Assinante(Integer assinanteId, String nome, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
+	public Assinante(Integer assinanteId, String nome) {
 		this.assinanteId = assinanteId;
 		this.nome = nome;
+	}
+
+	public Assinante(Integer assinanteId, String nome, Boolean ativo, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
+		this.assinanteId = assinanteId;
+		this.nome = nome;
+		this.ativo = ativo;
 		this.cargo = cargo;
 		this.setor = setor;
 		this.superior = superior;
@@ -42,6 +51,14 @@ public class Assinante {
 
 	public void setNome(String nome) {
 		this.nome = nome;
+	}
+
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
 	}
 
 	public String getCargo() {
@@ -82,5 +99,20 @@ public class Assinante {
 
 	public void setBlocoAssinatura(String blocoAssinatura) {
 		this.blocoAssinatura = blocoAssinatura;
+	}
+
+	@Override
+	public Integer getIntegerItemValue() {
+		return getAssinanteId();
+	}
+
+	@Override
+	public String getStringItemValue() {
+		return null;
+	}
+
+	@Override
+	public String getItemLabel() {
+		return getNome();
 	}
 }

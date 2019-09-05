@@ -27,9 +27,15 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	private MyButton btnExcluir = new MyButton("Excluir") {{ setExclusao(true); }};
 	private MyButton btnSalvar = new MyButton("Salvar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyButton btnCancelar = new MyButton("Cancelar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyButton[] btnBotoesPosteriores = null;
+	private MyButton[] btnBotoesAcimaPosteriores = null;
+	private MyButton[] btnBotoesAbaixoPosteriores = null;
 	private JPanel pnlCamposEditaveis;
 	private JPanel pnlFiltros = null;
+	private boolean exibirBotaoIncluir = true;
+
+	public void setExibirBotaoIncluir(boolean exibirBotaoIncluir) {
+		this.exibirBotaoIncluir = exibirBotaoIncluir;
+	}
 
 	public MyTable getTabela() {
 		return this.tabela;
@@ -43,10 +49,14 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		this.pnlFiltros = pnlFiltros;
 	}
 
-	public void setBtnBotoesPosteriores(MyButton... btnBotoesPosteriores) {
-		this.btnBotoesPosteriores = btnBotoesPosteriores;
+	public void setBtnBotoesAcimaPosteriores(MyButton... btnBotoesAcimaPosteriores) {
+		this.btnBotoesAcimaPosteriores = btnBotoesAcimaPosteriores;
 	}
-	
+
+	public void setBtnBotoesAbaixoPosteriores(MyButton... btnBotoesAbaixoPosteriores) {
+		this.btnBotoesAbaixoPosteriores = btnBotoesAbaixoPosteriores;
+	}
+
 	public CadastroTemplate() {
 		super();
 		setResizable(true);
@@ -66,6 +76,10 @@ public abstract class CadastroTemplate extends JInternalFrame {
 	}
 
 	public void inicializar() {
+		inicializar(true);
+	}
+	
+	public void inicializar(boolean mostrarAreaEdicao) {
 		JScrollPane areaRolavel = new JScrollPane(tabela);
 		areaRolavel.setVisible(true);
 		add(areaRolavel, BorderLayout.CENTER);
@@ -80,11 +94,11 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		pnlPainelSuperior.setLayout(new BoxLayout(pnlPainelSuperior, BoxLayout.Y_AXIS));
 		JPanel pnlBotoesAcima = new JPanel(new FlowLayout());
 		pnlBotoesAcima.add(btnAtualizar);
-		pnlBotoesAcima.add(btnIncluir);
+		if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
 		pnlBotoesAcima.add(btnExcluir);
 
-		if (btnBotoesPosteriores != null) {
-			for (MyButton botao : btnBotoesPosteriores) {
+		if (btnBotoesAcimaPosteriores != null) {
+			for (MyButton botao : btnBotoesAcimaPosteriores) {
 				pnlBotoesAcima.add(botao);
 			}
 		}
@@ -96,15 +110,24 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		
 		add(pnlPainelSuperior, BorderLayout.NORTH);
 
-		JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
-		pnlBotoesAbaixo.add(btnSalvar);
-		pnlBotoesAbaixo.add(btnCancelar);
-		JPanel pnlAreaEdicao = new JPanel();
-		pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
-		pnlAreaEdicao.add(this.pnlCamposEditaveis);
-		pnlAreaEdicao.add(pnlBotoesAbaixo);
+		if (mostrarAreaEdicao) {
+			JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
+			pnlBotoesAbaixo.add(btnSalvar);
+			pnlBotoesAbaixo.add(btnCancelar);
 
-		add(pnlAreaEdicao, BorderLayout.SOUTH);
+			if (btnBotoesAbaixoPosteriores != null) {
+				for (MyButton botao : btnBotoesAbaixoPosteriores) {
+					pnlBotoesAbaixo.add(botao);
+				}
+			}
+
+			JPanel pnlAreaEdicao = new JPanel();
+			pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
+			pnlAreaEdicao.add(this.pnlCamposEditaveis);
+			pnlAreaEdicao.add(pnlBotoesAbaixo);
+	
+			add(pnlAreaEdicao, BorderLayout.SOUTH);
+		}
 
 		btnAtualizar.addActionListener(new ActionListener() {
 			@Override
@@ -112,7 +135,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 				try {
 					resetarDados();
 				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(null, "Erro ao tentar atualizar a lista de registros:/n/n" + e1.getMessage());
+					JOptionPane.showMessageDialog(null, "Erro ao tentar atualizar a lista de registros:\n\n" + e1.getMessage());
 					e1.printStackTrace();
 				}
 			}
@@ -197,7 +220,7 @@ public abstract class CadastroTemplate extends JInternalFrame {
 		componentesEmEdicao(this, true);
 	}
 
-	private void incluirRegistro() {
+	public void incluirRegistro() {
 		componentesEmInclusao(this, true);
 	}
 

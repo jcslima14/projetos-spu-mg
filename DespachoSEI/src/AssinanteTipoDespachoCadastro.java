@@ -10,9 +10,7 @@ import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
-import framework.ComboBoxItem;
 import framework.MyComboBox;
-import framework.MyComboBoxModel;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -23,12 +21,12 @@ import framework.MyUtils;
 public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 	private Connection conexao;
-	private JTextField txtAssinanteTipoDespachoId = new JTextField() {{ setEnabled(false); }};
-	private MyLabel lblAssinanteTipoDespachoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JTextField txtAssinanteTipoRespostaId = new JTextField() {{ setEnabled(false); }};
+	private MyLabel lblAssinanteTipoRespostaId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbAssinante = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblAssinante = new MyLabel("Assinado por") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyComboBox cbbTipoDespacho = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyLabel lblTipoDespacho = new MyLabel("Tipo de Despacho") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyComboBox cbbTipoResposta = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblTipoResposta = new MyLabel("Tipo de Resposta") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtBlocoAssinatura = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblBlocoAssinatura = new MyLabel("Bloco de Assinatura") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
@@ -41,15 +39,15 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		opcoesAssinante();
-		opcoesTipoDespacho();
+		despachoServico.preencherOpcoesTipoResposta(cbbTipoResposta, null, null);
+		despachoServico.preencherOpcoesAssinante(cbbAssinante, null, false, null);
 
-		pnlCamposEditaveis.add(lblAssinanteTipoDespachoId);
-		pnlCamposEditaveis.add(txtAssinanteTipoDespachoId);
+		pnlCamposEditaveis.add(lblAssinanteTipoRespostaId);
+		pnlCamposEditaveis.add(txtAssinanteTipoRespostaId);
 		pnlCamposEditaveis.add(lblAssinante);
 		pnlCamposEditaveis.add(cbbAssinante);
-		pnlCamposEditaveis.add(lblTipoDespacho);
-		pnlCamposEditaveis.add(cbbTipoDespacho);
+		pnlCamposEditaveis.add(lblTipoResposta);
+		pnlCamposEditaveis.add(cbbTipoResposta);
 		pnlCamposEditaveis.add(lblBlocoAssinatura);
 		pnlCamposEditaveis.add(txtBlocoAssinatura);
 
@@ -57,35 +55,25 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 		this.inicializar();
 	}
 
-	private void opcoesAssinante() {
-		cbbAssinante.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbAssinante, "select assinanteid, nome from assinante");
-	}
-
-	private void opcoesTipoDespacho() {
-		cbbTipoDespacho.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbTipoDespacho, "select tipodespachoid, descricao from tipodespacho", new ArrayList<ComboBoxItem>());
-	}
-
 	public void limparCamposEditaveis() {
-		txtAssinanteTipoDespachoId.setText("");
+		txtAssinanteTipoRespostaId.setText("");
 		cbbAssinante.setSelectedIndex(0);
-		cbbTipoDespacho.setSelectedIndex(0);
+		cbbTipoResposta.setSelectedIndex(0);
 		txtBlocoAssinatura.setText("");
 	}
 
 	public void salvarRegistro() throws Exception {
 		String sql = "";
-		if (txtAssinanteTipoDespachoId.getText() != null && !txtAssinanteTipoDespachoId.getText().trim().equals("")) {
-			sql += "update assinantetipodespacho "
+		if (txtAssinanteTipoRespostaId.getText() != null && !txtAssinanteTipoRespostaId.getText().trim().equals("")) {
+			sql += "update assinantetiporesposta "
 				+  "   set assinanteid = " + MyUtils.idItemSelecionado(cbbAssinante)
-				+  "     , tipodespachoid = " + MyUtils.idItemSelecionado(cbbTipoDespacho)
+				+  "     , tiporespostaid = " + MyUtils.idItemSelecionado(cbbTipoResposta)
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
-				+  " where assinantetipodespachoid = " + txtAssinanteTipoDespachoId.getText();
+				+  " where assinantetiporespostaid = " + txtAssinanteTipoRespostaId.getText();
 		} else {
-			sql += "insert into assinantetipodespacho (assinanteid, tipodespachoid, blocoassinatura) values ("
+			sql += "insert into assinantetiporesposta (assinanteid, tiporespostaid, blocoassinatura) values ("
 				+  MyUtils.idItemSelecionado(cbbAssinante) + ", "
-				+  MyUtils.idItemSelecionado(cbbTipoDespacho) + ", "
+				+  MyUtils.idItemSelecionado(cbbTipoResposta) + ", "
 				+  "'" + txtBlocoAssinatura.getText() + "') ";
 		}
 		MyUtils.execute(conexao, sql);
@@ -93,17 +81,17 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
-		sql += "delete from assinantetipodespacho where assinantetipodespachoid = " + id;
+		sql += "delete from assinantetiporesposta where assinantetiporespostaid = " + id;
 		MyUtils.execute(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
-		txtAssinanteTipoDespachoId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
-		AssinanteTipoDespacho entidade = null;
+		txtAssinanteTipoRespostaId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
+		AssinanteTipoResposta entidade = null;
 		try {
-			entidade = despachoServico.obterAssinanteTipoDespacho(Integer.parseInt(txtAssinanteTipoDespachoId.getText()), null, null).iterator().next();
-			cbbTipoDespacho.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoDespacho, entidade.getTipoDespacho().getTipoDespachoId(), null));
-			cbbAssinante.setSelectedIndex(MyUtils.itemSelecionado(cbbAssinante, entidade.getAssinante().getAssinanteId(), null));
+			entidade = despachoServico.obterAssinanteTipoResposta(Integer.parseInt(txtAssinanteTipoRespostaId.getText()), null, null).iterator().next();
+			cbbTipoResposta.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoResposta, entidade.getTipoResposta().getTipoRespostaId(), null));
+			cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, entidade.getAssinante().getAssinanteId(), null));
 			txtBlocoAssinatura.setText(entidade.getBlocoAssinatura());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -112,14 +100,14 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
 	public TableModel obterDados() throws Exception {
 		String sql = "";
-		sql += "select atd.assinantetipodespachoid ";
+		sql += "select atr.assinantetiporespostaid ";
 		sql += "	 , a.nome as assinante ";
-		sql += "	 , td.descricao as tipodespacho ";
-		sql += "	 , atd.blocoassinatura ";
-		sql += "  from assinantetipodespacho atd ";
+		sql += "	 , tr.descricao as tiporesposta ";
+		sql += "	 , atr.blocoassinatura ";
+		sql += "  from assinantetiporesposta atr ";
 		sql += " inner join assinante a using (assinanteid) ";
-		sql += " inner join tipodespacho td using (tipodespachoid) ";
-		sql += " order by a.nome, td.descricao ";
+		sql += " inner join tiporesposta tr using (tiporespostaid) ";
+		sql += " order by a.nome, tr.descricao ";
 
 		ResultSet rs = MyUtils.executeQuery(conexao, sql);
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));

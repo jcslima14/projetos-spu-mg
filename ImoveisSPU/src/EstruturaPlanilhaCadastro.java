@@ -98,7 +98,7 @@ public class EstruturaPlanilhaCadastro extends CadastroTemplate {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		cbbTipoPlanilha.setSelectedIndex(MyUtils.itemSelecionado(cbbTipoPlanilha, entidade.getTipoPlanilha().getTipoPlanilhaId(), null));
+		cbbTipoPlanilha.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoPlanilha, entidade.getTipoPlanilha().getTipoPlanilhaId(), null));
 		txtEstruturaPlanilhaId.setText(estruturaPlanilhaId.toString());
 		txtNomeCampo.setText(entidade.getNomeCampo());
 		txtNomeColuna.setText(entidade.getNomeColuna());

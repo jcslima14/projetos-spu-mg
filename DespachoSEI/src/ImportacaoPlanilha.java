@@ -8,7 +8,6 @@ import java.io.StringWriter;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JButton;
@@ -33,7 +32,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import framework.MyComboBox;
-import framework.MyComboBoxModel;
 import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
@@ -70,7 +68,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(this.conexao);
 
-		opcoesAssinante();
+		despachoServico.preencherOpcoesAssinante(cbbAssinante, null, false, true);
 
 		JPanel painelArquivo = new JPanel() {{ add(lblArquivo); add(btnAbrirArquivo); }};
 		JPanel painelLinhas = new JPanel() {{ setLayout(new SpringLayout()); add(lblLinhaInicial); add(txtLinhaInicial); add(lblLinhaFinal); add(txtLinhaFinal); add(lblAssinante); add(cbbAssinante); }};
@@ -198,18 +196,18 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					sData = MyUtils.formatarData(f1.parse(sData), "yyyy-MM-dd");
 				}
 			}
-			String tipoProcesso = (MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? "Físico" : "Eletrônico");
+			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcesso = MyUtils.obterValorCelula(linha.getCell(2));
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
-			String comarca = MyUtils.obterValorCelula(linha.getCell(4));
+			String cartorio = "";
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
-			String municipio = MyUtils.obterValorCelula(linha.getCell(6));
+			String nomeMunicipio = MyUtils.obterValorCelula(linha.getCell(6));
 			String coordenada = MyUtils.obterValorCelula(linha.getCell(7));
 			coordenada = (coordenada == null || coordenada.trim().length() <= 1 ? "" : coordenada);
 			String area = MyUtils.obterValorCelula(linha.getCell(8));
 			area = (area == null || area.trim().length() <= 1 ? "" : area);
-			String destino = MyUtils.obterValorCelula(linha.getCell(14));
-			String tipoDespacho = MyUtils.obterValorCelula(linha.getCell(15));
+			String origemProcesso = MyUtils.obterValorCelula(linha.getCell(14));
+			String tipoResposta = MyUtils.obterValorCelula(linha.getCell(15));
 			String observacao = MyUtils.obterValorCelula(linha.getCell(17));
 			observacao = (observacao == null || observacao.trim().length() <= 1 ? "" : observacao);
 			String statusAtual = "";
@@ -221,81 +219,128 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1));
 			MyUtils.appendLogArea(logArea, "Nº Processo: " + numeroProcesso);
 			MyUtils.appendLogArea(logArea, "Autor......: " + autor);
-//			appendLogArea(logArea, "Comarca......: " + comarca);
-//			appendLogArea(logArea, "Endereço.....: " + endereco);
-//			appendLogArea(logArea, "Município....: " + municipio);
-//			appendLogArea(logArea, "Coordenada...: " + coordenada);
-//			appendLogArea(logArea, "Área.........: " + area);
-//			appendLogArea(logArea, "Destino......: " + destino);
-//			appendLogArea(logArea, "Tipo Despacho: " + tipoDespacho);
-//			appendLogArea(logArea, "Observação...: " + observacao);
 
 			// se o status do registro (conteúdo da coluna 16 da linha) não estiver vazio, ignora o processamento e retorna ao usuário
 			if (statusAtual.equals("")) {
-				String tipoImovel = endereco.trim().toLowerCase().replace("ó", "o").contains("imovel rural") ? "Rural" : "Urbano";
+				TipoImovel tipoImovel = endereco.trim().toLowerCase().replace("ó", "o").contains("imovel rural") ? TipoImovel.RURAL : TipoImovel.URBANO;
 
-				// ajusta o tipo de despacho para consulta a órgão ambiental (ICMBio, IBAMA, MMA)
-				if (tipoDespacho.trim().equalsIgnoreCase("consultar icmbio") || 
-					tipoDespacho.trim().equalsIgnoreCase("consultar icmbio/mma") ||
-					tipoDespacho.trim().equalsIgnoreCase("consultar mma/ibama")) {
-					tipoDespacho = "consultar órgão ambiental";
+				// ajusta o tipo de resposta para consulta a órgão ambiental (ICMBio, IBAMA, MMA)
+				if (tipoResposta.trim().equalsIgnoreCase("consultar icmbio") || 
+					tipoResposta.trim().equalsIgnoreCase("consultar icmbio/mma") ||
+					tipoResposta.trim().equalsIgnoreCase("consultar mma/ibama")) {
+					tipoResposta = "consultar órgão ambiental";
 					observacao = observacao.replaceFirst("APAF ", "");
 				}
 
-				List<Municipio> municipios = despachoServico.obterMunicipio(true, null, municipio);
-				if (municipios.isEmpty()) {
+				Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(true, null, nomeMunicipio));
+				if (municipio == null) {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Município não encontrado";
 				} else {
-					if (municipios.iterator().next().getMunicipioComarca() == null) {
+					if (municipio.getMunicipioComarca() == null) {
 						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Município não possui comarca";
 					}
 				}
 
-				List<Destino> destinos = null;
+				Destino destino = null;
 				// se não foi encontrado o destino no cadastro (PU ou PSUs), indica que se trata de processo extrajudicial
-				if (!destino.equalsIgnoreCase("judicial")) {
-					tipoDespacho = "extra judicial " + tipoDespacho;
-					comarca = destino;
+				if (!origemProcesso.equalsIgnoreCase("judicial")) {
+					tipoResposta = "extra judicial " + tipoResposta;
+					cartorio = origemProcesso;
 
-					if (destino.toLowerCase().trim().startsWith("defensoria")) {
-						destino = "Defensoria Pública";
-					} else if (destino.toLowerCase().trim().startsWith("serventia")) {
-						destino = "Serventia de Registro de Imóveis";
+					if (origemProcesso.toLowerCase().trim().startsWith("defensoria")) {
+						origemProcesso = "Defensoria Pública";
+					} else if (origemProcesso.toLowerCase().trim().startsWith("serventia")) {
+						origemProcesso = "Serventia de Registro de Imóveis";
 					} else {
-						destino = "Cartório da Comarca";
+						origemProcesso = "Cartório da Comarca";
 					}
-					destinos = despachoServico.obterDestino(null, null, destino, null);
+					destino = MyUtils.entidade(despachoServico.obterDestino(null, null, origemProcesso, null, null, null));
 				} else {
-					destinos = despachoServico.obterDestino(null, null, null, municipio);
-					if (municipios != null && !municipios.isEmpty() && municipios.iterator().next().getMunicipioComarca() != null) comarca = municipios.iterator().next().getMunicipioComarca().getNome();
+					if (municipio != null) destino = municipio.getDestino();
+					cartorio = null;
 				}
 
-				if (destinos == null || destinos.isEmpty()) {
+				if (destino == null) {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Destino não encontrado";
 				}
 
-				List<TipoDespacho> tiposDespacho = despachoServico.obterTipoDespacho(null, tipoDespacho.toLowerCase());
-				if (tiposDespacho.isEmpty()) {
-					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Tipo de Despacho não encontrado";
+				TipoResposta tpResposta = MyUtils.entidade(despachoServico.obterTipoResposta(null, tipoResposta.toLowerCase()));
+				if (tpResposta == null) {
+					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Tipo de Resposta não encontrado";
 				}
 
-				if (tipoImovel.equalsIgnoreCase("rural") && endereco.trim().toLowerCase().replace("ó", "o").equalsIgnoreCase("imovel rural")) {
+				if (tipoImovel.getTipoImovelId().equals(TipoImovel.RURAL_ID) && endereco.trim().toLowerCase().replace("ó", "o").equalsIgnoreCase("imovel rural")) {
 					endereco = "";
-				} else if (tipoImovel.equalsIgnoreCase("rural")) {
+				} else if (tipoImovel.getTipoImovelId().equals(TipoImovel.RURAL_ID)) {
 					endereco = endereco.replaceFirst("imóvel ", "").replaceFirst("imovel ", "").replaceFirst("Imóvel ", "").replaceFirst("Imovel ", "");
 				}
 
 				if (msgRetorno.equals("")) {
-					if (!(tipoDespacho.startsWith("Extra judicial") && tipoProcesso.equals("Eletrônico"))) {
-						Despacho despacho = new Despacho(null, sData, despachoServico.obterTipoProcesso(null, tipoProcesso.toLowerCase()).iterator().next(), numeroProcesso, autor, comarca, 
-								despachoServico.obterTipoImovel(null, tipoImovel).iterator().next(), endereco, municipio, coordenada, area, tiposDespacho.iterator().next(), 
-								new Assinante(MyUtils.idItemSelecionado(cbbAssinante)), destinos.iterator().next(), observacao, "", null, null, false, false, null, null, false);
-					
-						despachoServico.salvarDespacho(despacho);
+//					if (!(tipoResposta.startsWith("Extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
+						Origem origem;
+						if (origemProcesso.equalsIgnoreCase("judicial")) {
+							origem = Origem.SAPIENS;
+						} else {
+							origem = Origem.SPUNET;
+						}
+
+						Solicitacao solicitacao;
+						SolicitacaoEnvio envio = null;
+
+						if (numeroProcesso.equals("-")) {
+							MyUtils.appendLogArea(logArea, "Busca por autor: " + autor + " - " + cartorio + " - " + endereco + " - " + origem.getDescricao() + " - " + tipoProcesso.getDescricao());
+							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, autor, municipio, cartorio, endereco));
+						} else {
+							MyUtils.appendLogArea(logArea, "Busca por processo: " + origem.getDescricao() + " - " + tipoProcesso.getDescricao() + " - " + numeroProcesso);
+							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso));
+						}
+
+						MyUtils.appendLogArea(logArea, "Resultado: " + (solicitacao == null ? "Nenhuma solicitação encontrada" : solicitacao.getSolicitacaoId()));
+
+						if (solicitacao == null) {
+							solicitacao = new Solicitacao();
+							envio = new SolicitacaoEnvio(null, null, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
+						}
+
+						solicitacao.setOrigem(origem);
+						solicitacao.setTipoProcesso(tipoProcesso);
+						solicitacao.setNumeroProcesso(numeroProcesso);
+						solicitacao.setAutor(autor);
+						solicitacao.setMunicipio(municipio);
+						solicitacao.setDestino(destino);
+						solicitacao.setCartorio(cartorio);
+						solicitacao.setTipoImovel(tipoImovel);
+						solicitacao.setEndereco(endereco);
+						solicitacao.setCoordenada(coordenada);
+						solicitacao.setArea(area);
+						solicitacao.setArquivosAnexados(false);
+
+						solicitacao = despachoServico.salvarSolicitacao(solicitacao);
+
+						if (envio != null) {
+							envio.setSolicitacao(solicitacao);
+							despachoServico.salvarSolicitacaoEnvio(envio);
+						}
+
+						// busca uma solicitacao pendente, se existir
+						SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(solicitacao));
+						
+						if (resposta == null) {
+							resposta = new SolicitacaoResposta();
+						}
+
+						resposta.setSolicitacao(solicitacao);
+						resposta.setTipoResposta(tpResposta);
+						resposta.setObservacao(observacao);
+						resposta.setAssinante(new Assinante(MyUtils.idItemSelecionado(cbbAssinante)));
+						resposta.setRespostaImpressa(false);
+						resposta.setRespostaNoBlocoAssinatura(false);
+
+						despachoServico.salvarSolicitacaoResposta(resposta);
 						msgRetorno = "Automático pelo sistema";
-					} else {
-						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
-					}
+//					} else {
+//						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
+//					}
 				} else {
 					msgRetorno = "Manual: " + msgRetorno;
 				}
@@ -315,10 +360,5 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		wb.close();
 		fileInput.delete();
 		fileOutput.renameTo(fileInput);
-	}
-
-	private void opcoesAssinante() {
-		cbbAssinante.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbAssinante, "select assinanteid, nome from assinante where superior = false order by nome");
 	}
 }

@@ -5,6 +5,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Map.Entry;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -19,7 +20,7 @@ import framework.MyUtils;
 public class DespachoSEI extends JFrame {
 
 	public DespachoSEI() {
-		super("Despachos do SEI");
+		super("Respostas do SEI");
 
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();
@@ -27,32 +28,49 @@ public class DespachoSEI extends JFrame {
 
 		Connection conexao = obterConexao();
 
-		JMenuItem sbmDespacho = new JMenuItem("Despacho");
+		JMenuItem sbmProcessoRecebido = new JMenuItem("Processamento de Solicitação de Análise Recebida");
+		JMenuItem sbmSolicitacaoAnalise = new JMenuItem("Solicitação de Análise");
+		JMenuItem sbmSolicitacaoResposta = new JMenuItem("Resposta à Solicitação de Análise");
+		JMenuItem sbmSolicitacaoAnaliseMenu = new JMenu("Solicitação de Análise") {{ add(sbmSolicitacaoAnalise); add(sbmSolicitacaoResposta); add(sbmProcessoRecebido); }};
 		JMenuItem sbmMunicipio = new JMenuItem("Município");
+		JMenuItem sbmMunicipioTipoResposta = new JMenuItem("Tipo de Resposta por Município");
+		JMenuItem sbmMunicipioMenu = new JMenu("Município") {{ add(sbmMunicipio); add(sbmMunicipioTipoResposta); }};
 		JMenuItem sbmAssinante = new JMenuItem("Assinante");
-		JMenuItem sbmAssinanteTipoDespacho = new JMenuItem("Tipo de Despacho por Assinante");
-		JMenuItem sbmAssinanteMenu = new JMenu("Assinante") {{ add(sbmAssinante); add(sbmAssinanteTipoDespacho); }};
+		JMenuItem sbmAssinanteTipoResposta = new JMenuItem("Tipo de Resposta por Assinante");
+		JMenuItem sbmAssinanteMenu = new JMenu("Assinante") {{ add(sbmAssinante); add(sbmAssinanteTipoResposta); }};
 		JMenuItem sbmDestino = new JMenuItem("Destino");
-		JMenuItem sbmTipoDespacho = new JMenuItem("Tipo de Despacho");
+		JMenuItem sbmTipoResposta = new JMenuItem("Tipo de Resposta");
 		JMenuItem sbmTipoImovel = new JMenuItem("Tipo de Imóvel");
 		JMenuItem sbmTipoProcesso = new JMenuItem("Tipo de Processo");
-		JMenuItem sbmInclusaoDespachoSEI = new JMenuItem("Inclusão de Despachos no SEI");
+		JMenuItem sbmInclusaoRespostaSEI = new JMenuItem("Inclusão de Respostas no SEI");
 		JMenuItem sbmRespostaProcesso = new JMenuItem("Resposta a Processos");
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
-		JMenuItem sbmImpressaoDespachos = new JMenuItem("Impressão de Despachos");
+		JMenuItem sbmImpressaoRespostas = new JMenuItem("Impressão de Respostas");
 		JMenuItem sbmRecepcaoProcessos = new JMenuItem("Recepção de Processos do Sapiens");
-		JMenuItem sbmProcessoRecebido = new JMenuItem("Processos Recebidos do Sapiens");
 		JMenuItem sbmInclusaoSPUNet = new JMenuItem("Inclusão de Geometadados no SPUNet");
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
-		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmDespacho); addSeparator();
-													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipio); addSeparator(); 
-													 add(sbmTipoDespacho); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); addSeparator();
-													 add(sbmProcessoRecebido); }};
+		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
+		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
+													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
+													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); 
+												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
-															   add(sbmRecepcaoProcessos); add(sbmInclusaoDespachoSEI); add(sbmImpressaoDespachos); add(sbmRespostaProcesso); 
+															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 //															   addSeparator(); add(sbmInclusaoSPUNet);  
 															}};
-		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); }};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); 
+//															   addSeparator(); add(sbmInclusaoSPUNet);  
+		}};
+		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
+
+		sbmExecucaoScript.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ExecucaoScript janela = new ExecucaoScript("Execução de Scripts", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
 
 		sbmInclusaoSPUNet.addActionListener(new ActionListener() {
 			@Override
@@ -75,7 +93,16 @@ public class DespachoSEI extends JFrame {
 		sbmProcessoRecebido.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ProcessoRecebidoCadastro janela = new ProcessoRecebidoCadastro("Processos Recebidos do Sapiens", conexao);
+				ProcessoRecebidoCadastro janela = new ProcessoRecebidoCadastro("Processamento de Solicitação de Análise Recebida", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmSolicitacaoResposta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				DespachoCadastro janela = new DespachoCadastro("Resposta à Solicitação de Análise", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -99,19 +126,19 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 
-		sbmInclusaoDespachoSEI.addActionListener(new ActionListener() {
+		sbmInclusaoRespostaSEI.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				InclusaoDespachoSEI geracaoDespachoSEI = new InclusaoDespachoSEI("Geração de Despachos no SEI", conexao);
-				desktop.add(geracaoDespachoSEI);
-				geracaoDespachoSEI.abrirJanela();
+				InclusaoDespachoSEI geracaoRespostaSEI = new InclusaoDespachoSEI("Geração de Respostas no SEI", conexao);
+				desktop.add(geracaoRespostaSEI);
+				geracaoRespostaSEI.abrirJanela();
 			}
 		});
 		
-		sbmImpressaoDespachos.addActionListener(new ActionListener() {
+		sbmImpressaoRespostas.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ImpressaoDespacho janela = new ImpressaoDespacho("Impressão de Despachos", conexao);
+				ImpressaoDespacho janela = new ImpressaoDespacho("Impressão de Respostas", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -126,12 +153,11 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 		
-		sbmDespacho.addActionListener(new ActionListener() {
+		sbmSolicitacaoAnalise.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				DespachoCadastro despacho = new DespachoCadastro("Despacho", conexao);
-				desktop.add(despacho);
-				despacho.abrirJanela();
+				SolicitacaoAnaliseConsulta janela = new SolicitacaoAnaliseConsulta("Solicitação de Análise", conexao, desktop);
+				janela.abrirJanela();
 			}
 		});
 		
@@ -153,15 +179,24 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 		
-		sbmAssinanteTipoDespacho.addActionListener(new ActionListener() {
+		sbmAssinanteTipoResposta.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				AssinanteTipoDespachoCadastro janela = new AssinanteTipoDespachoCadastro("Tipo de Despacho x Assinante", conexao);
+				AssinanteTipoDespachoCadastro janela = new AssinanteTipoDespachoCadastro("Tipo de Resposta x Assinante", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
 		});
 		
+		sbmMunicipioTipoResposta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MunicipioTipoRespostaCadastro janela = new MunicipioTipoRespostaCadastro("Tipo de Resposta x Município", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
 		sbmMunicipio.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -189,12 +224,12 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 		
-		sbmTipoDespacho.addActionListener(new ActionListener() {
+		sbmTipoResposta.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				TipoDespachoCadastro tipoDespacho = new TipoDespachoCadastro("Tipo de Despacho", conexao);
-				desktop.add(tipoDespacho);
-				tipoDespacho.abrirJanela();
+				TipoRespostaCadastro tipoResposta = new TipoRespostaCadastro("Tipo de Resposta", conexao);
+				desktop.add(tipoResposta);
+				tipoResposta.abrirJanela();
 			}
 		});
 		
@@ -233,15 +268,18 @@ public class DespachoSEI extends JFrame {
 
 	private void criarTabelas(Connection conexao) throws Exception {
 		criarTabelaAssinante(conexao);
-		criarTabelaAssinanteTipoDespacho(conexao);
-		criarTabelaDespacho(conexao);
+		criarTabelaAssinanteTipoResposta(conexao);
+		criarTabelaSolicitacao(conexao);
+		criarTabelaSolicitacaoEnvio(conexao);
+		criarTabelaSolicitacaoResposta(conexao);
 		criarTabelaDestino(conexao);
-		criarTabelaTipoDespacho(conexao);
+		criarTabelaTipoResposta(conexao);
 		criarTabelaTipoImovel(conexao);
 		criarTabelaTipoProcesso(conexao);
 		criarTabelaMunicipio(conexao);
-		criarTabelaProcessoRecebido(conexao);
+		criarTabelaMunicipioTipoResposta(conexao);
 		criarTabelaParametro(conexao);
+		criarTabelaOrigem(conexao);
 	}
 
 	private void criarTabelaAssinante(Connection conexao) throws Exception {
@@ -250,10 +288,11 @@ public class DespachoSEI extends JFrame {
 						 "(" + 
 						 "  assinanteid integer primary key autoincrement not null," + 
 						 "  nome varchar NOT NULL," + 
+						 "  ativo boolean NOT NULL," + 
 						 "  cargo varchar NOT NULL," + 
 						 "  setor varchar NOT NULL," + 
 						 "  superior boolean NOT NULL," + 
-						 "  numeroprocesso varchar NOT NULL," + 
+						 "  numeroprocessosei varchar NOT NULL," + 
 						 "  blocoassinatura varchar NOT NULL" + 
 						 ")"; 
 	
@@ -261,13 +300,13 @@ public class DespachoSEI extends JFrame {
 		}
 	}
 
-	private void criarTabelaAssinanteTipoDespacho(Connection conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "assinantetipodespacho")) {
-			String sql = "CREATE TABLE assinantetipodespacho " + 
+	private void criarTabelaAssinanteTipoResposta(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "assinantetiporesposta")) {
+			String sql = "CREATE TABLE assinantetiporesposta " + 
 						 "(" + 
-						 "  assinantetipodespachoid integer primary key autoincrement not null," + 
+						 "  assinantetiporespostaid integer primary key autoincrement not null," + 
 						 "  assinanteid integer not null," + 
-						 "  tipodespachoid integer," + 
+						 "  tiporespostaid integer," + 
 						 "  blocoassinatura varchar NOT NULL" + 
 						 ")"; 
 	
@@ -275,34 +314,48 @@ public class DespachoSEI extends JFrame {
 		}
 	}
 
-	private void criarTabelaDespacho(Connection conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "despacho")) {
-			String sql = "CREATE TABLE despacho" + 
+	private void criarTabelaSolicitacao(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "solicitacao")) {
+			String sql = "CREATE TABLE solicitacao " + 
 						 "(" + 
-						 "  despachoid integer primary key autoincrement not null," + 
-						 "  datadespacho date NOT NULL," + 
+						 "  solicitacaoid integer primary key autoincrement not null," +
+						 "  origemid integer NOT NULL," +
 						 "  tipoprocessoid integer not null," + 
 						 "  numeroprocesso varchar NOT NULL," + 
 						 "  autor varchar NOT NULL," + 
-						 "  comarca varchar NOT NULL," + 
-						 "  tipoimovelid integer NOT NULL," + 
+						 "  municipioid integer," +
+						 "  destinoid integer," + 
+						 "  cartorio varchar," + 
+						 "  tipoimovelid integer," + 
 						 "  endereco varchar," + 
-						 "  municipio varchar NOT NULL," + 
 						 "  coordenada varchar," + 
 						 "  area varchar," + 
-						 "  tipodespachoid integer," + 
-						 "  assinanteid integer," + 
-						 "  destinoid integer," + 
-						 "  observacao varchar," + 
-						 "  numerodocumentosei varchar," + 
-						 "  datahoradespacho datetime," + 
 						 "  numeroprocessosei varchar," + 
-						 "  arquivosanexados boolean not null," + 
-						 "  despachoimpresso boolean," + 
+						 "  arquivosanexados boolean" + 
+						 ")"; 
+
+			MyUtils.execute(conexao, sql);
+		}
+	}
+
+	private void criarTabelaSolicitacaoResposta(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "solicitacaoresposta")) {
+			String sql = "CREATE TABLE solicitacaoresposta " + 
+						 "(" +
+						 "  solicitacaorespostaid integer primary key autoincrement not null," +
+						 "  solicitacaoid integer not null," +
+						 "  tiporespostaid integer null," + 
+						 "  observacao varchar null," + 
+						 "  assinanteid integer not null," + 
+						 "  assinanteidsuperior integer," + 
+						 "  numerodocumentosei varchar," + 
+						 "  datahoraresposta datetime," + 
+						 "  numeroprocessosei varchar," + 
+						 "  respostaimpressa boolean not null," + 
 						 "  datahoraimpressao datetime," + 
 						 "  blocoassinatura varchar," + 
-						 "  despachonoblocoassinatura boolean" + 
-						 ")"; 
+						 "  respostanoblocoassinatura boolean not null" + 
+						 ")";
 
 			MyUtils.execute(conexao, sql);
 		}
@@ -316,24 +369,27 @@ public class DespachoSEI extends JFrame {
 						 "  abreviacao varchar NOT NULL," + 
 						 "  artigo varchar NOT NULL," + 
 						 "  descricao varchar NOT NULL," + 
-						 "  usarcomarca boolean NOT NULL," + 
-						 "  caminhodespachos varchar NOT NULL" + 
+						 "  usarcartorio boolean NOT NULL" + 
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
 		}
 	}
 
-	private void criarTabelaTipoDespacho(Connection conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "tipodespacho")) {
-			String sql = "CREATE TABLE tipodespacho" + 
+	private void criarTabelaTipoResposta(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "tiporesposta")) {
+			String sql = "CREATE TABLE tiporesposta" + 
 						 "(" + 
-						 "  tipodespachoid integer primary key autoincrement not null," + 
+						 "  tiporespostaid integer primary key autoincrement not null," + 
 						 "  descricao varchar NOT NULL," + 
-						 "  numerodocumentosei varchar NOT NULL," + 
+						 "  tipodocumento varchar NOT NULL," + 
+						 "  numerodocumentomodelo varchar NOT NULL," + 
 						 "  gerarprocessoindividual boolean NOT NULL," + 
 						 "  unidadeaberturaprocesso varchar," + 
-						 "  tipoprocesso varchar" + 
+						 "  tipoprocesso varchar," + 
+						 "  imprimirresposta boolean not null," +
+						 "  quantidadeassinaturas integer," +
+						 "  origemid integer" +
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
@@ -349,6 +405,14 @@ public class DespachoSEI extends JFrame {
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaTipoImovel(conexao);
+		}
+	}
+
+	private void preencherTabelaTipoImovel(Connection conexao) throws Exception {
+		for (TipoImovel tipoImovel : TipoImovel.TIPOS_IMOVEIS) {
+			MyUtils.execute(conexao, "insert into tipoimovel (tipoimovelid, descricao) values (" + tipoImovel.getTipoImovelId() + ", '" + tipoImovel.getDescricao() + "')");
 		}
 	}
 
@@ -360,6 +424,14 @@ public class DespachoSEI extends JFrame {
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaTipoProcesso(conexao);
+		}
+	}
+
+	private void preencherTabelaTipoProcesso(Connection conexao) throws Exception {
+		for (TipoProcesso tipoProcesso : TipoProcesso.TIPOS_PROCESSO) {
+			MyUtils.execute(conexao, "insert into tipoprocesso (tipoprocessoid, descricao) values (" + tipoProcesso.getTipoProcessoId() + ", '" + tipoProcesso.getDescricao() + "')");
 		}
 	}
 
@@ -370,25 +442,39 @@ public class DespachoSEI extends JFrame {
 						 "  municipioid integer primary key autoincrement not null," + 
 						 "  nome varchar NOT NULL," + 
 						 "  municipioidcomarca integer," +
-						 "  destinoid integer" +
+						 "  destinoid integer," +
+						 "  tiporespostaid integer" +
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
 		}
 	}
 
-	private void criarTabelaProcessoRecebido(Connection conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "processorecebido")) {
-			String sql = "CREATE TABLE processorecebido " + 
+	private void criarTabelaMunicipioTipoResposta(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "municipiotiporesposta")) {
+			String sql = "CREATE TABLE municipiotiporesposta " + 
 						 "(" + 
-						 "  processorecebidoid integer primary key autoincrement not null," + 
-						 "  numerounico varchar NOT NULL," + 
+						 "  municipiotiporespostaid integer primary key autoincrement not null," + 
+						 "  municipioid integer not null," + 
+						 "  origemid integer not null," +
+						 "  tiporespostaid integer not null" +
+						 ")"; 
+
+			MyUtils.execute(conexao, sql);
+		}
+	}
+
+	private void criarTabelaSolicitacaoEnvio(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
+			String sql = "CREATE TABLE solicitacaoenvio " + 
+						 "(" +
+						 "  solicitacaoenvioid integer primary key autoincrement not null," +
+						 "  solicitacaoid integer not null," +
 						 "  datahoramovimentacao integer NOT NULL," +
-						 "  municipioid integer," +
 						 "  resultadodownload varchar," + 
 						 "  arquivosprocessados boolean," +
 						 "  resultadoprocessamento varchar" + 
-						 ")"; 
+						 ")";
 
 			MyUtils.execute(conexao, sql);
 		}
@@ -400,10 +486,39 @@ public class DespachoSEI extends JFrame {
 						 "(" + 
 						 "  parametroid integer primary key not null," + 
 						 "  descricao varchar NOT NULL," + 
-						 "  conteudo varchar NOT NULL" +
+						 "  conteudo varchar NOT NULL," +
+						 "  ativo boolean NOT NULL" +
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);
+			
+			preencherTabelaParametro(conexao);
+		}
+	}
+	
+	private void preencherTabelaParametro(Connection conexao) throws Exception {
+		for (Entry<Integer, String[]> parametro : Parametro.DESCRICOES.entrySet()) {
+			MyUtils.execute(conexao, "insert into parametro (parametroid, descricao, conteudo, ativo) values (" + parametro.getKey() + ", '" + parametro.getValue()[0] + "', '" + parametro.getValue()[1] + "', true)");
+		}
+	}
+
+	private void criarTabelaOrigem(Connection conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "origem")) {
+			String sql = "CREATE TABLE origem " + 
+						 "(" + 
+						 "  origemid integer primary key not null," + 
+						 "  descricao varchar NOT NULL" + 
+						 ")"; 
+
+			MyUtils.execute(conexao, sql);
+
+			preencherTabelaOrigem(conexao);
+		}
+	}
+
+	private void preencherTabelaOrigem(Connection conexao) throws Exception {
+		for (Origem origem : Origem.ORIGENS) {
+			MyUtils.execute(conexao, "insert into origem (origemid, descricao) values (" + origem.getOrigemId() + ", '" + origem.getDescricao() + "')");
 		}
 	}
 }
