@@ -200,7 +200,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replace("-", "").replace(".", "").replace("/", "").replace(" ", "");
-			if (numeroProcesso.length() == 1) {
+			if (numeroProcesso.length() <= 1) {
 				numeroProcesso = "-";
 			} else {
 				if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
@@ -284,7 +284,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				}
 
 				if (msgRetorno.equals("")) {
-					if (!(tipoResposta.startsWith("Extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
+					if (!(tipoResposta.startsWith("extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
 						Origem origem;
 						if (origemProcesso.equalsIgnoreCase("judicial")) {
 							origem = Origem.SAPIENS;
@@ -296,14 +296,10 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						SolicitacaoEnvio envio = null;
 
 						if (numeroProcesso.equals("-")) {
-							MyUtils.appendLogArea(logArea, "Busca por autor: " + autor + " - " + cartorio + " - " + endereco + " - " + origem.getDescricao() + " - " + tipoProcesso.getDescricao());
 							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, autor, municipio, cartorio, endereco));
 						} else {
-							MyUtils.appendLogArea(logArea, "Busca por processo: " + origem.getDescricao() + " - " + tipoProcesso.getDescricao() + " - " + numeroProcesso);
 							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso));
 						}
-
-						MyUtils.appendLogArea(logArea, "Resultado: " + (solicitacao == null ? "Nenhuma solicitação encontrada" : solicitacao.getSolicitacaoId()));
 
 						if (solicitacao == null) {
 							solicitacao = new Solicitacao();
