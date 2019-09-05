@@ -17,16 +17,15 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -45,10 +44,6 @@ import framework.SpringUtilities;
 public class InclusaoDespachoSEI extends JInternalFrame {
 
 	private Connection conexao;
-	private JFileChooser filSelecionarPasta = new JFileChooser();
-	private JButton btnAbrirJanelaSelecaoPasta = new JButton("Selecionar pasta");
-	private JLabel lblPastaProcessosIndividuais = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
-	private JLabel lblSelecionarPasta = new JLabel("Pasta:", JLabel.TRAILING) {{ setLabelFor(filSelecionarPasta); }};
 	private JTextField txtUsuario = new JTextField(15);
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
 	private JPasswordField txtSenha = new JPasswordField(15);
@@ -70,20 +65,15 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(conexao);
 
-		lblPastaProcessosIndividuais.setText(despachoServico.obterConteudoParametro(Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS));
-		JPanel painelArquivo = new JPanel() {{ add(lblSelecionarPasta); add(btnAbrirJanelaSelecaoPasta); }};
-
-		painelDados.add(painelArquivo);
-		painelDados.add(lblPastaProcessosIndividuais);
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
 		painelDados.add(txtSenha);
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
-		
+
 		SpringUtilities.makeGrid(painelDados,
-	            4, 2, //rows, cols
+	            3, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -100,7 +90,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), lblPastaProcessosIndividuais.getText());
+								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()));
 							} catch (Exception e) {
 								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 								e.printStackTrace();
@@ -118,30 +108,6 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				}
 			}
 		});
-
-		btnAbrirJanelaSelecaoPasta.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String diretorioPadrao = despachoServico.obterConteudoParametro(Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS);
-				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
-					File dirPadrao = new File(diretorioPadrao);
-					if (dirPadrao.exists()) {
-						filSelecionarPasta.setCurrentDirectory(dirPadrao);
-					}
-				}
-				filSelecionarPasta.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				filSelecionarPasta.setAcceptAllFileFilterUsed(false);
-				int retorno = filSelecionarPasta.showOpenDialog(InclusaoDespachoSEI.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filSelecionarPasta.getSelectedFile().exists()) {
-						lblPastaProcessosIndividuais.setText(filSelecionarPasta.getSelectedFile().getAbsolutePath());
-						if (diretorioPadrao == null || !diretorioPadrao.equals(filSelecionarPasta.getSelectedFile().getAbsolutePath())) {
-							despachoServico.salvarConteudoParametro(Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS, filSelecionarPasta.getSelectedFile().getAbsolutePath());
-						}
-					}
-				}
-			}
-		});
 	}
 
 	public void abrirJanela() {
@@ -151,11 +117,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarRespostaSEI(String usuario, String senha, String pastaProcessosIndividuais) throws Exception {
-		if (pastaProcessosIndividuais == null || pastaProcessosIndividuais.equalsIgnoreCase("")) {
-			throw new Exception("É necessário informar a pasta onde estão os arquivos a serem anexados nos processos que forem abertos individualmente.");
-		}
-		
+	private void gerarRespostaSEI(String usuario, String senha) throws Exception {
+		String pastaProcessosIndividuais = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS));
+        if (pastaProcessosIndividuais.equals("") || !MyUtils.arquivoExiste(pastaProcessosIndividuais)) {
+        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos para serem anexados aos processos individuais não está configurada ou não existe: " + pastaProcessosIndividuais + ". \nConfigure o parâmetro " + Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS + " com o caminho para a pasta onde os anexos deve estar gravados.");
+        	return;
+        }
+
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver();

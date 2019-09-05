@@ -13,16 +13,15 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
@@ -44,10 +43,6 @@ import framework.SpringUtilities;
 @SuppressWarnings("serial")
 public class RespostaProcesso extends JInternalFrame {
 
-	private JFileChooser filSelecionarDiretorio = new JFileChooser();
-	private JButton btnAbrirJanelaSelecaoDiretorio = new JButton("Selecionar diretório");
-	private JLabel lblDiretorioDespachosSalvos = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
-	private JLabel lblSelecionarDiretorio = new JLabel("Diretório:", JLabel.TRAILING) {{ setLabelFor(filSelecionarDiretorio); }};
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
@@ -65,9 +60,6 @@ public class RespostaProcesso extends JInternalFrame {
 		cbbNavegador.addItem("Firefox");
 		cbbNavegador.setSelectedItem(despachoServico.obterConteudoParametro(Parametro.DEFAULT_BROWSER, "Firefox"));
 
-		lblDiretorioDespachosSalvos.setText(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS));
-		JPanel painelArquivo = new JPanel() {{ add(lblSelecionarDiretorio); add(btnAbrirJanelaSelecaoDiretorio); }};
-
 		// define os objetos da tela
 		JLabel lblUsuario = new JLabel("Usuário:");
 		JTextField txtUsuario = new JTextField(15);
@@ -80,7 +72,6 @@ public class RespostaProcesso extends JInternalFrame {
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
 		JButton botaoProcessar = new JButton("Processar"); 
-		JButton botaoSair = new JButton("Sair");
 		JCheckBox chkExibirNavegador = new JCheckBox("Exibir nevagador", true);
 
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
@@ -89,8 +80,6 @@ public class RespostaProcesso extends JInternalFrame {
 			painelDados.add(new JLabel("<html><font color='red'>" + espacoEmDisco + "</font></html>"));
 			painelDados.add(new JPanel());
 		}
-		painelDados.add(painelArquivo);
-		painelDados.add(lblDiretorioDespachosSalvos);
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
@@ -100,10 +89,10 @@ public class RespostaProcesso extends JInternalFrame {
 		painelDados.add(chkExibirNavegador);
 		painelDados.add(new JPanel());
 		painelDados.add(botaoProcessar); 
-		painelDados.add(botaoSair); 
+		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeGrid(painelDados,
-                espacoEmDisco == null ? 6 : 7, 2, //rows, cols
+                espacoEmDisco == null ? 5 : 6, 2, //rows, cols
                 6, 6, //initX, initY
                 6, 6); //xPad, yPad
 		
@@ -137,36 +126,6 @@ public class RespostaProcesso extends JInternalFrame {
 				}).start();
 			} 
 		}); 
-
-		botaoSair.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				System.exit(0);
-			} 
-		});
-
-		btnAbrirJanelaSelecaoDiretorio.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String diretorioPadrao = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
-				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
-					File dirPadrao = new File(diretorioPadrao);
-					if (dirPadrao.exists()) {
-						filSelecionarDiretorio.setCurrentDirectory(dirPadrao);
-					}
-				}
-				filSelecionarDiretorio.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				filSelecionarDiretorio.setAcceptAllFileFilterUsed(false);
-				int retorno = filSelecionarDiretorio.showOpenDialog(RespostaProcesso.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filSelecionarDiretorio.getSelectedFile().exists()) {
-						lblDiretorioDespachosSalvos.setText(filSelecionarDiretorio.getSelectedFile().getAbsolutePath());
-						if (diretorioPadrao == null || !diretorioPadrao.equals(filSelecionarDiretorio.getSelectedFile().getAbsolutePath())) {
-							despachoServico.salvarConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS, filSelecionarDiretorio.getSelectedFile().getAbsolutePath());
-						}
-					}
-				}
-			}
-		});
     }
 
 	public void abrirJanela() {
@@ -177,7 +136,13 @@ public class RespostaProcesso extends JInternalFrame {
 	}
 
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
-		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS));
+        if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
+        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure o parâmetro " + Parametro.PASTA_DESPACHOS_SALVOS + " com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
+        	return;
+        }
+
+        MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -242,7 +207,6 @@ public class RespostaProcesso extends JInternalFrame {
         passarMouse.moveToElement(abaOficios).click().build().perform();
         Thread.sleep(2000);
         abaOficios.click();
-        String pastaDespachosSalvos = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : obterArquivos(pastaDespachosSalvos)) {
