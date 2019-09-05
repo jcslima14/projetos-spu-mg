@@ -188,6 +188,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		for (int l = linhaInicial - 1; l < linhaFinal; l++) {
 			Row linha = planilha.getRow(l);
 			String sData = MyUtils.formatarData(new Date(), "yyyy-MM-dd");
+			String msgRetorno = "";
 			if (linha.getCell(0).getCellTypeEnum().equals(CellType.NUMERIC)) {
 				if (DateUtil.isCellDateFormatted(linha.getCell(0))) {
 					DataFormatter df = new DataFormatter();
@@ -197,7 +198,15 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				}
 			}
 			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
-			String numeroProcesso = MyUtils.obterValorCelula(linha.getCell(2));
+			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
+			String numeroProcesso = numeroProcessoOriginal.replace("-", "").replace(".", "").replace("/", "").replace(" ", "");
+			if (numeroProcesso.length() == 1) {
+				numeroProcesso = "-";
+			} else {
+				if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
+					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
+				}
+			}
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
@@ -214,10 +223,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			if (linha.getCell(18) != null) {
 				statusAtual = (new DataFormatter()).formatCellValue(linha.getCell(18));
 			}
-			String msgRetorno = "";
 
 			MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1));
-			MyUtils.appendLogArea(logArea, "Nº Processo: " + numeroProcesso);
+			MyUtils.appendLogArea(logArea, "Nº Processo: " + numeroProcesso + " (" + numeroProcessoOriginal + ")");
 			MyUtils.appendLogArea(logArea, "Autor......: " + autor);
 
 			// se o status do registro (conteúdo da coluna 16 da linha) não estiver vazio, ignora o processamento e retorna ao usuário
@@ -276,7 +284,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				}
 
 				if (msgRetorno.equals("")) {
-//					if (!(tipoResposta.startsWith("Extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
+					if (!(tipoResposta.startsWith("Extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
 						Origem origem;
 						if (origemProcesso.equalsIgnoreCase("judicial")) {
 							origem = Origem.SAPIENS;
@@ -338,9 +346,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 						despachoServico.salvarSolicitacaoResposta(resposta);
 						msgRetorno = "Automático pelo sistema";
-//					} else {
-//						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
-//					}
+					} else {
+						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
+					}
 				} else {
 					msgRetorno = "Manual: " + msgRetorno;
 				}
