@@ -32,7 +32,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import framework.MyComboBox;
-import framework.MyComboBoxModel;
 import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
@@ -69,7 +68,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(this.conexao);
 
-		opcoesAssinante();
+		despachoServico.preencherOpcoesAssinante(cbbAssinante, null, false, true);
 
 		JPanel painelArquivo = new JPanel() {{ add(lblArquivo); add(btnAbrirArquivo); }};
 		JPanel painelLinhas = new JPanel() {{ setLayout(new SpringLayout()); add(lblLinhaInicial); add(txtLinhaInicial); add(lblLinhaFinal); add(txtLinhaFinal); add(lblAssinante); add(cbbAssinante); }};
@@ -361,10 +360,5 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		wb.close();
 		fileInput.delete();
 		fileOutput.renameTo(fileInput);
-	}
-
-	private void opcoesAssinante() {
-		cbbAssinante.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbAssinante, "select assinanteid, nome from assinante where superior = false order by nome");
 	}
 }

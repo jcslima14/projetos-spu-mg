@@ -293,9 +293,9 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 		Integer filtroArquivosProcessados = MyUtils.idItemSelecionado(cbbFiltroArquivosProcessados);
 		if (filtroArquivosProcessados.equals(0)) {
-			sql.append(" and not s.arquivosprocessados ");
+			sql.append(" and not se.arquivosprocessados ");
 		} else if (filtroArquivosProcessados.equals(1)) {
-			sql.append(" and s.arquivosprocessados ");
+			sql.append(" and se.arquivosprocessados ");
 		}
 
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
