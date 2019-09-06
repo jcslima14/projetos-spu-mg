@@ -139,7 +139,10 @@ public class DespachoServico {
 		while (i.hasNext()) {
 			// se o nº de documento do SEI estiver vazio, não retorna a resposta
 			SolicitacaoResposta resposta = i.next();
-			if (MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("")) {
+			boolean semProcessoOuDocumento = (MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("") || MyUtils.emptyStringIfNull(resposta.getNumeroProcessoSEI()).equals(""));
+			boolean documentoNaoImpresso = MyUtils.emptyStringIfNull(resposta.getDataHoraImpressao()).equals("");
+			
+			if (semProcessoOuDocumento || (respostaImpressa && documentoNaoImpresso)) {
 				i.remove();
 			}
 		}

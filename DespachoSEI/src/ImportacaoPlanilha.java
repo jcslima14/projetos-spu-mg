@@ -183,9 +183,6 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replaceAll("\\D+", "").trim();
 			String chaveBusca = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim();
-			if (chaveBusca.length() != 0 && chaveBusca.length() != 11) {
-				msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do atendimento parece estar errado (tamanho diferente de 11 caracteres)";
-			}
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
@@ -201,6 +198,34 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			String statusAtual = "";
 			if (linha.getCell(18) != null) {
 				statusAtual = (new DataFormatter()).formatCellValue(linha.getCell(18));
+			}
+
+			// define a origem do processo
+			Origem origem;
+			if (origemProcesso.equalsIgnoreCase("judicial")) {
+				origem = Origem.SAPIENS;
+			} else {
+				origem = Origem.SPUNET;
+			}
+
+			// verifica se o número do processo foi informado corretamente
+			if (numeroProcesso.length() <= 1) {
+				numeroProcesso = "-";
+			} else {
+				if (origem.getOrigemId().equals(Origem.SAPIENS_ID)) {
+					if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
+						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
+					}
+				} else {
+					if (numeroProcesso.length() != 17) {
+						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1 ou 17 caracteres)";
+					}
+				}
+			}
+
+			// verifica se o número de atendimento está formatado corretamente
+			if (chaveBusca.length() != 0 && chaveBusca.length() != 11) {
+				msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do atendimento parece estar errado (tamanho diferente de 11 caracteres)";
 			}
 
 			MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1));
@@ -263,80 +288,65 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				}
 
 				if (msgRetorno.equals("")) {
-//					if (!(tipoResposta.startsWith("extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
-						Origem origem;
-						if (origemProcesso.equalsIgnoreCase("judicial")) {
-							origem = Origem.SAPIENS;
-						} else {
-							origem = Origem.SPUNET;
-						}
+					Solicitacao solicitacao;
+					SolicitacaoEnvio envio = null;
 
-						// verifica se o número do processo foi informado corretamente
-						if (numeroProcesso.length() <= 1) {
-							numeroProcesso = "-";
-						} else {
-							if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
-								msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
-							}
-						}
+					if (numeroProcesso.equals("-")) {
+						solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, autor, municipio, cartorio, endereco));
+					} else {
+						solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso));
+					}
 
-						Solicitacao solicitacao;
-						SolicitacaoEnvio envio = null;
+					if (solicitacao == null) {
+						solicitacao = new Solicitacao();
+						envio = new SolicitacaoEnvio(null, null, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
+					}
 
-						if (numeroProcesso.equals("-")) {
-							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, autor, municipio, cartorio, endereco));
-						} else {
-							solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso));
-						}
+					solicitacao.setOrigem(origem);
+					solicitacao.setTipoProcesso(tipoProcesso);
+					solicitacao.setNumeroProcesso(numeroProcesso);
+					solicitacao.setChaveBusca(MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()).trim());
+					solicitacao.setAutor(autor);
+					solicitacao.setMunicipio(municipio);
+					solicitacao.setDestino(destino);
+					solicitacao.setCartorio(cartorio);
+					solicitacao.setTipoImovel(tipoImovel);
+					solicitacao.setEndereco(endereco);
+					solicitacao.setCoordenada(coordenada);
+					solicitacao.setArea(area);
+					solicitacao.setArquivosAnexados(origem.getOrigemId().equals(Origem.SAPIENS_ID) ? false : true);
 
-						if (solicitacao == null) {
-							solicitacao = new Solicitacao();
-							envio = new SolicitacaoEnvio(null, null, MyUtils.formatarData(new Date(), "yyyy-MM-dd HH:mm:ss"), null, true, null);
-						}
+					// se a chave de busca foi informada na planilha, atualiza a que estiver na solicitação
+					if (!chaveBusca.equals("")) solicitacao.setChaveBusca(chaveBusca);
 
-						solicitacao.setOrigem(origem);
-						solicitacao.setTipoProcesso(tipoProcesso);
-						solicitacao.setNumeroProcesso(numeroProcesso);
-						solicitacao.setChaveBusca(MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()).trim());
-						solicitacao.setAutor(autor);
-						solicitacao.setMunicipio(municipio);
-						solicitacao.setDestino(destino);
-						solicitacao.setCartorio(cartorio);
-						solicitacao.setTipoImovel(tipoImovel);
-						solicitacao.setEndereco(endereco);
-						solicitacao.setCoordenada(coordenada);
-						solicitacao.setArea(area);
-						solicitacao.setArquivosAnexados(false);
+					// se for origem SPUNet e o número do processo SEI tiver sido informado, grava o número do processo como número do processo SEI interno onde serão gravados os despachos futuros
+					if (origem.getOrigemId().equals(Origem.SPUNET_ID) && numeroProcesso.length() == 17) {
+						solicitacao.setNumeroProcessoSEI(numeroProcessoOriginal);
+					}
+					
+					solicitacao = despachoServico.salvarSolicitacao(solicitacao);
 
-						// se a chave de busca foi informada na planilha, atualiza a que estiver na solicitação
-						if (!chaveBusca.equals("")) solicitacao.setChaveBusca(chaveBusca);
-						
-						solicitacao = despachoServico.salvarSolicitacao(solicitacao);
+					if (envio != null) {
+						envio.setSolicitacao(solicitacao);
+						despachoServico.salvarSolicitacaoEnvio(envio);
+					}
 
-						if (envio != null) {
-							envio.setSolicitacao(solicitacao);
-							despachoServico.salvarSolicitacaoEnvio(envio);
-						}
+					// busca uma solicitacao pendente, se existir
+					SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(solicitacao));
+					
+					if (resposta == null) {
+						resposta = new SolicitacaoResposta();
+					}
 
-						// busca uma solicitacao pendente, se existir
-						SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(solicitacao));
-						
-						if (resposta == null) {
-							resposta = new SolicitacaoResposta();
-						}
+					resposta.setSolicitacao(solicitacao);
+					resposta.setTipoResposta(tpResposta);
+					resposta.setObservacao(observacao);
+					resposta.setAssinante(new Assinante(MyUtils.idItemSelecionado(cbbAssinante)));
+					resposta.setRespostaImpressa(false);
+					resposta.setRespostaNoBlocoAssinatura(false);
 
-						resposta.setSolicitacao(solicitacao);
-						resposta.setTipoResposta(tpResposta);
-						resposta.setObservacao(observacao);
-						resposta.setAssinante(new Assinante(MyUtils.idItemSelecionado(cbbAssinante)));
-						resposta.setRespostaImpressa(false);
-						resposta.setRespostaNoBlocoAssinatura(false);
-
-						despachoServico.salvarSolicitacaoResposta(resposta);
-						msgRetorno = "Automático pelo sistema";
-//					} else {
-//						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
-//					}
+					despachoServico.salvarSolicitacaoResposta(resposta);
+					msgRetorno = "Automático pelo sistema";
 				} else {
 					msgRetorno = "Manual: " + msgRetorno;
 				}

@@ -177,6 +177,7 @@ public class DespachoCadastro extends CadastroTemplate {
 
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "coalesce(datahoraresposta, '9999-12-31') desc", "Data Resposta (mais recente)"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "autor collate nocase", "Autor"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio collate nocase ", "Município"));

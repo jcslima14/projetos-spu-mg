@@ -69,7 +69,7 @@ public class OrigemCadastro extends CadastroTemplate {
 	public void prepararParaEdicao() {
 		txtOrigemId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		txtDescricao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
-		txtPastaPDFResposta.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3).toString());
+		txtPastaPDFResposta.setText(MyUtils.emptyStringIfNull((String) this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3)));
 	}
 
 	public TableModel obterDados() throws Exception {
