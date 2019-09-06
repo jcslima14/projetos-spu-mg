@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.Action;
@@ -23,9 +22,7 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -84,12 +81,6 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		painelDados.add(lblNomeArquivo);
 		painelDados.add(painelLinhas);
 		painelDados.add(new JPanel());
-//		painelDados.add(lblLinhaInicial);
-//		painelDados.add(txtLinhaInicial);
-//		painelDados.add(painelLinhaFinal);
-//		painelDados.add(new JPanel());
-//		painelDados.add(lblLinhaFinal);
-//		painelDados.add(txtLinhaFinal);
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
 
@@ -187,16 +178,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		Sheet planilha = wb.getSheetAt(0);
 		for (int l = linhaInicial - 1; l < linhaFinal; l++) {
 			Row linha = planilha.getRow(l);
-			String sData = MyUtils.formatarData(new Date(), "yyyy-MM-dd");
 			String msgRetorno = "";
-			if (linha.getCell(0).getCellTypeEnum().equals(CellType.NUMERIC)) {
-				if (DateUtil.isCellDateFormatted(linha.getCell(0))) {
-					DataFormatter df = new DataFormatter();
-					sData = df.formatCellValue(linha.getCell(0));
-					SimpleDateFormat f1 = new SimpleDateFormat("dd/MM/yy");
-					sData = MyUtils.formatarData(f1.parse(sData), "yyyy-MM-dd");
-				}
-			}
 			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replace("-", "").replace(".", "").replace("/", "").replace(" ", "");
