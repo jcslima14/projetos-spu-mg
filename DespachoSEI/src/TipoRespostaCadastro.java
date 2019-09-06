@@ -50,7 +50,7 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 		
-		despachoServico.preencherOpcoesOrigem(cbbOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Qualquer origem)")); }});
+		despachoServico.preencherOpcoesOrigem(cbbOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Qualquer origem)", null)); }});
 		
 		pnlCamposEditaveis.add(lblTipoRespostaId);
 		pnlCamposEditaveis.add(txtTipoRespostaId);

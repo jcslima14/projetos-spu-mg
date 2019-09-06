@@ -251,16 +251,14 @@ public class RecepcaoProcesso extends JInternalFrame {
 	        // obtem a lista de processos a ser lida
 	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table"));
 	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table/tbody/tr[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
-//	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table"));
-//	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table/tbody/tr[.//*[text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
 	        MyUtils.appendLogArea(logArea, "Página: " + ++pagina + " - Processos encontrados: " + linhas.size());
 
 	        int nLinha = 0;
 
 	        for (WebElement linha : linhas) {
-	        	boolean numeroProcessoInformado = true;
 	        	WebElement txtProcessoJudicial = null;
 	        	String numeroProcessoJudicial = null;
+	        	String chaveBusca = "";
 	        	do {
 		        	txtProcessoJudicial = linha.findElement(By.xpath("./td[3]/div"));
 		        	passarMouse.moveToElement(txtProcessoJudicial).perform();
@@ -269,23 +267,29 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        		((JavascriptExecutor) tabela).executeScript("window.scrollBy(0,100)", "");
 		        	}
 	        	} while (numeroProcessoJudicial.equals(""));
-	        	WebElement lnkProcessoJudicial = linha.findElement(By.xpath("./td[2]/*/a"));
+	        	WebElement lnkNumeroUnicoProcesso = null;
+	        	try {
+	        		lnkNumeroUnicoProcesso = linha.findElement(By.xpath("./td[2]//i[@data-qtip = 'Processo']//following-sibling::a"));
+	        		chaveBusca = lnkNumeroUnicoProcesso.getText().trim();
+	        	} catch (Exception e) {
+	        		System.out.println("Nº único do processo não encontrado");
+	        	}
 	        	// se o número único de processo judicial não estiver preenchido, usa o NUP como chave
 	        	if (numeroProcessoJudicial.trim().equals("")) {
-	        		numeroProcessoJudicial = lnkProcessoJudicial.getText();
-	        		numeroProcessoInformado = false;
+	        		numeroProcessoJudicial = chaveBusca;
 	        	}
         		String especie = linha.findElement(By.xpath("./td[4]/div")).getText().trim();
         		String dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
-	        	if (numeroProcessoJudicial.indexOf(" (") != -1) numeroProcessoJudicial = numeroProcessoJudicial.substring(0, numeroProcessoJudicial.indexOf(" ("));
-	        	String numeroSemFormatacao = numeroProcessoJudicial.replace(".", "").replace("-", "").replace("/", "");
-	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ") " + especie);
+        		numeroProcessoJudicial = numeroProcessoJudicial.split("\\(")[0].trim();
+	        	String numeroSemFormatacao = numeroProcessoJudicial.replaceAll("\\D+", "");
+	        	chaveBusca = chaveBusca.replaceAll("\\D+", "");
+	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ") - " + chaveBusca + " - " + especie);
 	        	// if (!lnkProcessoJudicial.getText().equals("00478.000807/2019-54")) continue;
 	        	// clica no link para abrir a janela do processo
 
     			// verifica se o processo já foi recepcionado com esta data de movimentação; se já tiver sido, não precisa ser reprocessado
         		if (!processoJaRecebido(logArea, numeroSemFormatacao, dataHora)) {
-    				lnkProcessoJudicial.click();
+    				lnkNumeroUnicoProcesso.click();
 
 		        	TimeUnit.SECONDS.sleep(1);
 	
@@ -296,9 +300,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        		janelaAberta = janela;
 		        		driver.switchTo().window(janelaAberta);
 		        	}
-
-		        	txtProcessoJudicial = MyUtils.encontrarElemento(wait30, By.xpath("//td[.//*[contains(text(), '" + (numeroProcessoInformado ? "Número Único" : "NUP") + "')]]//following-sibling::td/div/a/b"));
-		        	TimeUnit.SECONDS.sleep(2);
 
 		        	// busca o nome do autor da solicitação
 		        	String autor = null;
@@ -400,7 +401,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
 	        			passarMouse.moveToElement(btnFechar).click().build().perform();
 
-		        		receberProcessoSapiens(numeroSemFormatacao, autor, dataHora, resultadoDownload);
+		        		receberProcessoSapiens(numeroSemFormatacao, chaveBusca, autor, dataHora, resultadoDownload);
 	        		} else {
 			        	// se não encontrou a remessa ou a complementação documentos, grava log com esta informação
 	        			mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + (!encontrouRemessaDocumentos ? " - Remessa não encontrada" : "") + (!encontrouComplementacao ? " - Complementação não encontrada" : "") + " - Data/Hora: " + dataHora + "\n");
@@ -437,7 +438,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		}
 	}
 
-	private void receberProcessoSapiens(String numeroProcesso, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
+	private void receberProcessoSapiens(String numeroProcesso, String chaveBusca, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
 		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso));
 
@@ -445,7 +446,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		if (solicitacao != null) {
 			solicitacao.setAutor(autor);
 		} else {
-			solicitacao = new Solicitacao(Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, autor);
+			solicitacao = new Solicitacao(Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, chaveBusca, autor);
 		}
 
 		solicitacao = despachoServico.salvarSolicitacao(solicitacao);

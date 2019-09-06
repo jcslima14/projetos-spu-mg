@@ -57,7 +57,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)")); }});
+		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)", null)); }});
 		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); }});
 		despachoServico.preencherOpcoesAssinante(cbbFiltroAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
 
@@ -227,23 +227,23 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append(" where 1 = 1");
 
 		if (!MyUtils.idItemSelecionado(cbbFiltroOrigem).equals(0)) {
-			sql.append(" and origemid = " + MyUtils.idItemSelecionado(cbbFiltroOrigem));
+			sql.append(" and s.origemid = " + MyUtils.idItemSelecionado(cbbFiltroOrigem));
 		}
 
 		if (!txtFiltroNumeroProcesso.getText().trim().equals("")) {
-			sql.append(" and numeroprocesso like '%" + txtFiltroNumeroProcesso.getText() + "%'");
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText() + "%'");
 		}
 
 		if (!MyUtils.idItemSelecionado(cbbFiltroMunicipio).equals(0)) {
-			sql.append(" and municipioid = " + MyUtils.idItemSelecionado(cbbFiltroMunicipio));
+			sql.append(" and s.municipioid = " + MyUtils.idItemSelecionado(cbbFiltroMunicipio));
 		}
 
 		if (!txtFiltroAutor.getText().trim().equals("")) {
-			sql.append(" and autor like '%" + txtFiltroAutor.getText() + "%'");
+			sql.append(" and s.autor like '%" + txtFiltroAutor.getText() + "%'");
 		}
 
 		if (!txtFiltroNumeroProcessoSEI.getText().trim().equals("")) {
-			sql.append(" and numeroprocessosei like '%" + txtFiltroNumeroProcessoSEI.getText() + "%'");
+			sql.append(" and s.numeroprocessosei like '%" + txtFiltroNumeroProcessoSEI.getText() + "%'");
 		}
 
 		sql.append(") as t where 1 = 1 "); 

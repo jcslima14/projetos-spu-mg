@@ -8,8 +8,8 @@ public class Origem implements ItemComboBox {
 	static int SAPIENS_ID = 1;
 	static int SPUNET_ID = 2;
 
-	static Origem SAPIENS = new Origem(SAPIENS_ID, "Sapiens");
-	static Origem SPUNET = new Origem(SPUNET_ID, "SPUNet");
+	static Origem SAPIENS = new Origem(SAPIENS_ID, "Sapiens", null);
+	static Origem SPUNET = new Origem(SPUNET_ID, "SPUNet", null);
 
 	@SuppressWarnings("serial")
 	static List<Origem> ORIGENS = new ArrayList<Origem>() {{ 
@@ -21,9 +21,12 @@ public class Origem implements ItemComboBox {
 	
 	private String descricao;
 
-	public Origem(Integer origemId, String descricao) {
+	private String pastaPDFResposta;
+	
+	public Origem(Integer origemId, String descricao, String pastaPDFResposta) {
 		this.origemId = origemId;
 		this.descricao = descricao;
+		this.pastaPDFResposta = pastaPDFResposta;
 	}
 
 	public Origem(Integer origemId) {
@@ -44,6 +47,14 @@ public class Origem implements ItemComboBox {
 
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
+	}
+
+	public String getPastaPDFResposta() {
+		return pastaPDFResposta;
+	}
+
+	public void setPastaPDFResposta(String pastaPDFResposta) {
+		this.pastaPDFResposta = pastaPDFResposta;
 	}
 
 	@Override

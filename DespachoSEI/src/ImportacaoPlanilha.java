@@ -181,13 +181,10 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			String msgRetorno = "";
 			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
-			String numeroProcesso = numeroProcessoOriginal.replace("-", "").replace(".", "").replace("/", "").replace(" ", "");
-			if (numeroProcesso.length() <= 1) {
-				numeroProcesso = "-";
-			} else {
-				if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
-					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
-				}
+			String numeroProcesso = numeroProcessoOriginal.replaceAll("\\D+", "").trim();
+			String chaveBusca = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim();
+			if (chaveBusca.length() != 0 && chaveBusca.length() != 11) {
+				msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do atendimento parece estar errado (tamanho diferente de 11 caracteres)";
 			}
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
@@ -266,12 +263,21 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				}
 
 				if (msgRetorno.equals("")) {
-					if (!(tipoResposta.startsWith("extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
+//					if (!(tipoResposta.startsWith("extra judicial") && tipoProcesso.getDescricao().equals("Eletrônico"))) {
 						Origem origem;
 						if (origemProcesso.equalsIgnoreCase("judicial")) {
 							origem = Origem.SAPIENS;
 						} else {
 							origem = Origem.SPUNET;
+						}
+
+						// verifica se o número do processo foi informado corretamente
+						if (numeroProcesso.length() <= 1) {
+							numeroProcesso = "-";
+						} else {
+							if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
+								msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
+							}
 						}
 
 						Solicitacao solicitacao;
@@ -291,6 +297,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						solicitacao.setOrigem(origem);
 						solicitacao.setTipoProcesso(tipoProcesso);
 						solicitacao.setNumeroProcesso(numeroProcesso);
+						solicitacao.setChaveBusca(MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()).trim());
 						solicitacao.setAutor(autor);
 						solicitacao.setMunicipio(municipio);
 						solicitacao.setDestino(destino);
@@ -301,6 +308,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						solicitacao.setArea(area);
 						solicitacao.setArquivosAnexados(false);
 
+						// se a chave de busca foi informada na planilha, atualiza a que estiver na solicitação
+						if (!chaveBusca.equals("")) solicitacao.setChaveBusca(chaveBusca);
+						
 						solicitacao = despachoServico.salvarSolicitacao(solicitacao);
 
 						if (envio != null) {
@@ -324,9 +334,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 						despachoServico.salvarSolicitacaoResposta(resposta);
 						msgRetorno = "Automático pelo sistema";
-					} else {
-						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
-					}
+//					} else {
+//						msgRetorno = "Extrajudicial eletrônico, já feito pelo analista";
+//					}
 				} else {
 					msgRetorno = "Manual: " + msgRetorno;
 				}

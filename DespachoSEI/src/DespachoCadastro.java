@@ -87,7 +87,7 @@ public class DespachoCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)")); }});
+		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)", null)); }});
 		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); }});
 		despachoServico.preencherOpcoesTipoResposta(cbbFiltroTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Todos)")); }}, null);
 		despachoServico.preencherOpcoesAssinante(cbbFiltroAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
