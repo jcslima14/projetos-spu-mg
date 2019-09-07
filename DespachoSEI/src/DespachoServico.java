@@ -657,10 +657,14 @@ public class DespachoServico {
 			sql.append("					where origemid = " + solicitacao.getOrigem().getOrigemId());
 			sql.append("					  and tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
 			sql.append(" 					  and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
-			sql.append("					  and autor like '" + solicitacao.getAutor() + "'");
-			sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
-			sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim() + "'");
-			sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim() + "')");
+			// se o número de processo não for significativo, adiciona a verificação por outros dados
+			if (solicitacao.getNumeroProcesso().trim().length() <= 1) {
+				sql.append("					  and autor like '" + solicitacao.getAutor() + "'");
+				sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
+				sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim() + "'");
+				sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim() + "'");
+			}
+			sql.append(")");
 		} else {
 			sql.append("update solicitacao ");
 			sql.append("   set origemid = " + solicitacao.getOrigem().getOrigemId());
