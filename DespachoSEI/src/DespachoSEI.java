@@ -74,7 +74,7 @@ public class DespachoSEI extends JFrame {
 		sbmInclusaoSPUNet.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				InclusaoSPUNet janela = new InclusaoSPUNet("Inclusão no SPUNet", conexao);
+				RespostaSPUNet janela = new RespostaSPUNet("Inclusão no SPUNet", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
