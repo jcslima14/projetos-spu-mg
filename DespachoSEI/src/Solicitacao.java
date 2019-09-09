@@ -7,6 +7,8 @@ public class Solicitacao {
 	
 	private String numeroProcesso;
 	
+	private String chaveBusca;
+	
 	private String autor;
 	
 	private Municipio municipio;
@@ -29,20 +31,22 @@ public class Solicitacao {
 
 	public Solicitacao() {
 	}
-	
-	public Solicitacao(Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor) {
+
+	public Solicitacao(Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor) {
 		this.origem = origem;
 		this.tipoProcesso = tipoProcesso;
 		this.numeroProcesso = numeroProcesso;
+		this.chaveBusca = chaveBusca;
 		this.autor = autor;
 	}
 
-	public Solicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, Municipio municipio, Destino destino, String cartorio, TipoImovel tipoImovel, 
+	public Solicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor, Municipio municipio, Destino destino, String cartorio, TipoImovel tipoImovel, 
 			String endereco, String coordenada, String area, String numeroProcessoSEI, Boolean arquivosAnexados) {
 		this.solicitacaoId = solicitacaoId;
 		this.origem = origem;
 		this.tipoProcesso = tipoProcesso;
 		this.numeroProcesso = numeroProcesso;
+		this.chaveBusca = chaveBusca;
 		this.autor = autor;
 		this.municipio = municipio;
 		this.destino = destino;
@@ -85,6 +89,14 @@ public class Solicitacao {
 
 	public void setNumeroProcesso(String numeroProcesso) {
 		this.numeroProcesso = numeroProcesso;
+	}
+
+	public String getChaveBusca() {
+		return chaveBusca;
+	}
+
+	public void setChaveBusca(String chaveBusca) {
+		this.chaveBusca = chaveBusca;
 	}
 
 	public String getAutor() {

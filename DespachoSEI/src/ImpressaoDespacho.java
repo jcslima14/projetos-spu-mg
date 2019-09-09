@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -129,11 +130,15 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
         String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
-		String diretorioRespostas = obterDiretorioDespachos(pastaRespostasImpressas);
+        String msgValidacao = validarPastas(pastaRespostasImpressas);
+        if (!msgValidacao.equals("")) {
+        	JOptionPane.showMessageDialog(null, msgValidacao);
+        	return;
+        }
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		ChromeOptions opcoes = new ChromeOptions();
-		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", diretorioRespostas); }});
+		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", pastaRespostasImpressas); }});
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver(opcoes);
 
@@ -190,6 +195,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 			for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
 				String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
+				String nomeArquivoFinal = (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("") ? respostaAImprimir.getSolicitacao().getChaveBusca() : numeroProcesso);
 				String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
 
 				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
@@ -231,13 +237,13 @@ public class ImpressaoDespacho extends JInternalFrame {
 						chkSelecionarDocumento.click();
 	
 						// apaga arquivo com o nome do processo, caso já exista
-						apagarArquivoProcesso(diretorioRespostas, numeroProcessoSEI);
+						apagarArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI);
 	
 						// gera o arquivo no diretório de downloads
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						renomearArquivoProcesso(diretorioRespostas, numeroProcessoSEI, pastaRespostasImpressas + "\\" + numeroProcesso + ".pdf");
+						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, respostaAImprimir.getSolicitacao().getOrigem().getPastaPDFResposta() + "\\" + nomeArquivoFinal + ".pdf");
 	
 						// atualiza o indicativo de que o documento foi impresso
 						atualizarRespostaImpressa(respostaAImprimir);
@@ -338,11 +344,6 @@ public class ImpressaoDespacho extends JInternalFrame {
 		};
 	}
 
-	private String obterDiretorioDespachos(String pastaRespostas) throws Exception {
-		File caminho = new File(pastaRespostas);
-		return caminho.getParent();
-	}
-
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta) throws Exception {
 		StringBuilder sql = new StringBuilder("");
 		sql.append("update solicitacaoresposta "
@@ -382,6 +383,26 @@ public class ImpressaoDespacho extends JInternalFrame {
 			String chave = (tipoFiltro == 1 ? resposta.getNumeroProcessoSEI() : resposta.getBlocoAssinatura());
 			if (retorno.get(chave) == null) retorno.put(chave, new ArrayList<SolicitacaoResposta>());
 			retorno.get(chave).add(resposta);
+		}
+
+		return retorno;
+	}
+	
+	private String validarPastas(String pastaDownload) throws Exception {
+		String retorno = "";
+
+		if (pastaDownload.equals("") || !MyUtils.arquivoExiste(pastaDownload)) {
+			retorno += "A pasta de download dos arquivos não está configurada ou não existe: " + pastaDownload + "\n";
+			retorno += "Altere o parâmetro " + Parametro.PASTA_DESPACHOS_SALVOS + " com o caminho para a pasta onde os arquivos devem ser gerados antes de serem transferidos para a pasta final.\n\n";
+		}
+
+		for (Origem origem : despachoServico.obterOrigem(null, null)) {
+			String pastaOrigem = MyUtils.emptyStringIfNull(origem.getPastaPDFResposta());
+
+			if (pastaOrigem.equals("") || !MyUtils.arquivoExiste(pastaOrigem)) {
+				retorno += "A pasta onde serão gravados os PDFs da origem " + origem.getDescricao() + " não está configurada ou não existe: " + pastaOrigem + "\n";
+				retorno += "Configure a origem indicando a pasta onde os arquivos devem ser armazenados após terem sido gerados.\n\n";
+			}
 		}
 
 		return retorno;

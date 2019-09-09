@@ -42,6 +42,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmTipoResposta = new JMenuItem("Tipo de Resposta");
 		JMenuItem sbmTipoImovel = new JMenuItem("Tipo de Imóvel");
 		JMenuItem sbmTipoProcesso = new JMenuItem("Tipo de Processo");
+		JMenuItem sbmOrigem = new JMenuItem("Origem");
 		JMenuItem sbmInclusaoRespostaSEI = new JMenuItem("Inclusão de Respostas no SEI");
 		JMenuItem sbmRespostaProcesso = new JMenuItem("Resposta a Processos");
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
@@ -52,15 +53,13 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
-													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmParametro); 
+													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmOrigem); add(sbmParametro); 
 												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 //															   addSeparator(); add(sbmInclusaoSPUNet);  
 															}};
-		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); 
-//															   addSeparator(); add(sbmInclusaoSPUNet);  
-		}};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
 
 		sbmExecucaoScript.addActionListener(new ActionListener() {
@@ -75,7 +74,7 @@ public class DespachoSEI extends JFrame {
 		sbmInclusaoSPUNet.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				InclusaoSPUNet janela = new InclusaoSPUNet("Inclusão no SPUNet", conexao);
+				RespostaSPUNet janela = new RespostaSPUNet("Inclusão no SPUNet", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -85,6 +84,15 @@ public class DespachoSEI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				ParametroCadastro janela = new ParametroCadastro("Parâmetros", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmOrigem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				OrigemCadastro janela = new OrigemCadastro("Origem de Solicitação", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -322,6 +330,7 @@ public class DespachoSEI extends JFrame {
 						 "  origemid integer NOT NULL," +
 						 "  tipoprocessoid integer not null," + 
 						 "  numeroprocesso varchar NOT NULL," + 
+						 "  chavebusca varchar NOT NULL," + 
 						 "  autor varchar NOT NULL," + 
 						 "  municipioid integer," +
 						 "  destinoid integer," + 
@@ -507,7 +516,8 @@ public class DespachoSEI extends JFrame {
 			String sql = "CREATE TABLE origem " + 
 						 "(" + 
 						 "  origemid integer primary key not null," + 
-						 "  descricao varchar NOT NULL" + 
+						 "  descricao varchar NOT NULL," + 
+						 "  pastapdfresposta varchar" + 
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);

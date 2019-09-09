@@ -37,13 +37,13 @@ import framework.MyUtils;
 import framework.SpringUtilities;
 
 @SuppressWarnings("serial")
-public class InclusaoSPUNet extends JInternalFrame {
+public class RespostaSPUNet extends JInternalFrame {
 
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
 
-	public InclusaoSPUNet(String tituloJanela, Connection conexao) {
+	public RespostaSPUNet(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);

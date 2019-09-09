@@ -136,9 +136,10 @@ public class RespostaProcesso extends JInternalFrame {
 	}
 
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS));
+		Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(sapiens.getPastaPDFResposta());
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
-        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure o parâmetro " + Parametro.PASTA_DESPACHOS_SALVOS + " com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
+        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem Sapiens (" + Origem.SAPIENS_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
         	return;
         }
 
@@ -218,15 +219,24 @@ public class RespostaProcesso extends JInternalFrame {
 	        } while (infCarregando != null && infCarregando.isDisplayed());
 
         	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
+        	String chaveBusca = numeroProcesso;
 
         	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
 
+        	// tenta obter o número da chave de busca para o número do processo lido do nome do arquivo
+        	Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso));
+        	
+        	if (solicitacao != null && !solicitacao.getChaveBusca().trim().equals("")) {
+        		chaveBusca = solicitacao.getChaveBusca().trim();
+        	}
+        	
 	        // clica no botão de filtro
-	        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]"));
+        	String textoBotaoBusca = (chaveBusca.equals(numeroProcesso) ? "Processo Judicial" : "NUP");
+	        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]"));
         	TimeUnit.SECONDS.sleep(1);
 	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
 	
-	        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]/div"));
+	        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]/div"));
         	TimeUnit.SECONDS.sleep(1);
 	        btnExpandirMenu.click();
 	
@@ -242,7 +252,7 @@ public class RespostaProcesso extends JInternalFrame {
 	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
 	        Thread.sleep(500);
 	        iptPesquisar.clear();
-	        iptPesquisar.sendKeys(numeroProcesso);
+	        iptPesquisar.sendKeys(chaveBusca);
 	
         	TimeUnit.SECONDS.sleep(2);
 

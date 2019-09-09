@@ -87,7 +87,7 @@ public class DespachoCadastro extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)")); }});
+		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)", null)); }});
 		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); }});
 		despachoServico.preencherOpcoesTipoResposta(cbbFiltroTipoResposta, new ArrayList<TipoResposta>() {{ add(new TipoResposta(0, "(Todos)")); }}, null);
 		despachoServico.preencherOpcoesAssinante(cbbFiltroAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
@@ -177,6 +177,7 @@ public class DespachoCadastro extends CadastroTemplate {
 
 	private void opcoesOrdenacao() {
 		cbbOrdenacao.setModel(new MyComboBoxModel());
+		cbbOrdenacao.addItem(new ComboBoxItem(null, "coalesce(datahoraresposta, '9999-12-31') desc", "Data Resposta (mais recente)"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "numeroprocesso", "Número do Processo"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "autor collate nocase", "Autor"));
 		cbbOrdenacao.addItem(new ComboBoxItem(null, "municipio collate nocase ", "Município"));

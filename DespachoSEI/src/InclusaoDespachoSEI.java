@@ -467,7 +467,12 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {
 		Map<String, String> retorno = new LinkedHashMap<String, String>();
-		retorno.put("<numero_processo>", resposta.getSolicitacao().getNumeroProcesso());
+		String numeroProcesso = resposta.getSolicitacao().getNumeroProcesso();
+		if (resposta.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && resposta.getSolicitacao().getNumeroProcesso().length() == 17) {
+			// reformata o número do processo para a máscara UUUU.NNNNNN/AAAA-DD
+			numeroProcesso = numeroProcesso.substring(0, 5) + "." + numeroProcesso.substring(5, 11) + "/" + numeroProcesso.substring(11, 15) + "-" + numeroProcesso.substring(15); 
+		}
+		retorno.put("<numero_processo>", numeroProcesso);
 		retorno.put("<autor>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getAutor()));
 		retorno.put("<comarca>", (resposta.getSolicitacao().getMunicipio() == null || resposta.getSolicitacao().getMunicipio().getMunicipioComarca() == null ? "" : resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase()));
 		retorno.put("<cartorio>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCartorio()));
@@ -519,7 +524,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				 + "   set numerodocumentosei = '" + resposta.getNumeroDocumentoSEI() + "'"
 				 + "	 , datahoraresposta = datetime('now', 'localtime') "
 				 + "	 , numeroprocessosei = '" + resposta.getNumeroProcessoSEI() + "' "
-				 + "	 , respostaimpressa = false "
+				 + "	 , respostaimpressa = " + (resposta.getTipoResposta().getImprimirResposta() ? "false" : "true")
 				 + "	 , blocoassinatura = '" + resposta.getBlocoAssinatura() + "' "
 				 + "	 , respostanoblocoassinatura = true "
 				 + "     , assinanteidsuperior = " + superior.getAssinanteId()
