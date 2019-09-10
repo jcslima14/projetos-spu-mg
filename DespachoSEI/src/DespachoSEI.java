@@ -44,20 +44,20 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmTipoProcesso = new JMenuItem("Tipo de Processo");
 		JMenuItem sbmOrigem = new JMenuItem("Origem");
 		JMenuItem sbmInclusaoRespostaSEI = new JMenuItem("Inclusão de Respostas no SEI");
-		JMenuItem sbmRespostaProcesso = new JMenuItem("Resposta a Processos do Sapiens");
+		JMenuItem sbmRespostaSapiens = new JMenuItem("Resposta a Processos do Sapiens");
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
 		JMenuItem sbmImpressaoRespostas = new JMenuItem("Impressão de Respostas");
 		JMenuItem sbmRecepcaoProcessos = new JMenuItem("Recepção de Processos do Sapiens");
-		JMenuItem sbmInclusaoSPUNet = new JMenuItem("Resposta a Processos do SPUNet");
+		JMenuItem sbmRespostaSPUNet = new JMenuItem("Resposta a Processos do SPUNet");
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
+		JMenuItem sbmRespostaProcesso = new JMenu("Resposta a Processos") {{ add(sbmRespostaSapiens); add(sbmRespostaSPUNet); }};
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
 													 add(sbmTipoResposta); add(sbmTipoProcesso); add(sbmTipoImovel); add(sbmOrigem); add(sbmParametro); 
 												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
-															   addSeparator(); add(sbmInclusaoSPUNet);  
 															}};
 		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
@@ -71,7 +71,7 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 
-		sbmInclusaoSPUNet.addActionListener(new ActionListener() {
+		sbmRespostaSPUNet.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				RespostaSPUNet janela = new RespostaSPUNet("Resposta a Processos do SPUNet", conexao);
@@ -125,7 +125,7 @@ public class DespachoSEI extends JFrame {
 			}
 		});
 
-		sbmRespostaProcesso.addActionListener(new ActionListener() {
+		sbmRespostaSapiens.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				RespostaProcesso cargaSEI = new RespostaProcesso("Resposta a Processos no Sapiens", conexao);
@@ -367,6 +367,7 @@ public class DespachoSEI extends JFrame {
 						 ")";
 
 			MyUtils.execute(conexao, sql);
+			MyUtils.execute(conexao, "CREATE INDEX ix_solicitacaoresposta_001 ON solicitacaoresposta (solicitacaoid)");
 		}
 	}
 
@@ -488,6 +489,7 @@ public class DespachoSEI extends JFrame {
 						 ")";
 
 			MyUtils.execute(conexao, sql);
+			MyUtils.execute(conexao, "CREATE INDEX ix_solicitacaoenvio_001 ON solicitacaoenvio (solicitacaoid)");
 		}
 	}
 
