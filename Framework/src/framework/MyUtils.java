@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
@@ -368,7 +369,14 @@ public class MyUtils {
         	} catch (Exception e) {
         		infCarregando = null;
         	}
-        } while (infCarregando != null && infCarregando.isDisplayed());
+        	try {
+	        	if (infCarregando == null || !infCarregando.isDisplayed()) {
+	        		break;
+	        	}
+        	} catch (StaleElementReferenceException e) {
+        		break;
+        	}
+        } while (true);
 	}
 
 	public static ArrayList<File> obterArquivos(String nomeDiretorio) {

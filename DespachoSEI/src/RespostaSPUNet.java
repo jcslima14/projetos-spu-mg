@@ -210,7 +210,7 @@ public class RespostaSPUNet extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
-        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']"); 
+        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
         
         // clica na aba de ofícios
         WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
@@ -228,10 +228,10 @@ public class RespostaSPUNet extends JInternalFrame {
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
-	        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        String nomeArquivo = arquivo.getName().toLowerCase().split(".")[0];
-	        String[] dadosResposta = nomeArquivo.split("-");
+	        String nomeArquivo = arquivo.getName().split("\\.")[0];
+	        String[] dadosResposta = nomeArquivo.split("\\-");
         	String numeroAtendimento = dadosResposta[0];
         	String numeroDocumentoSEI = "0";
         	if (dadosResposta.length > 1) numeroDocumentoSEI = dadosResposta[1];
@@ -264,10 +264,16 @@ public class RespostaSPUNet extends JInternalFrame {
 	        WebElement btnPesquisar = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label = 'Pesquisar']"));
 	        btnPesquisar.click();
 
-	        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']"); 
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
 
 	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait5, By.xpath("//table/tbody/tr"));
 	        if (linhasRetornadas.size() == 1) {
+	        	WebElement txtSituacao = linhasRetornadas.iterator().next().findElement(By.xpath("./td[6]"));
+	        	if (!txtSituacao.getText().trim().equalsIgnoreCase("Em Análise Técnica")) {
+	        		MyUtils.appendLogArea(logArea, "A solicitação não está em análise técnica e não pode ser respondida automaticamente");
+	        		continue;
+	        	}
+	        	
 	        	WebElement btnExpandirOpcoes = linhasRetornadas.iterator().next().findElement(By.xpath("//md-fab-trigger"));
 	        	passarMouse.moveToElement(btnExpandirOpcoes).click().build().perform();
 	        	
@@ -275,14 +281,16 @@ public class RespostaSPUNet extends JInternalFrame {
 	            passarMouse.moveToElement(btnDetalhar).perform();
 	        	btnDetalhar.click();
 	        	
-	            MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+	            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 	            
 	            WebElement optResposta = MyUtils.encontrarElemento(wait5, By.xpath("//md-radio-button[@aria-label = '" + resposta.getTipoResposta().getRespostaSPUNet() + "']"));
 	            optResposta.click();
 	            
-	            WebElement txtInformacoesComplementares = MyUtils.encontrarElemento(wait5, By.xpath("//textarea[@ng-model = 'analiseRequerimento.justificativa']"));
-	            txtInformacoesComplementares.sendKeys(resposta.getTipoResposta().getComplementoSPUNet());
-	
+	            if (!MyUtils.emptyStringIfNull(resposta.getTipoResposta().getComplementoSPUNet()).equals("")) {
+		            WebElement txtInformacoesComplementares = MyUtils.encontrarElemento(wait5, By.xpath("//textarea[@ng-model = 'analiseRequerimento.justificativa']"));
+		            txtInformacoesComplementares.sendKeys(MyUtils.emptyStringIfNull(resposta.getTipoResposta().getComplementoSPUNet()));
+	            }
+
 	            WebElement txtUpload = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
 	            
 	            TimeUnit.MILLISECONDS.sleep(500);
@@ -294,21 +302,21 @@ public class RespostaSPUNet extends JInternalFrame {
 	            
 	            txtUpload.sendKeys(arquivo.getAbsolutePath());
 	            
-	            MyUtils.esperarCarregamento(100, wait5, "//p[text() = 'Carregando']");
+	            MyUtils.esperarCarregamento(100, wait5, "//p[contains(text(), 'Carregando')]");
 	            
 	            // busca o botão de enviar para clicar
 	            WebElement btnEnviar = MyUtils.encontrarElemento(wait5, By.xpath("//button[text() = 'Enviar']"));
 	            passarMouse.moveToElement(btnEnviar);
 	            btnEnviar.click();
 
-	            MyUtils.esperarCarregamento(1000, wait5, "//p[text() = 'Carregando']");
+	            MyUtils.esperarCarregamento(1000, wait5, "//p[contains(text(), 'Carregando')]");
 
 	            // botao para fechar a janela após clicar em enviar
 	            WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//button[@ng-click='fechar()' and ./label[text() = 'fechar']]"));
 	            passarMouse.moveToElement(btnEnviar);
 	            btnFechar.click();
 
-	            MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+	            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 	        } else {
 	        	MyUtils.appendLogArea(logArea, "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.");
 	        }
