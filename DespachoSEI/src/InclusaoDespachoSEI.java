@@ -183,7 +183,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
 					List<File> anexos = obterArquivos(pastaProcessosIndividuais, respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
-					if (respostaAGerar.getSolicitacao().getNumeroProcessoSEI() == null || respostaAGerar.getSolicitacao().getNumeroProcessoSEI().trim().equalsIgnoreCase("")) {
+					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
 						if (anexos == null || anexos.size() == 0) {
 							MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
 							continue;
@@ -198,7 +198,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
 				} else {
-					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcesso());
+					if (MyUtils.emptyStringIfNull(respostaAGerar.getNumeroProcessoSEI()).equals("")) {
+						respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcesso());
+					}
 				}
 
 				// pesquisa o processo onde deverá ser incluído a resposta
