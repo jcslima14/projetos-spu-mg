@@ -195,7 +195,12 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 			for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
 				String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
-				String nomeArquivoFinal = (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("") ? respostaAImprimir.getSolicitacao().getChaveBusca() : numeroProcesso);
+				String nomeArquivoFinal;
+				if (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("")) {
+					nomeArquivoFinal = respostaAImprimir.getSolicitacao().getChaveBusca() + "-" + respostaAImprimir.getNumeroDocumentoSEI();
+				} else {
+					nomeArquivoFinal = numeroProcesso;
+				}
 				String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
 
 				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);

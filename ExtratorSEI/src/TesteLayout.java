@@ -62,7 +62,6 @@ public class TesteLayout extends JInternalFrame {
 		painelDados.setBorder(new LineBorder(new Color(0, 0, 0)));
 		painelDados.setBounds(0, 0, 400, 130);
 		JButton botaoCarregar = new JButton("Carregar"); 
-		JButton botaoSair = new JButton("Sair"); 
 
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
@@ -73,7 +72,7 @@ public class TesteLayout extends JInternalFrame {
 		painelDados.add(lblDataFinal);
 		painelDados.add(txtDataFinal);
 		painelDados.add(botaoCarregar); 
-		painelDados.add(botaoSair);
+		painelDados.add(new JPanel());
 
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		
@@ -87,12 +86,6 @@ public class TesteLayout extends JInternalFrame {
 				String msg = "W: " + painelDados.getWidth() + " - H: " + painelDados.getHeight() + " - X: "+ painelDados.getX() + " - Y: "+ painelDados.getY();
 				JOptionPane.showMessageDialog(null, msg);
 				logArea.setText("");
-			} 
-		}); 
-
-		botaoSair.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				System.exit(0);
 			} 
 		}); 
     }
