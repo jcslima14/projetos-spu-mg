@@ -18,11 +18,11 @@ public class DespachoServico {
 		this.conexao = conexao;
 	}
 
-	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso) throws Exception {
-		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, null, null, null, null);
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca) throws Exception {
+		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, chaveBusca, null, null, null, null);
 	}
 
-	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String autor, Municipio municipio, String cartorio, String endereco) throws Exception {
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor, Municipio municipio, String cartorio, String endereco) throws Exception {
 		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -38,6 +38,9 @@ public class DespachoServico {
 			}
 			if (numeroProcesso != null) {
 				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
+			}
+			if (chaveBusca != null) {
+				sql.append(" and chaveBusca = '" + chaveBusca + "'");
 			}
 			if (municipio != null) {
 				sql.append(" and municipioid = " + municipio.getMunicipioId());
@@ -109,7 +112,7 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoEnvio(rs.getInt("solicitacaoenvioid"), 
-					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null)),
+					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null, null)),
 					rs.getString("datahoramovimentacao"), 
 					rs.getString("resultadodownload"),
 					rs.getBoolean("arquivosprocessados"),
@@ -121,7 +124,7 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, null, null, null, null);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, null, null, null, null, null);
 		Iterator<SolicitacaoResposta> i = respostas.iterator();
 		while (i.hasNext()) {
 			// se o nº de documento do SEI estiver preenchido, não retorna a resposta
@@ -134,7 +137,7 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAImprimir(Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, tipoRespostaImprimirResposta);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, new TipoResposta() {{ setImprimirResposta(tipoRespostaImprimirResposta); }}, null);
 		Iterator<SolicitacaoResposta> i = respostas.iterator();
 		while (i.hasNext()) {
 			// se o nº de documento do SEI estiver vazio, não retorna a resposta
@@ -150,11 +153,11 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId) throws Exception {
-		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null);
+		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null, null);
 	}
 	
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
-			Boolean tipoRespostaImprimirResposta) throws Exception {
+			TipoResposta tipoResposta, String numeroDocumentoSEI) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -183,8 +186,11 @@ public class DespachoServico {
 			if (assinante != null && assinante.getAssinanteId() != null) {
 				sql.append(" and sr.assinanteid = " + assinante.getAssinanteId());
 			}
-			if (tipoRespostaImprimirResposta != null) {
-				sql.append(" and tr.imprimirresposta = " + (tipoRespostaImprimirResposta ? "true" : "false"));
+			if (tipoResposta != null && tipoResposta.getImprimirResposta() != null) {
+				sql.append(" and tr.imprimirresposta = " + (tipoResposta.getImprimirResposta() ? "true" : "false"));
+			}
+			if (numeroDocumentoSEI != null) {
+				sql.append(" and sr.numerodocumentosei = '" + numeroDocumentoSEI + "' ");
 			}
 		}
 
@@ -192,7 +198,7 @@ public class DespachoServico {
 
 		while (rs.next()) {
 			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
-					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null)),
+					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null, null)),
 					MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null)),
 					rs.getString("observacao"), 
 					MyUtils.entidade(obterAssinante(rs.getInt("assinanteid"), null, null, null)),
@@ -414,9 +420,11 @@ public class DespachoServico {
 					rs.getString("tipoprocesso"), 
 					rs.getBoolean("imprimirresposta"), 
 					rs.getInt("quantidadeassinaturas"),
-					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null))));
+					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
+					rs.getString("respostaspunet"),
+					rs.getString("complementospunet")));
 		}
-		
+
 		return retorno;
 	}
 
@@ -686,7 +694,7 @@ public class DespachoServico {
 
 		MyUtils.execute(conexao, sql.toString());
 
-		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso(), solicitacao.getAutor(), solicitacao.getMunicipio(), solicitacao.getCartorio(), solicitacao.getEndereco()));
+		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso(), solicitacao.getChaveBusca(), solicitacao.getAutor(), solicitacao.getMunicipio(), solicitacao.getCartorio(), solicitacao.getEndereco()));
 	}
 
 	public SolicitacaoEnvio salvarSolicitacaoEnvio(SolicitacaoEnvio solicitacaoEnvio) throws Exception {
@@ -769,7 +777,7 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoRespostaPendente(Solicitacao solicitacao) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, null);
 		Iterator<SolicitacaoResposta> i = respostas.iterator();
 
 		while (i.hasNext()) {

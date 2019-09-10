@@ -81,7 +81,6 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
 		JButton botaoProcessar = new JButton("Processar"); 
-		JButton botaoSair = new JButton("Sair"); 
 
 		painelDados.add(lblUnidade);
 		painelDados.add(cbbUnidade);
@@ -96,7 +95,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		painelDados.add(chkSalvarDistribuicao);
 		painelDados.add(new JPanel());
 		painelDados.add(botaoProcessar); 
-		painelDados.add(botaoSair); 
+		painelDados.add(new JPanel());
 
 		SpringUtilities.makeGrid(painelDados,
                 7, 2, //rows, cols
@@ -129,12 +128,6 @@ public class AtribuicaoProcesso extends JInternalFrame {
 						return sw.toString();
 					}
 				}).start();
-			} 
-		}); 
-
-		botaoSair.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				System.exit(0);
 			} 
 		}); 
     }

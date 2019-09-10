@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.sql.rowset.CachedRowSet;
@@ -355,5 +356,36 @@ public class MyUtils {
 	public static String emptyStringIfNull(Object obj) {
 		if (obj == null) return "";
 		else return obj.toString();
+	}
+	
+	public static void esperarCarregamento(int esperaInicialEmMilissegundos, Wait<WebDriver> wait, String xpath) throws Exception {
+        TimeUnit.MILLISECONDS.sleep(esperaInicialEmMilissegundos);
+
+        WebElement infCarregando = null;
+        do {
+        	try {
+        		infCarregando = MyUtils.encontrarElemento(wait, By.xpath(xpath));
+        	} catch (Exception e) {
+        		infCarregando = null;
+        	}
+        } while (infCarregando != null && infCarregando.isDisplayed());
+	}
+
+	public static ArrayList<File> obterArquivos(String nomeDiretorio) {
+		ArrayList<File> retorno = new ArrayList<File>();
+		File diretorio = new File(nomeDiretorio);
+		for (File arquivo : diretorio.listFiles()) {
+			if (!arquivo.isDirectory() && arquivo.getName().toLowerCase().endsWith("pdf")) {
+				retorno.add(arquivo);
+			}
+		}
+		return retorno;
+	}
+
+	public static void criarDiretorioBackup(String caminho) {
+		File diretorio = new File(caminho + "\\bkp");
+		if (!diretorio.exists()) {
+			diretorio.mkdir();
+		}
 	}
 }

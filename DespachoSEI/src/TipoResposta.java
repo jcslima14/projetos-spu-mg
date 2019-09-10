@@ -21,6 +21,13 @@ public class TipoResposta implements ItemComboBox {
 	
 	private Origem origem;
 
+	private String respostaSPUNet;
+
+	private String complementoSPUNet;
+
+	public TipoResposta() {
+	}
+	
 	public TipoResposta(Integer tipoRespostaId) {
 		this.tipoRespostaId = tipoRespostaId;
 	}
@@ -31,7 +38,7 @@ public class TipoResposta implements ItemComboBox {
 	}
 
 	public TipoResposta(Integer tipoRespostaId, String descricao, String tipoDocumento, String numeroDocumentoSEI, Boolean gerarProcessoIndividual, String unidadeAberturaProcesso, String tipoProcesso, 
-			Boolean imprimirResposta, Integer quantidadeAssinaturas, Origem origem) {
+			Boolean imprimirResposta, Integer quantidadeAssinaturas, Origem origem, String respostaSPUNet, String complementoSPUNet) {
 		this.tipoRespostaId = tipoRespostaId;
 		this.descricao = descricao;
 		this.tipoDocumento = tipoDocumento;
@@ -42,6 +49,8 @@ public class TipoResposta implements ItemComboBox {
 		this.imprimirResposta = imprimirResposta;
 		this.quantidadeAssinaturas = quantidadeAssinaturas;
 		this.origem = origem;
+		this.respostaSPUNet = respostaSPUNet;
+		this.complementoSPUNet = complementoSPUNet;
 	}
 
 	public Integer getTipoRespostaId() {
@@ -122,6 +131,22 @@ public class TipoResposta implements ItemComboBox {
 
 	public void setOrigem(Origem origem) {
 		this.origem = origem;
+	}
+
+	public String getRespostaSPUNet() {
+		return respostaSPUNet;
+	}
+
+	public void setRespostaSPUNet(String respostaSPUNet) {
+		this.respostaSPUNet = respostaSPUNet;
+	}
+
+	public String getComplementoSPUNet() {
+		return complementoSPUNet;
+	}
+
+	public void setComplementoSPUNet(String complementoSPUNet) {
+		this.complementoSPUNet = complementoSPUNet;
 	}
 
 	@Override

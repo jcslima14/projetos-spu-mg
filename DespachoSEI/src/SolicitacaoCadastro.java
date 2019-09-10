@@ -267,7 +267,7 @@ public class SolicitacaoCadastro extends CadastroController {
 			if (entidade.getNumeroProcesso().trim().equals("")) {
 				return "O Número do Processo deve ser informado.";
 			} else {
-				Solicitacao s = MyUtils.entidade(despachoServico.obterSolicitacao(null, entidade.getOrigem(), entidade.getTipoProcesso(), entidade.getNumeroProcesso()));
+				Solicitacao s = MyUtils.entidade(despachoServico.obterSolicitacao(null, entidade.getOrigem(), entidade.getTipoProcesso(), entidade.getNumeroProcesso(), null));
 				if (s != null && !Objects.equals(s.getSolicitacaoId(), entidade.getSolicitacaoId())) {
 					return "Já existe uma outra solicitação cadastrada com esta origem, tipo e número de processo.";
 				}

@@ -40,7 +40,11 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	private MyLabel lblTipoProcesso = new MyLabel("Tipo de Processo no SEI") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbOrigem = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblOrigem = new MyLabel("Origem") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(9, 2));
+	private MyTextField txtRespostaSPUNet = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblRespostaSPUNet = new MyLabel("Resposta no SPUNet") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtComplementoSPUNet = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblComplementoSPUNet = new MyLabel("Complemento à resposta no SPUNet") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(11, 2));
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
@@ -70,6 +74,10 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtTipoProcesso);
 		pnlCamposEditaveis.add(lblOrigem);
 		pnlCamposEditaveis.add(cbbOrigem);
+		pnlCamposEditaveis.add(lblRespostaSPUNet);
+		pnlCamposEditaveis.add(txtRespostaSPUNet);
+		pnlCamposEditaveis.add(lblComplementoSPUNet);
+		pnlCamposEditaveis.add(txtComplementoSPUNet);
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -86,6 +94,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 		txtUnidadeAberturaProcesso.setText("");
 		txtTipoProcesso.setText("");
 		cbbOrigem.setSelectedIndex(0);
+		txtRespostaSPUNet.setText("");
+		txtComplementoSPUNet.setText("");
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -101,9 +111,11 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 				+  "     , imprimirresposta = " + (chkImprimirResposta.isSelected() ? "true" : "false")
 				+  "     , quantidadeassinaturas = " + (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText())
 				+  "     , origemid = " + (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem))
+				+  "     , respostaspunet = " + (txtRespostaSPUNet.getText().equals("") ? "null" : "'" + txtRespostaSPUNet.getText() + "'")
+				+  "     , complementospunet = " + (txtComplementoSPUNet.getText().equals("") ? "null" : "'" + txtComplementoSPUNet.getText() + "'")
 				+  " where tiporespostaid = " + txtTipoRespostaId.getText();
 		} else {
-			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas, origemid) values (";
+			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas, origemid, respostaspunet, complementospunet) values (";
 			sql += "'" + txtDescricao.getText().trim() + "', ";
 			sql += "'" + txtTipoDocumento.getText() + "', ";
 			sql += "'" + txtNumeroDocumentoModelo.getText() + "', ";
@@ -112,7 +124,9 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			sql += "'" + txtTipoProcesso.getText() + "', ";
 			sql += (chkImprimirResposta.isSelected() ? "true" : "false") + ", ";
 			sql += (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText()) + ", ";
-			sql += (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem)) + ") ";
+			sql += (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem)) + ", ";
+			sql += (txtRespostaSPUNet.getText().equals("") ? "null" : "'" + txtRespostaSPUNet.getText() + "'") + ", ";
+			sql += (txtComplementoSPUNet.getText().equals("") ? "null" : "'" + txtComplementoSPUNet.getText() + "'") + ") ";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -135,8 +149,10 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			txtUnidadeAberturaProcesso.setText(entidade.getUnidadeAberturaProcesso());
 			txtTipoProcesso.setText(entidade.getTipoProcesso());
 			chkImprimirResposta.setSelected(entidade.getImprimirResposta());
-			txtQuantidadeAssinaturas.setText(entidade.getQuantidadeAssinaturas().equals(0) ? "" : entidade.getQuantidadeAssinaturas().toString());
+			txtQuantidadeAssinaturas.setText(entidade.getQuantidadeAssinaturas() == null ? "" : entidade.getQuantidadeAssinaturas().toString());
 			cbbOrigem.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbOrigem, (entidade.getOrigem() == null ? 0 : entidade.getOrigem().getOrigemId()), null));
+			txtRespostaSPUNet.setText(MyUtils.emptyStringIfNull(entidade.getRespostaSPUNet()));
+			txtComplementoSPUNet.setText(MyUtils.emptyStringIfNull(entidade.getComplementoSPUNet()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -154,6 +170,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 				+ "		 , case when tr.imprimirresposta then 'Sim' else 'Não' end as imprimirresposta "
 				+ "		 , tr.quantidadeassinaturas "
 				+ "		 , o.descricao as origem "
+				+ "		 , tr.respostaspunet "
+				+ "		 , tr.complementospunet "
 				+ "   from tiporesposta tr "
 				+ "   left join origem o using (origemid) "
 				+ " order by tr.descricao ");
@@ -177,6 +195,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Imprimir resposta?", 100, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Quantidade Assinaturas", 80, true, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Origem", 100, true, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Resposta no SPUNet", 150, true));
+			colunas.add(new MyTableColumn("Complemento à Resposta no SPUNet", 150, true));
 		}
 		return this.colunas;
 	}

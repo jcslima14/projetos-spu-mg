@@ -152,7 +152,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 	public void prepararParaEdicao() {
 		Integer solicitacaoId = Integer.parseInt(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		try {
-			Solicitacao entidade = MyUtils.entidade(despachoServico.obterSolicitacao(solicitacaoId, null, null, null));
+			Solicitacao entidade = MyUtils.entidade(despachoServico.obterSolicitacao(solicitacaoId, null, null, null, null));
 
 			SolicitacaoAnaliseCadastro janela = new SolicitacaoAnaliseCadastro(conexao, despachoServico, entidade, this);
 			this.desktop.add(janela);

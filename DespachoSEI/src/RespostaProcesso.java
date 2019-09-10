@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -210,13 +209,8 @@ public class RespostaProcesso extends JInternalFrame {
         abaOficios.click();
 
         // inicia o loop para leitura dos arquivos do diretório
-        for (File arquivo : obterArquivos(pastaDespachosSalvos)) {
-        	TimeUnit.SECONDS.sleep(1);
-
-	        WebElement infCarregando = null;
-	        do {
-		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-	        } while (infCarregando != null && infCarregando.isDisplayed());
+        for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
+        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
         	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
         	String chaveBusca = numeroProcesso;
@@ -224,7 +218,7 @@ public class RespostaProcesso extends JInternalFrame {
         	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
 
         	// tenta obter o número da chave de busca para o número do processo lido do nome do arquivo
-        	Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso));
+        	Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, null));
         	
         	if (solicitacao != null && !solicitacao.getChaveBusca().trim().equals("")) {
         		chaveBusca = solicitacao.getChaveBusca().trim();
@@ -241,12 +235,7 @@ public class RespostaProcesso extends JInternalFrame {
 	        btnExpandirMenu.click();
 	
 	        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
-        	TimeUnit.SECONDS.sleep(1);
-
-	        infCarregando = null;
-	        do {
-		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-	        } while (infCarregando != null && infCarregando.isDisplayed());
+        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
 	        passarMouse.moveToElement(divFiltro).click().build().perform();
 	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
@@ -254,12 +243,7 @@ public class RespostaProcesso extends JInternalFrame {
 	        iptPesquisar.clear();
 	        iptPesquisar.sendKeys(chaveBusca);
 	
-        	TimeUnit.SECONDS.sleep(2);
-
-	        infCarregando = null;
-	        do {
-		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-	        } while (infCarregando != null && infCarregando.isDisplayed());
+        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
 		        
 	        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
 	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
@@ -306,36 +290,15 @@ public class RespostaProcesso extends JInternalFrame {
 			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
 			passarMouse.moveToElement(btnFechar).click().build().perform();
 
-	        infCarregando = null;
-	        do {
-		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-	        } while (infCarregando != null && infCarregando.isDisplayed());
+        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
 			
 			// mover o arquivo
-	        criarDiretorioBackup(pastaDespachosSalvos);
+	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
 			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
         }
 		
         MyUtils.appendLogArea(logArea, "Fim do processamento...");
         // driver.close();
         driver.quit();
-	}
-
-	private void criarDiretorioBackup(String caminho) {
-		File diretorio = new File(caminho + "\\bkp");
-		if (!diretorio.exists()) {
-			diretorio.mkdir();
-		}
-	}
-
-	private ArrayList<File> obterArquivos(String nomeDiretorio) {
-		ArrayList<File> retorno = new ArrayList<File>();
-		File diretorio = new File(nomeDiretorio);
-		for (File arquivo : diretorio.listFiles()) {
-			if (!arquivo.isDirectory() && arquivo.getName().toLowerCase().endsWith("pdf")) {
-				retorno.add(arquivo);
-			}
-		}
-		return retorno;
 	}
 }

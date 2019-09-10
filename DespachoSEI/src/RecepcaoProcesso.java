@@ -77,7 +77,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
 		JButton botaoProcessar = new JButton("Processar"); 
-		JButton botaoSair = new JButton("Sair");
 		JCheckBox chkExibirNavegador = new JCheckBox("Exibir nevagador", true);
 
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
@@ -96,7 +95,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		painelDados.add(chkExibirNavegador);
 		painelDados.add(new JPanel());
 		painelDados.add(botaoProcessar); 
-		painelDados.add(botaoSair); 
+		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeGrid(painelDados,
                 espacoEmDisco == null ? 5 : 6, 2, //rows, cols
@@ -133,12 +132,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 				}).start();
 			} 
 		}); 
-
-		botaoSair.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				System.exit(0);
-			} 
-		});
     }
 
 	public void abrirJanela() {
@@ -440,7 +433,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private void receberProcessoSapiens(String numeroProcesso, String chaveBusca, String autor, String dataHoraMovimentacao, String resultadoDownload) throws Exception {
 		String dataHoraFormatada = MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss");
-		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso));
+		Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, null));
 
 		// se a solicitação já existe, atualiza o nome do autor; se não, cria uma nova solicitação que será gravada
 		if (solicitacao != null) {

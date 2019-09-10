@@ -1,10 +1,12 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
@@ -12,6 +14,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -20,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -139,6 +143,13 @@ public class RespostaSPUNet extends JInternalFrame {
 	}
 
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
+		Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(spunet.getPastaPDFResposta());
+        if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
+        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem SPUNet (" + Origem.SPUNET_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
+        	return;
+        }
+
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
@@ -199,133 +210,115 @@ public class RespostaSPUNet extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
-        TimeUnit.SECONDS.sleep(1);
-        
-        MyUtils.appendLogArea(logArea, "Esperando o carregamento da página principal...");
-        
-        WebElement carregando = null;
-        do {
-        	try {
-        		carregando = MyUtils.encontrarElemento(wait5, By.xpath("//p[text() = 'Carregando...']"));
-        	} catch (Exception e) {
-        		carregando = null;
-        	}
-        } while (carregando != null);
-        
-        MyUtils.appendLogArea(logArea, "Iniciando a sequência para entrar na tela de cadastro...");
+        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']"); 
         
         // clica na aba de ofícios
         WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
+        passarMouse.moveToElement(btnMenuAplicacao).perform();
         waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
         btnMenuAplicacao.click();
 
-        WebElement btnGeoinformacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
-        btnGeoinformacao.click();
+        WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'SERVIÇOS (PORTAL SPU/MP)')]]"));
+        passarMouse.moveToElement(btnServicos).click().build().perform();
 
-        WebElement btnGeoinformaçãoCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
-        passarMouse.moveToElement(btnGeoinformaçãoCadastrar).click().build().perform();
-        // btnGeoinformaçãoCadastrar.click();
-//        String pastaDespachosSalvos = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
-//
-//        // inicia o loop para leitura dos arquivos do diretório
-//        for (File arquivo : obterArquivos(pastaDespachosSalvos)) {
-//        	delayInSeconds(1);
-//
-//	        WebElement infCarregando = null;
-//	        do {
-//		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-//	        } while (infCarregando != null && infCarregando.isDisplayed());
-//
-//        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
-//
-//	        appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
-//
-//	        // clica no botão de filtro
-//	        WebElement cbcProcessoJudicial = encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]"));
-//	        delayInSeconds(1);
-//	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
-//	
-//	        WebElement btnExpandirMenu = encontrarElemento(wait5, By.xpath("//div[./span[text() = 'Processo Judicial']]/div"));
-//	        delayInSeconds(1);
-//	        btnExpandirMenu.click();
-//	
-//	        WebElement divFiltro = encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
-//	        delayInSeconds(1);
-//
-//	        infCarregando = null;
-//	        do {
-//		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-//	        } while (infCarregando != null && infCarregando.isDisplayed());
-//
-//	        passarMouse.moveToElement(divFiltro).click().build().perform();
-//	        WebElement iptPesquisar = encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
-//	        Thread.sleep(500);
-//	        iptPesquisar.clear();
-//	        iptPesquisar.sendKeys(numeroProcesso);
-//	
-//	        delayInSeconds(2);
-//
-//	        infCarregando = null;
-//	        do {
-//		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-//	        } while (infCarregando != null && infCarregando.isDisplayed());
-//		        
-//	        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
-//	        List<WebElement> linhasRetornadas = encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
-//
-//			if (linhasRetornadas.size() == 1) {
-//				WebElement divLinhaResultado = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
-//				passarMouse.moveToElement(divLinhaResultado).click().build().perform();
-//				passarMouse.contextClick(divLinhaResultado).perform();
-//			} else {
-//				if (linhasRetornadas.size() == 0) {
-//					appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
-//				} else {
-//					appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
-//				}
-//				continue;
-//			}
-//	
-//			delayInSeconds(1);
-//			
-//			// clicar no botão responder
-//			WebElement divResponder = encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
-//			passarMouse.moveToElement(divResponder).click().build().perform();
-//
-//			delayInSeconds(1);
-//
-//			// clicar no botão de upload de arquivos
-//			WebElement btnUploadArquivo = encontrarElemento(wait5, By.id("button_browse-button"));
-//			passarMouse.moveToElement(btnUploadArquivo).perform();
-//	
-//			WebElement inpUploadArquivo = encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
-//			inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
-//			
-//			WebElement btnConfirmarUpload = encontrarElemento(wait5, By.id("button_upload"));
-//			passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
-//
-//			WebElement infUploadCompleto = null;
-//			
-//			do {
-//				infUploadCompleto = encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
-//			} while (infUploadCompleto == null);
-//
-//			delayInSeconds(1);
-//
-//			WebElement btnFechar = encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
-//			passarMouse.moveToElement(btnFechar).click().build().perform();
-//
-//	        infCarregando = null;
-//	        do {
-//		        infCarregando = encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-//	        } while (infCarregando != null && infCarregando.isDisplayed());
-//			
-//			// mover o arquivo
-//	        criarDiretorioBackup(pastaDespachosSalvos);
-//			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
-//        }
+        WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[text() = 'Triagem']"));
+        passarMouse.moveToElement(btnTriagem).perform();
+        waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
+        btnTriagem.click();
+
+        // inicia o loop para leitura dos arquivos do diretório
+        for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
+	        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+
+	        String nomeArquivo = arquivo.getName().toLowerCase().split(".")[0];
+	        String[] dadosResposta = nomeArquivo.split("-");
+        	String numeroAtendimento = dadosResposta[0];
+        	String numeroDocumentoSEI = "0";
+        	if (dadosResposta.length > 1) numeroDocumentoSEI = dadosResposta[1];
+
+	        Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SPUNET, TipoProcesso.ELETRONICO, null, numeroAtendimento));
+	        SolicitacaoResposta resposta = null;
+	        if (solicitacao == null) {
+	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrada a solicitação para o nº de atendimento " + numeroAtendimento + ". A resposta não poderá ser feita automaticamente");
+	        	continue;
+	        } else {
+	        	// busca a resposta referente ao arquivo lido
+	        	resposta = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, numeroDocumentoSEI));
+	        }
+
+	        if (resposta == null) {
+	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrado o número do documento de resposta na base de dados. A resposta não poderá ser feita automaticamente");
+	        	continue;
+	        }
+
+	        if (MyUtils.emptyStringIfNull(resposta.getTipoResposta().getRespostaSPUNet()).trim().equals("")) {
+	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + "(" + solicitacao.getNumeroProcesso() + " / " + numeroAtendimento + "): o tipo de resposta não está configurado para qual tipo de resposta deve ser data no SPUNet. Configure a resposta para o SPUNet e tente novamente.");
+	        	continue;
+	        }
+
+        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + solicitacao.getNumeroProcesso() + " (Nº Atendimento: " + numeroAtendimento + ") - Arquivo: " + arquivo.getAbsolutePath());
+
+	        WebElement txtNumeroAtendimento = MyUtils.encontrarElemento(wait15, By.xpath("//input[@ng-model = 'filtro.nuAtendimento']"));
+	        txtNumeroAtendimento.sendKeys(numeroAtendimento);
+
+	        WebElement btnPesquisar = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label = 'Pesquisar']"));
+	        btnPesquisar.click();
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']"); 
+
+	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait5, By.xpath("//table/tbody/tr"));
+	        if (linhasRetornadas.size() == 1) {
+	        	WebElement btnExpandirOpcoes = linhasRetornadas.iterator().next().findElement(By.xpath("//md-fab-trigger"));
+	        	passarMouse.moveToElement(btnExpandirOpcoes).click().build().perform();
+	        	
+	        	WebElement btnDetalhar = linhasRetornadas.iterator().next().findElement(By.xpath("//a[@ng-click = 'irParaDetalhar(item);']"));
+	            passarMouse.moveToElement(btnDetalhar).perform();
+	        	btnDetalhar.click();
+	        	
+	            MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+	            
+	            WebElement optResposta = MyUtils.encontrarElemento(wait5, By.xpath("//md-radio-button[@aria-label = '" + resposta.getTipoResposta().getRespostaSPUNet() + "']"));
+	            optResposta.click();
+	            
+	            WebElement txtInformacoesComplementares = MyUtils.encontrarElemento(wait5, By.xpath("//textarea[@ng-model = 'analiseRequerimento.justificativa']"));
+	            txtInformacoesComplementares.sendKeys(resposta.getTipoResposta().getComplementoSPUNet());
+	
+	            WebElement txtUpload = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
+	            
+	            TimeUnit.MILLISECONDS.sleep(500);
+	            
+	            JavascriptExecutor js = (JavascriptExecutor) driver;
+	            js.executeScript("arguments[0].style.visibility = 'visible'; arguments[0].style.overflow = 'visible'; arguments[0].style.height = '1px'; arguments[0].style.width = '1px'; arguments[0].style.opacity = 1", txtUpload);
+	
+	            TimeUnit.MILLISECONDS.sleep(500);
+	            
+	            txtUpload.sendKeys(arquivo.getAbsolutePath());
+	            
+	            MyUtils.esperarCarregamento(100, wait5, "//p[text() = 'Carregando']");
+	            
+	            // busca o botão de enviar para clicar
+	            WebElement btnEnviar = MyUtils.encontrarElemento(wait5, By.xpath("//button[text() = 'Enviar']"));
+	            passarMouse.moveToElement(btnEnviar);
+	            btnEnviar.click();
+
+	            MyUtils.esperarCarregamento(1000, wait5, "//p[text() = 'Carregando']");
+
+	            // botao para fechar a janela após clicar em enviar
+	            WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//button[@ng-click='fechar()' and ./label[text() = 'fechar']]"));
+	            passarMouse.moveToElement(btnEnviar);
+	            btnFechar.click();
+
+	            MyUtils.esperarCarregamento(500, wait5, "//p[text() = 'Carregando']");
+	        } else {
+	        	MyUtils.appendLogArea(logArea, "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.");
+	        }
+			
+			// mover o arquivo
+	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
+			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
+        }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
-//        driver.quit();
+        driver.quit();
 	}
 }
