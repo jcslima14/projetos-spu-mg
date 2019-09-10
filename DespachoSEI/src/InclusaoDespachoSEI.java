@@ -180,7 +180,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: " + respostaAGerar.getPendenciasParaGeracao());
 					continue;
 				}
-				
+
 				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
 					List<File> anexos = obterArquivos(pastaProcessosIndividuais, respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
 					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
