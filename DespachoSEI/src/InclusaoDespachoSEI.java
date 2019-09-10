@@ -198,8 +198,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
 				} else {
-					if (MyUtils.emptyStringIfNull(respostaAGerar.getNumeroProcessoSEI()).equals("")) {
+					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).equals("")) {
 						respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcesso());
+					} else {
+						respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
 					}
 				}
 
