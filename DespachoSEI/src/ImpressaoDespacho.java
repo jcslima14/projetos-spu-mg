@@ -248,10 +248,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, respostaAImprimir.getSolicitacao().getOrigem().getPastaPDFResposta() + "\\" + nomeArquivoFinal + ".pdf");
+						String nomeArquivoPasta = respostaAImprimir.getSolicitacao().getOrigem().getPastaPDFResposta() + "\\" + nomeArquivoFinal + ".pdf";
+						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, nomeArquivoPasta);
 	
 						// atualiza o indicativo de que o documento foi impresso
-						atualizarRespostaImpressa(respostaAImprimir);
+						atualizarRespostaImpressa(respostaAImprimir, nomeArquivoPasta);
 	
 						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 						chkSelecionarDocumento.click();
@@ -349,14 +350,16 @@ public class ImpressaoDespacho extends JInternalFrame {
 		};
 	}
 
-	private void atualizarRespostaImpressa(SolicitacaoResposta resposta) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("update solicitacaoresposta "
-				 + "   set respostaimpressa = true "
-				 + "	 , datahoraimpressao = datetime('now', 'localtime') "
-				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
-
-		MyUtils.execute(conexao, sql.toString());
+	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {
+		if (MyUtils.arquivoExiste(nomeArquivo)) {
+			StringBuilder sql = new StringBuilder("");
+			sql.append("update solicitacaoresposta "
+					 + "   set respostaimpressa = true "
+					 + "	 , datahoraimpressao = datetime('now', 'localtime') "
+					 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
+	
+			MyUtils.execute(conexao, sql.toString());
+		}
 	}
 
 	private void atualizarRespostaRetiradaBlocoAssinatura(SolicitacaoResposta resposta) throws Exception {
