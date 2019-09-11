@@ -65,7 +65,11 @@ public class CadastroSPUNet extends JFrame {
 	private EntityManager obterConexaoEM() {
 		EntityManager conexao = null;
 		try {
+<<<<<<< Upstream, based on origin/master
 			EntityManagerFactory emf = Persistence.createEntityManagerFactory("CadastroSPUNet");
+=======
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory("ImoveisSPU");
+>>>>>>> 0d95c05 Robô de catalogação de geoinformação no SPUNet.
 			conexao = emf.createEntityManager();
 			criarTabelas(conexao);
 		} catch (Exception e1) {
