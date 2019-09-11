@@ -82,8 +82,9 @@ public class ImoveisServico {
 		return JPAUtils.executeQuery(em, sql.toString(), parametros);
 	}
 	
-	public <T> void persistir(T entidade) {
-		JPAUtils.persistir(em, entidade);
+	public <T> T persistir(T entidade) {
+		entidade = JPAUtils.persistir(em, entidade);
+		return entidade;
 	}
 	
 	public <T> void excluir(T entidade) {
