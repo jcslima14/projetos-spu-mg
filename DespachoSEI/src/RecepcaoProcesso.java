@@ -277,8 +277,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	        	String numeroSemFormatacao = numeroProcessoJudicial.replaceAll("\\D+", "");
 	        	chaveBusca = chaveBusca.replaceAll("\\D+", "");
 	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ") - " + chaveBusca + " - " + especie);
-	        	// if (!lnkProcessoJudicial.getText().equals("00478.000807/2019-54")) continue;
-	        	// clica no link para abrir a janela do processo
+	        	// if (!chaveBusca.equals("00476001410201908")) continue;
 
     			// verifica se o processo já foi recepcionado com esta data de movimentação; se já tiver sido, não precisa ser reprocessado
         		if (!processoJaRecebido(logArea, numeroSemFormatacao, dataHora)) {
@@ -404,7 +403,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        	driver.switchTo().window(janelaAtual);
 	        	}
 	        }
-
+	        
 	        try {
 	        	WebElement btnProximaPagina = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Próxima Página' and not(contains(@class, 'x-item-disabled'))]"));
 	        	passarMouse.moveToElement(btnProximaPagina).click().build().perform();

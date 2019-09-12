@@ -651,13 +651,13 @@ public class DespachoServico {
 			sql.append("	 , " + solicitacao.getTipoProcesso().getTipoProcessoId());
 			sql.append("	 , '" + solicitacao.getNumeroProcesso() + "'");
 			sql.append("	 , '" + MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()) + "'");
-			sql.append("	 , '" + solicitacao.getAutor() + "'");
+			sql.append("	 , '" + solicitacao.getAutor().replace("'", "''") + "'");
 			sql.append("	 , " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
 			sql.append("	 , " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
-			sql.append("	 , " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio() + "'"));
+			sql.append("	 , " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio().replace("'", "''") + "'"));
 			sql.append("	 , " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
-			sql.append("	 , " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco() + "'"));
-			sql.append("	 , " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada() + "'"));
+			sql.append("	 , " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco().replace("'", "''") + "'"));
+			sql.append("	 , " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada().replace("'", "''") + "'"));
 			sql.append("	 , " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
 			sql.append("	 , " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
 			sql.append("	 , " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
@@ -669,8 +669,8 @@ public class DespachoServico {
 			if (solicitacao.getNumeroProcesso().trim().length() <= 1) {
 				sql.append("					  and autor like '" + solicitacao.getAutor() + "'");
 				sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
-				sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim() + "'");
-				sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim() + "'");
+				sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim().replace("'", "''") + "'");
+				sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim().replace("'", "''") + "'");
 			}
 			sql.append(")");
 		} else {
@@ -679,13 +679,13 @@ public class DespachoServico {
 			sql.append("	 , tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
 			sql.append("	 , numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
 			sql.append("	 , chavebusca = '" + solicitacao.getChaveBusca() + "'");
-			sql.append("	 , autor = '" + solicitacao.getAutor() + "'");
+			sql.append("	 , autor = '" + solicitacao.getAutor().replace("'", "''") + "'");
 			sql.append("	 , municipioid = " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
 			sql.append("	 , destinoid = " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
-			sql.append("	 , cartorio = " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio() + "'"));
+			sql.append("	 , cartorio = " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio().replace("'", "''") + "'"));
 			sql.append("	 , tipoimovelid = " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
-			sql.append("	 , endereco = " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco() + "'"));
-			sql.append("	 , coordenada = " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada() + "'"));
+			sql.append("	 , endereco = " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco().replace("'", "''") + "'"));
+			sql.append("	 , coordenada = " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada().replace("'", "''") + "'"));
 			sql.append("	 , area = " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
 			sql.append("	 , numeroprocessosei = " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
 			sql.append("	 , arquivosanexados = " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
