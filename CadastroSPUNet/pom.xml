@@ -38,6 +38,9 @@
   		<artifactId>selenium-java</artifactId>
   		</dependency>
 <<<<<<< Upstream, based on origin/master
+<<<<<<< Upstream, based on origin/master
+=======
+>>>>>>> cba9265 Atualização das configurações do projeto e do banco de dados.
   	<dependency>
   		<groupId>org.hibernate</groupId>
   		<artifactId>hibernate-core</artifactId>
@@ -74,6 +77,7 @@
   			<groupId>org.hibernate</groupId>
   			<artifactId>hibernate-core</artifactId>
   			<version>5.2.12.Final</version>
+<<<<<<< Upstream, based on origin/master
 =======
   </dependencies>
   <dependencyManagement>
@@ -103,6 +107,8 @@
   			<artifactId>selenium-java</artifactId>
   			<version>3.14.0</version>
 >>>>>>> 0d95c05 Robô de catalogação de geoinformação no SPUNet.
+=======
+>>>>>>> cba9265 Atualização das configurações do projeto e do banco de dados.
   		</dependency>
   	</dependencies>
   </dependencyManagement>
