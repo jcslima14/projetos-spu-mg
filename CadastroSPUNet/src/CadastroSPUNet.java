@@ -65,7 +65,7 @@ public class CadastroSPUNet extends JFrame {
 	private EntityManager obterConexaoEM() {
 		EntityManager conexao = null;
 		try {
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory("ImoveisSPU");
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory("CadastroSPUNet");
 			conexao = emf.createEntityManager();
 			criarTabelas(conexao);
 		} catch (Exception e1) {
