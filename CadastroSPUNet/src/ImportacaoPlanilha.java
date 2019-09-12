@@ -139,7 +139,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		File fileInput = new File(arquivo);
 		Workbook wb = WorkbookFactory.create(fileInput);
 		Sheet planilha = wb.getSheetAt(0);
-		for (int l = 1; l < planilha.getLastRowNum() - 1; l++) {
+		for (int l = 2; l < planilha.getLastRowNum() - 1; l++) {
 			Row linha = planilha.getRow(l);
 			String msgRetorno = l + ": ";
 			String situacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 0)).trim();
