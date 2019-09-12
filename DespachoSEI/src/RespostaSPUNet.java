@@ -294,7 +294,7 @@ public class RespostaSPUNet extends JInternalFrame {
 	            WebElement txtUpload = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
 	            
 	            TimeUnit.MILLISECONDS.sleep(500);
-	            
+	
 	            JavascriptExecutor js = (JavascriptExecutor) driver;
 	            js.executeScript("arguments[0].style.visibility = 'visible'; arguments[0].style.overflow = 'visible'; arguments[0].style.height = '1px'; arguments[0].style.width = '1px'; arguments[0].style.opacity = 1", txtUpload);
 	
@@ -302,25 +302,25 @@ public class RespostaSPUNet extends JInternalFrame {
 	            
 	            txtUpload.sendKeys(arquivo.getAbsolutePath());
 	            
-	            MyUtils.esperarCarregamento(100, wait5, "//p[contains(text(), 'Carregando')]");
-	            
+	            MyUtils.esperarCarregamento(2000, wait5, "//p[contains(text(), 'Carregando')]");
+
 	            // busca o botão de enviar para clicar
 	            WebElement btnEnviar = MyUtils.encontrarElemento(wait5, By.xpath("//button[text() = 'Enviar']"));
 	            passarMouse.moveToElement(btnEnviar);
 	            btnEnviar.click();
 
-	            MyUtils.esperarCarregamento(1000, wait5, "//p[contains(text(), 'Carregando')]");
+	            MyUtils.esperarCarregamento(2000, wait15, "//p[contains(text(), 'Carregando')]");
 
 	            // botao para fechar a janela após clicar em enviar
 	            WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//button[@ng-click='fechar()' and ./label[text() = 'fechar']]"));
-	            passarMouse.moveToElement(btnEnviar);
+	            passarMouse.moveToElement(btnFechar);
 	            btnFechar.click();
 
-	            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	            MyUtils.esperarCarregamento(2000, wait5, "//p[contains(text(), 'Carregando')]");
 	        } else {
 	        	MyUtils.appendLogArea(logArea, "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.");
 	        }
-			
+
 			// mover o arquivo
 	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
 			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));

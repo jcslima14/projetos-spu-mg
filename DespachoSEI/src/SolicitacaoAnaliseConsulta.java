@@ -170,6 +170,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append("	  , o.descricao as origem ");
 		sql.append("	  , tp.descricao as tipoprocesso ");
 		sql.append("	  , s.numeroprocesso ");
+		sql.append("	  , s.chavebusca ");
 		sql.append("	  , s.autor ");
 		sql.append("	  , case when datahoramovimentacao is null then 'Indeterminado' ");
 		sql.append("         	 when datahoramovimentacao is not null and (datahoraresposta is null or datahoraresposta < datahoramovimentacao) then 'Pendente de Análise' ");
@@ -276,6 +277,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Origem", 75, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Tipo Processo", 75, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Nº Processo", 150, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Chave de Busca", 150, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Autor", 250));
 			colunas.add(new MyTableColumn("Situação", 150));
 			colunas.add(new MyTableColumn("Assinante", 200));

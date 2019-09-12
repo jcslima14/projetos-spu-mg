@@ -649,8 +649,8 @@ public class DespachoServico {
 			sql.append("insert into solicitacao (origemid, tipoprocessoid, numeroprocesso, chavebusca, autor, municipioid, destinoid, cartorio, tipoimovelid, endereco, coordenada, area, numeroprocessosei, arquivosanexados) ");
 			sql.append("select " + solicitacao.getOrigem().getOrigemId());
 			sql.append("	 , " + solicitacao.getTipoProcesso().getTipoProcessoId());
-			sql.append("	 , '" + MyUtils.emptyStringIfNull(solicitacao.getNumeroProcesso()) + "'");
-			sql.append("	 , '" + solicitacao.getChaveBusca() + "'");
+			sql.append("	 , '" + solicitacao.getNumeroProcesso() + "'");
+			sql.append("	 , '" + MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()) + "'");
 			sql.append("	 , '" + solicitacao.getAutor() + "'");
 			sql.append("	 , " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
 			sql.append("	 , " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));

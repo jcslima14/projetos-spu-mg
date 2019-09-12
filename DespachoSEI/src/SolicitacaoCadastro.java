@@ -45,6 +45,8 @@ public class SolicitacaoCadastro extends CadastroController {
 	private MyLabel lblTipoProcesso = new MyLabel("Tipo Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtNumeroProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNumeroProcesso = new MyLabel("Nº do Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyTextField txtChaveBusca = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblChaveBusca = new MyLabel("Sapiens: NUP / SPUNet: Nº Atendimento") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtAutor = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblAutor = new MyLabel("Autor") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbMunicipio = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -64,7 +66,7 @@ public class SolicitacaoCadastro extends CadastroController {
 	private MyTextField txtNumeroProcessoSEI = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNumeroProcessoSEI = new MyLabel("Nº de Processo do SEI") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyCheckBox chkArquivosAnexados = new MyCheckBox("Arquivos Anexados") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 5));
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(8, 5));
 
 	private DespachoServico despachoServico;
 	private Solicitacao entidade;
@@ -102,14 +104,20 @@ public class SolicitacaoCadastro extends CadastroController {
 		pnlCamposEditaveis.add(lblSolicitacaoId);
 		pnlCamposEditaveis.add(txtSolicitacaoId);
 		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(new JPanel());
+		//
 		pnlCamposEditaveis.add(lblOrigem);
 		pnlCamposEditaveis.add(cbbOrigem);
-		//
+		pnlCamposEditaveis.add(new JPanel());
 		pnlCamposEditaveis.add(lblTipoProcesso);
 		pnlCamposEditaveis.add(cbbTipoProcesso);
-		pnlCamposEditaveis.add(new JPanel());
+		//
 		pnlCamposEditaveis.add(lblNumeroProcesso);
 		pnlCamposEditaveis.add(txtNumeroProcesso);
+		pnlCamposEditaveis.add(new JPanel());
+		pnlCamposEditaveis.add(lblChaveBusca);
+		pnlCamposEditaveis.add(txtChaveBusca);
 		//
 		pnlCamposEditaveis.add(lblAutor);
 		pnlCamposEditaveis.add(txtAutor);
@@ -198,6 +206,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		cbbOrigem.setSelectedIndex(0);
 		cbbTipoProcesso.setSelectedIndex(0);
 		txtNumeroProcesso.setText("");
+		txtChaveBusca.setText("");
 		txtAutor.setText("");
 		cbbMunicipio.setSelectedIndex(0);
 		cbbDestino.setSelectedIndex(0);
@@ -230,6 +239,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		entidade.setOrigem(origem);
 		entidade.setTipoProcesso(tipoProcesso);
 		entidade.setNumeroProcesso(txtNumeroProcesso.getText());
+		entidade.setChaveBusca(txtChaveBusca.getText());
 		entidade.setAutor(txtAutor.getText());
 		entidade.setMunicipio(municipio);
 		entidade.setDestino(destino);
@@ -285,6 +295,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		cbbOrigem.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbOrigem, entidade.getOrigem() == null ? 0 : entidade.getOrigem().getOrigemId(), null));
 		cbbTipoProcesso.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbTipoProcesso, entidade.getTipoProcesso() == null ? 0 : entidade.getTipoProcesso().getTipoProcessoId(), null));
 		txtNumeroProcesso.setText(entidade.getNumeroProcesso());
+		txtChaveBusca.setText(entidade.getChaveBusca());
 		txtAutor.setText(MyUtils.emptyStringIfNull(entidade.getAutor()));
 		cbbMunicipio.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbMunicipio, (entidade.getMunicipio() == null ? 0 : entidade.getMunicipio().getMunicipioId()), null));
 		cbbDestino.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbDestino, (entidade.getDestino() == null ? 0 : entidade.getDestino().getDestinoId()), null));
