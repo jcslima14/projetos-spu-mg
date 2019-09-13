@@ -19,6 +19,7 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -139,9 +140,11 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		File fileInput = new File(arquivo);
 		Workbook wb = WorkbookFactory.create(fileInput);
 		Sheet planilha = wb.getSheetAt(0);
+		DataFormatter df = new DataFormatter();
+
 		for (int l = 2; l < planilha.getLastRowNum() - 1; l++) {
 			Row linha = planilha.getRow(l);
-			String msgRetorno = l + ": ";
+			String msgRetorno = (l+1) + ": ";
 			String situacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 0)).trim();
 
 			if (situacao.equalsIgnoreCase("ok")) {
@@ -150,8 +153,8 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setIdentFormatoProdutoCDG(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 1)).trim());
 				geo.setIdentProdutoCDG(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 2)).trim());
 				geo.setIdentTituloProduto(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 3)).trim());
-				geo.setIdentDataCriacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 4)).trim());
-				geo.setIdentDataDigitalizacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 5)).trim());
+				geo.setIdentDataCriacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 4, df)).trim());
+				geo.setIdentDataDigitalizacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 5, df)).trim());
 				geo.setIdentResumo(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 6)).trim());
 				geo.setIdentStatus(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 7)).trim());
 				geo.setIdentInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 8)).trim());
@@ -177,17 +180,26 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setInfadicTipoArticulacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 29)).trim());
 				geo.setInfadicCamadaInf(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 30)).trim());
 
-				Geoinformacao geoCadastrada = MyUtils.entidade(cadastroServico.obterGeoinformacao(null, null, geo.getIdentTituloProduto())); 
 
-				if (geoCadastrada == null) {
-					try {
-						JPAUtils.persistir(conexao, geo);
-						msgRetorno += "título '" + geo.getIdentTituloProduto() + "' cadastrado com sucesso!";
-					} catch (Exception e) {
-						msgRetorno += "erro ao cadastrar o título '" + geo.getIdentTituloProduto() + "' (" + e.getMessage() + ")";
-					}
-				} else {
-					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' já está cadastrado na base de dados para catalogação";
+				String msgValidacao = validar(geo);
+
+				try {
+					MyUtils.obterData(geo.getIdentDataCriacao(), "dd/MM/yyyy");
+				} catch (Exception e) {
+					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' data de criação inválida: " + geo.getIdentDataCriacao();
+				}
+
+				try {
+					MyUtils.obterData(geo.getIdentDataCriacao(), "dd/MM/yyyy");
+				} catch (Exception e) {
+					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' data de digitalização inválida: " + geo.getIdentDataDigitalizacao();
+				}
+
+				try {
+					JPAUtils.persistir(conexao, geo);
+					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' cadastrado com sucesso!";
+				} catch (Exception e) {
+					msgRetorno += "erro ao cadastrar o título '" + geo.getIdentTituloProduto() + "' (" + e.getMessage() + ")";
 				}
 			} else {
 				msgRetorno += "registro não está com indicador de ok";
@@ -198,5 +210,15 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		MyUtils.appendLogArea(logArea, "------------------------------------------------------------------------------------");
 		MyUtils.appendLogArea(logArea, "Fim de leitura do arquivo!");
 		wb.close();
+	}
+	
+	private String validar(Geoinformacao geo) throws Exception {
+		Geoinformacao geoCadastrada = MyUtils.entidade(cadastroServico.obterGeoinformacao(null, null, geo.getIdentTituloProduto())); 
+		
+		if (geoCadastrada != null) {
+			return "título '" + geo.getIdentTituloProduto() + "' já está cadastrado na base de dados para catalogação";
+		}
+
+		return "";
 	}
 }

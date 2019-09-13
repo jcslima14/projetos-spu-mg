@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 public class CadastroSPUNet extends JFrame {
 
 	public CadastroSPUNet() {
-		super("Respostas do SEI");
+		super("Cadastro SPUNet");
 
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();

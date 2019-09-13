@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -18,6 +19,8 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -122,6 +125,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
         // acessando o endereço
         driver.get("http://spunet.planejamento.gov.br");
         Actions passarMouse = new Actions(driver);
+        JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(15))
@@ -187,40 +191,59 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": títullo '" + geo.getIdentTituloProduto() + "'");
 
 	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Formato do Produto de CDG']"));
-	        cbbFormatoProduto.click();;
+	        cbbFormatoProduto.click();
 
 	        WebElement optFormatoProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentFormatoProdutoCDG() + "']]"));
+	        js.executeScript("arguments[0].click();", optFormatoProduto);
+	        TimeUnit.MILLISECONDS.sleep(500);
 	        optFormatoProduto.click();
 
 	        WebElement cbbProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Produto de CDG']"));
-	        cbbProduto.click();;
+	        cbbProduto.click();
 
 	        WebElement optProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentProdutoCDG() + "']]"));
+	        js.executeScript("arguments[0].click();", optProduto);
+	        TimeUnit.MILLISECONDS.sleep(500);
 	        optProduto.click();
 
 	        WebElement optColecao = MyUtils.encontrarElemento(wait15, By.xpath("//md-radio-button[@name = 'radioTipo' and @aria-label = 'Não']"));
 	        optColecao.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement txtTitulo = MyUtils.encontrarElemento(wait15, By.xpath("//input[@name = 'dsTituloProdCartografico']"));
 	        txtTitulo.sendKeys(geo.getIdentTituloProduto());
+	        
+	        do {
+	        	TimeUnit.MILLISECONDS.sleep(500);
+	        	MyUtils.appendLogArea(logArea, "Título: '" + txtTitulo.getAttribute("value") + "'");
+	        } while (!txtTitulo.getAttribute("value").equals(geo.getIdentTituloProduto()));
 
 	        WebElement txtDataCriacao = MyUtils.encontrarElemento(wait15, By.xpath("//md-datepicker[@id = 'metadadosDtCriacao']//input"));
+	        txtDataCriacao.click();
+	        txtDataCriacao.sendKeys(Keys.ESCAPE);
 	        txtDataCriacao.sendKeys(geo.getIdentDataCriacao());
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement txtDataPublicacao = MyUtils.encontrarElemento(wait15, By.xpath("//md-datepicker[@id = 'metadadosDtPublicacao']//input"));
+	        txtDataPublicacao.click();
+	        txtDataPublicacao.sendKeys(Keys.ESCAPE);
 	        txtDataPublicacao.sendKeys(geo.getIdentDataDigitalizacao());
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement txtResumo = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@name = 'dsResumo']"));
 	        txtResumo.sendKeys(geo.getIdentResumo());
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbStatus = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@id = 'idStatusProduto']"));
-	        cbbStatus.click();;
+	        cbbStatus.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement optStatus = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentProdutoCDG() + "']]"));
 	        optStatus.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Instituição Responsável']"));
-	        cbbInstituicao.click();;
+	        cbbInstituicao.click();
 
 	        WebElement optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentInstituicao() + "']]"));
 	        optInstituicao.click();
