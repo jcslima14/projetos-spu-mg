@@ -124,40 +124,21 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, null, null, null, null, null);
-		Iterator<SolicitacaoResposta> i = respostas.iterator();
-		while (i.hasNext()) {
-			// se o nº de documento do SEI estiver preenchido, não retorna a resposta
-			SolicitacaoResposta resposta = i.next();
-			if (!MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("")) {
-				i.remove();
-			}
-		}
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, false, null, null, null, null, true, false);
 		return  respostas;
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAImprimir(Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, new TipoResposta() {{ setImprimirResposta(tipoRespostaImprimirResposta); }}, null);
-		Iterator<SolicitacaoResposta> i = respostas.iterator();
-		while (i.hasNext()) {
-			// se o nº de documento do SEI estiver vazio, não retorna a resposta
-			SolicitacaoResposta resposta = i.next();
-			boolean semProcessoOuDocumento = (MyUtils.emptyStringIfNull(resposta.getNumeroDocumentoSEI()).equals("") || MyUtils.emptyStringIfNull(resposta.getNumeroProcessoSEI()).equals(""));
-			boolean documentoNaoImpresso = MyUtils.emptyStringIfNull(resposta.getDataHoraImpressao()).equals("");
-			
-			if (semProcessoOuDocumento || (respostaImpressa && documentoNaoImpresso)) {
-				i.remove();
-			}
-		}
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, new TipoResposta() {{ setImprimirResposta(tipoRespostaImprimirResposta); }}, null, false, true);
 		return  respostas;
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId) throws Exception {
-		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null, null);
+		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null, null, false, false);
 	}
 	
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
-			TipoResposta tipoResposta, String numeroDocumentoSEI) throws Exception {
+			TipoResposta tipoResposta, String numeroDocumentoSEI, boolean pendentesGeracao, boolean pendentesImpressao) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -192,6 +173,14 @@ public class DespachoServico {
 			if (numeroDocumentoSEI != null) {
 				sql.append(" and sr.numerodocumentosei = '" + numeroDocumentoSEI + "' ");
 			}
+			if (pendentesGeracao) {
+				sql.append(" and coalesce(sr.numerodocumentosei, '') = '' ");
+			}
+			if (pendentesImpressao) {
+				sql.append(" and coalesce(sr.numerodocumentosei, '') <> '' ");
+				sql.append(" and coalesce(sr.numeroprocessosei, '') <> '' ");
+				sql.append(" and datahoraresposta is not null ");
+			}
 		}
 
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
@@ -212,7 +201,7 @@ public class DespachoServico {
 					rs.getBoolean("respostanoblocoassinatura")
 					));
 		}
-
+		
 		return retorno;
 	}
 
@@ -777,7 +766,7 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoRespostaPendente(Solicitacao solicitacao) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, null);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, null, false, false);
 		Iterator<SolicitacaoResposta> i = respostas.iterator();
 
 		while (i.hasNext()) {
