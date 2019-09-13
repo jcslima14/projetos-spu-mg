@@ -135,12 +135,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(30))
+        		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
 
-        Wait<WebDriver> wait3 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(3))
+        // este wait não deve ter seu tempo alterado, pois é usado apenas para buscar a variante <autor> no frame correto; se for aumentada, pode ter impacto negativo em função da quantidade de frames que pode conter um documento
+        Wait<WebDriver> wait2 = new FluentWait<WebDriver>(driver)
+        		.withTimeout(Duration.ofSeconds(2))
         		.pollingEvery(Duration.ofSeconds(1))
         		.ignoring(NoSuchElementException.class);
 
@@ -235,6 +236,11 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				WebElement btnConfirmarDados = MyUtils.encontrarElemento(wait, By.xpath("//button[@id = 'btnSalvar']"));
 				btnConfirmarDados.click();
 				
+				// esperar abrir a janela popup
+				do {
+					TimeUnit.SECONDS.sleep(1);
+				} while (driver.getWindowHandles().size() == 1);
+				
 				// abriu janela para editar o documento, então navega até a janela
 				for (String tituloJanela : driver.getWindowHandles()) {
 					driver.switchTo().window(tituloJanela);
@@ -252,18 +258,18 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					frmIFrames = MyUtils.encontrarElementos(wait, By.tagName("iframe"));
 				} while (--espera >= 0 && (frmIFrames == null || frmIFrames.size() <= 1));
 	
-				WebElement welNumeroProcesso = null;
+				WebElement welAutor = null;
 				
 				for (WebElement frmIFrame : frmIFrames) {
 					driver.switchTo().frame(frmIFrame);
-					
+
 					try {
-						welNumeroProcesso = MyUtils.encontrarElemento(wait3, By.xpath("//*[contains(text(), '<autor>')]"));
+						welAutor = MyUtils.encontrarElemento(wait2, By.xpath("//*[contains(text(), '<autor>')]"));
 					} catch (Exception e) {
-						welNumeroProcesso = null;
+						welAutor = null;
 					}
 	
-					if (welNumeroProcesso != null) {
+					if (welAutor != null) {
 						break;
 					} else {
 						driver.switchTo().defaultContent();
@@ -271,7 +277,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				}
 				
 				// clica no primeiro paragrafo encontrado no iframe
-				welNumeroProcesso.click();
+				welAutor.click();
 				
 				// volta ao conteúdo default
 				driver.switchTo().defaultContent();

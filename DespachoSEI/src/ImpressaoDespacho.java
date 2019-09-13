@@ -146,12 +146,12 @@ public class ImpressaoDespacho extends JInternalFrame {
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(15))
+        		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
 
         Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
+        		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
 
