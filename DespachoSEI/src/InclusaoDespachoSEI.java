@@ -278,6 +278,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				// clica no primeiro paragrafo encontrado no iframe
 				welAutor.click();
+				TimeUnit.SECONDS.sleep(1);
 				
 				// volta ao conteúdo default
 				driver.switchTo().defaultContent();
@@ -314,7 +315,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					btnSubstituirTudo.click();
 					
 					// clica em ok na mensagem apresentada
-					// appendLogArea(logArea, "Resultado da substituição: " + driver.switchTo().alert().getText());
+					// MyUtils.appendLogArea(logArea, "Resultado da substituição de '" + chave + "' por '" + textoSubstituto + "': " + driver.switchTo().alert().getText());
 					driver.switchTo().alert().accept();
 				}
 				
@@ -322,9 +323,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				WebElement btnFechar = MyUtils.encontrarElemento(wait, By.xpath("//span[text() = 'Fechar']"));
 				btnFechar.click();
 	
-				// clica no botão salvar
-				WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar')]"));
+				// procura o botão salvar, conferindo que ele esteja habilitado
+				WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
 				btnSalvar.click();
+				
+				TimeUnit.MILLISECONDS.sleep(500);
+				
+				// aguarda até que o botão de salvar esteja novamente desabilitado para fechar a janela
+				MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and @aria-disabled]"));
 				
 				driver.close();
 				driver.switchTo().window(janelaPrincipal);
