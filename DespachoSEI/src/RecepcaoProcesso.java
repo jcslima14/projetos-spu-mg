@@ -183,12 +183,12 @@ public class RecepcaoProcesso extends JInternalFrame {
         Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait30 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(30))
+        		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
 
         Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
+        		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(1))
         		.ignoring(NoSuchElementException.class);
 
