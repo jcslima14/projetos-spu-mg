@@ -190,21 +190,20 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": títullo '" + geo.getIdentTituloProduto() + "'");
 
-	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Formato do Produto de CDG']"));
+	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.name("idProdutoCdg"));
 	        cbbFormatoProduto.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement optFormatoProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentFormatoProdutoCDG() + "']]"));
 	        js.executeScript("arguments[0].click();", optFormatoProduto);
 	        TimeUnit.MILLISECONDS.sleep(500);
-	        optFormatoProduto.click();
 
-	        WebElement cbbProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Produto de CDG']"));
+	        WebElement cbbProduto = MyUtils.encontrarElemento(wait15, By.name("idTipoProduto"));
 	        cbbProduto.click();
 
 	        WebElement optProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentProdutoCDG() + "']]"));
 	        js.executeScript("arguments[0].click();", optProduto);
 	        TimeUnit.MILLISECONDS.sleep(500);
-	        optProduto.click();
 
 	        WebElement optColecao = MyUtils.encontrarElemento(wait15, By.xpath("//md-radio-button[@name = 'radioTipo' and @aria-label = 'Não']"));
 	        optColecao.click();
@@ -215,7 +214,6 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        
 	        do {
 	        	TimeUnit.MILLISECONDS.sleep(500);
-	        	MyUtils.appendLogArea(logArea, "Título: '" + txtTitulo.getAttribute("value") + "'");
 	        } while (!txtTitulo.getAttribute("value").equals(geo.getIdentTituloProduto()));
 
 	        WebElement txtDataCriacao = MyUtils.encontrarElemento(wait15, By.xpath("//md-datepicker[@id = 'metadadosDtCriacao']//input"));
@@ -238,17 +236,58 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        cbbStatus.click();
 	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        WebElement optStatus = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentProdutoCDG() + "']]"));
-	        optStatus.click();
+	        WebElement optStatus = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentStatus() + "']]"));
+	        js.executeScript("arguments[0].click();", optStatus);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Instituição Responsável']"));
 	        cbbInstituicao.click();
 
 	        WebElement optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentInstituicao() + "']]"));
-	        optInstituicao.click();
+	        js.executeScript("arguments[0].click();", optInstituicao);
+	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	        
+	        WebElement btnContinuar = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetIdentificacaoForm']//button[text() = 'CONTINUAR/GRAVAR']"));
+	        btnContinuar.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        // seção de sistema de referência
+	        WebElement cbbSistemaReferencia = MyUtils.encontrarElemento(wait15, By.name("coSistemaReferencia"));
+	        cbbSistemaReferencia.click();
+
+	        WebElement optSistemaReferencia = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getSisrefDatum() + "']]"));
+	        js.executeScript("arguments[0].click();", optSistemaReferencia);
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        if (geo.getSisrefDatum().equalsIgnoreCase("sem datum")) {
+		        WebElement cbbProjecao = MyUtils.encontrarElemento(wait15, By.name("coProjecao"));
+		        cbbProjecao.click();
+
+		        WebElement optProjecao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getSisrefProjecao() + "']]"));
+		        js.executeScript("arguments[0].click();", optProjecao);
+		        TimeUnit.MILLISECONDS.sleep(500);
+
+		        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	        }
+
+	        WebElement txtObservacao = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dssisrefobservacao']"));
+	        txtObservacao.sendKeys(geo.getSisrefObservacao());
+	        
+	        do {
+	        	TimeUnit.MILLISECONDS.sleep(500);
+	        } while (!txtObservacao.getAttribute("value").equals(geo.getSisrefObservacao()));
+	        
+	        btnContinuar = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetSistemaReferenciaForm']//button[text() = 'CONTINUAR/GRAVAR']"));
+	        btnContinuar.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");

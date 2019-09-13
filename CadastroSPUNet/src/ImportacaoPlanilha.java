@@ -183,23 +183,15 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 				String msgValidacao = validar(geo);
 
-				try {
-					MyUtils.obterData(geo.getIdentDataCriacao(), "dd/MM/yyyy");
-				} catch (Exception e) {
-					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' data de criação inválida: " + geo.getIdentDataCriacao();
-				}
-
-				try {
-					MyUtils.obterData(geo.getIdentDataCriacao(), "dd/MM/yyyy");
-				} catch (Exception e) {
-					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' data de digitalização inválida: " + geo.getIdentDataDigitalizacao();
-				}
-
-				try {
-					JPAUtils.persistir(conexao, geo);
-					msgRetorno += "título '" + geo.getIdentTituloProduto() + "' cadastrado com sucesso!";
-				} catch (Exception e) {
-					msgRetorno += "erro ao cadastrar o título '" + geo.getIdentTituloProduto() + "' (" + e.getMessage() + ")";
+				if (msgValidacao.equals("")) {
+					try {
+						JPAUtils.persistir(conexao, geo);
+						msgRetorno += "título '" + geo.getIdentTituloProduto() + "' cadastrado com sucesso!";
+					} catch (Exception e) {
+						msgRetorno += "erro ao cadastrar o título '" + geo.getIdentTituloProduto() + "' (" + e.getMessage() + ")";
+					}
+				} else {
+					msgRetorno += msgValidacao;
 				}
 			} else {
 				msgRetorno += "registro não está com indicador de ok";
@@ -217,6 +209,18 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		
 		if (geoCadastrada != null) {
 			return "título '" + geo.getIdentTituloProduto() + "' já está cadastrado na base de dados para catalogação";
+		}
+
+		try {
+			MyUtils.obterData(geo.getIdentDataCriacao(), "dd/MM/yyyy");
+		} catch (Exception e) {
+			return "título '" + geo.getIdentTituloProduto() + "' data de criação inválida: " + geo.getIdentDataCriacao();
+		}
+
+		try {
+			MyUtils.obterData(geo.getIdentDataDigitalizacao(), "dd/MM/yyyy");
+		} catch (Exception e) {
+			return "título '" + geo.getIdentTituloProduto() + "' data de digitalização inválida: " + geo.getIdentDataDigitalizacao();
 		}
 
 		return "";
