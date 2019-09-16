@@ -182,7 +182,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replaceAll("\\D+", "").trim();
-			String chaveBusca = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim();
+			String chaveBusca = (tipoProcesso.getTipoProcessoId().equals(TipoProcesso.FISICO_ID) ? "" : MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim());
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));

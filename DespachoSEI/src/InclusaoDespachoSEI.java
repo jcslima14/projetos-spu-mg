@@ -118,9 +118,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	}
 
 	private void gerarRespostaSEI(String usuario, String senha) throws Exception {
-		String pastaProcessosIndividuais = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS));
-        if (pastaProcessosIndividuais.equals("") || !MyUtils.arquivoExiste(pastaProcessosIndividuais)) {
-        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos para serem anexados aos processos individuais não está configurada ou não existe: " + pastaProcessosIndividuais + ". \nConfigure o parâmetro " + Parametro.PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS + " com o caminho para a pasta onde os anexos deve estar gravados.");
+		String msgVldPastaAssinante = validarPastaProcessoIndividual();
+        if (!msgVldPastaAssinante.equals("")) {
+        	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
         	return;
         }
 
@@ -183,14 +183,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				}
 
 				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
-					List<File> anexos = obterArquivos(pastaProcessosIndividuais, respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
+					List<File> anexos = obterArquivos(respostaAGerar.getAssinante().getPastaArquivoProcesso(), respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
 					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
 						if (anexos == null || anexos.size() == 0) {
 							MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
 							continue;
 						}
 	
-						gerarProcessoIndividual(driver, wait, respostaAGerar, pastaProcessosIndividuais);
+						gerarProcessoIndividual(driver, wait, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
 					}
 	
 					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
@@ -581,5 +581,15 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		};
 		File diretorio = new File(pasta);
 		return Arrays.asList(diretorio.listFiles(filtro));
+	}
+	
+	private String validarPastaProcessoIndividual() throws Exception {
+		List<Assinante> assinantes = despachoServico.obterAssinante(null, null, false, true);
+		for (Assinante assinante : assinantes) {
+			if (assinante.getPastaArquivoProcesso().equals("") || !MyUtils.arquivoExiste(assinante.getPastaArquivoProcesso())) {
+				return "A pasta de arquivos de processos individuais para o assinante " + assinante.getNome() + " não existe ou não está configurada: " + assinante.getPastaArquivoProcesso() + "\nConfigure a pasta para o assinante e tente novamente.";
+			}
+		}
+		return "";
 	}
 }

@@ -365,7 +365,7 @@ public class SolicitacaoCadastro extends CadastroController {
 			this.despachoServico = despachoServico;
 			this.conexao = conexao;
 
-			despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Selecione o assinante)", null, null, null, null, null, null)); }}, false, true); 
+			despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Selecione o assinante)")); }}, false, true); 
 
 			pnlCamposEditaveis.add(lblSolicitacaoRespostaId);
 			pnlCamposEditaveis.add(txtSolicitacaoRespostaId);

@@ -301,7 +301,8 @@ public class DespachoSEI extends JFrame {
 						 "  setor varchar NOT NULL," + 
 						 "  superior boolean NOT NULL," + 
 						 "  numeroprocessosei varchar NOT NULL," + 
-						 "  blocoassinatura varchar NOT NULL" + 
+						 "  blocoassinatura varchar NOT NULL," + 
+						 "  pastaarquivoprocesso varchar NOT NULL" + 
 						 ")"; 
 	
 			MyUtils.execute(conexao, sql);

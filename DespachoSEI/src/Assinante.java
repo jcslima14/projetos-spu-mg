@@ -17,6 +17,8 @@ public class Assinante implements ItemComboBox {
 
 	private String blocoAssinatura;
 
+	private String pastaArquivoProcesso;
+
 	public Assinante(Integer assinanteId) {
 		this.assinanteId = assinanteId;
 	}
@@ -26,7 +28,7 @@ public class Assinante implements ItemComboBox {
 		this.nome = nome;
 	}
 
-	public Assinante(Integer assinanteId, String nome, Boolean ativo, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura) {
+	public Assinante(Integer assinanteId, String nome, Boolean ativo, String cargo, String setor, Boolean superior, String numeroProcesso, String blocoAssinatura, String pastaArquivoProcesso) {
 		this.assinanteId = assinanteId;
 		this.nome = nome;
 		this.ativo = ativo;
@@ -35,6 +37,7 @@ public class Assinante implements ItemComboBox {
 		this.superior = superior;
 		this.numeroProcesso = numeroProcesso;
 		this.blocoAssinatura = blocoAssinatura;
+		this.pastaArquivoProcesso = pastaArquivoProcesso;
 	}
 	
 	public Integer getAssinanteId() {
@@ -99,6 +102,14 @@ public class Assinante implements ItemComboBox {
 
 	public void setBlocoAssinatura(String blocoAssinatura) {
 		this.blocoAssinatura = blocoAssinatura;
+	}
+
+	public String getPastaArquivoProcesso() {
+		return pastaArquivoProcesso;
+	}
+
+	public void setPastaArquivoProcesso(String pastaArquivoProcesso) {
+		this.pastaArquivoProcesso = pastaArquivoProcesso;
 	}
 
 	@Override
