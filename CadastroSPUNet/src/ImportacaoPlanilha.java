@@ -163,7 +163,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setSisrefProjecao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 11)).trim());
 				geo.setSisrefObservacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 12)).trim());
 				geo.setIdentcdgTipoReprEspacial(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 13)).trim());
-				geo.setIdentcdgEscala(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 14)).trim());
+				geo.setIdentcdgEscala(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 14, df)).trim());
 				geo.setIdentcdgIdioma(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 16)).trim());
 				geo.setIdentcdgCategoria(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 17)).trim());
 				geo.setIdentcdgUF(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 18)).trim());
