@@ -265,7 +265,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        if (geo.getSisrefDatum().equalsIgnoreCase("sem datum")) {
+	        if (!geo.getSisrefDatum().equalsIgnoreCase("sem datum")) {
 		        WebElement cbbProjecao = MyUtils.encontrarElemento(wait15, By.name("coProjecao"));
 		        cbbProjecao.click();
 
@@ -288,6 +288,18 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	        
+	        // seção de identificação do CDG
+	        WebElement cbbTipoRepresentacaoEspacial = MyUtils.encontrarElemento(wait15, By.name("coRepresentacaoEspacial"));
+	        cbbTipoRepresentacaoEspacial.click();
+
+	        WebElement optTipoRepresentacaoEspacial = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgTipoReprEspacial() + "']]"));
+	        js.executeScript("arguments[0].click();", optTipoRepresentacaoEspacial);
+	        TimeUnit.MILLISECONDS.sleep(500);
+	        
+	        WebElement optEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-radio-group[@name = 'radioDAU']/md-radio-button[@aria-label = 'Escala']"));
+	        optEscala.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
