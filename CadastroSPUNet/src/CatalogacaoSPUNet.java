@@ -190,6 +190,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": títullo '" + geo.getIdentTituloProduto() + "'");
 
+	        // seção de identificação
 	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.name("idProdutoCdg"));
 	        cbbFormatoProduto.click();
 	        TimeUnit.MILLISECONDS.sleep(500);
@@ -299,6 +300,43 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        
 	        WebElement optEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-radio-group[@name = 'radioDAU']/md-radio-button[@aria-label = 'Escala']"));
 	        optEscala.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']//md-select[@name = 'vlEscala']"));
+	        cbbListaEscala.click();
+
+	        WebElement optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgEscala() + "']]"));
+	        js.executeScript("arguments[0].click();", optListaEscala);
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        WebElement cbbIdioma = MyUtils.encontrarElemento(wait15, By.name("coIdiomaIdCdg"));
+	        cbbIdioma.click();
+
+	        WebElement optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgIdioma() + "']]"));
+	        js.executeScript("arguments[0].click();", optIdioma);
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        WebElement cbbCategoriaTematica = MyUtils.encontrarElemento(wait15, By.name("coCategoriaTematica"));
+	        cbbCategoriaTematica.click();
+
+	        WebElement optCategoriaTematica = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgCategoria() + "']]"));
+	        js.executeScript("arguments[0].click();", optCategoriaTematica);
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        WebElement cbbUF = MyUtils.encontrarElemento(wait15, By.name("geocodigoUf"));
+	        cbbUF.click();
+
+	        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
+	        js.executeScript("arguments[0].click();", optUF);
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        WebElement cbbMunicipio = MyUtils.encontrarElemento(wait15, By.name("geocodigoMunicipioIdentificacaoCdg"));
+	        cbbMunicipio.click();
+
+	        WebElement optMunicipio = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgMunicipio() + "']]"));
+	        js.executeScript("arguments[0].click();", optMunicipio);
 	        TimeUnit.MILLISECONDS.sleep(500);
         }
 
