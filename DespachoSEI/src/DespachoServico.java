@@ -508,10 +508,12 @@ public class DespachoServico {
 			}
 		}
 
+		sql.append(" order by nome");
+		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocessosei"), rs.getString("blocoassinatura")));
+			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocessosei"), rs.getString("blocoassinatura"), rs.getString("pastaarquivoprocesso")));
 		}
 		
 		return retorno;

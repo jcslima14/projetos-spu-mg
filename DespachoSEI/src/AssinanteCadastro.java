@@ -38,7 +38,9 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyLabel lblNumeroProcesso = new MyLabel("Nº Processo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtBlocoAssinatura = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblBlocoAssinatura = new MyLabel("Bloco de Assinatura") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 2));
+	private MyTextField txtPastaArquivoProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyLabel lblPastaArquivoProcesso = new MyLabel("Pasta de arquivos para processos individuais") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(8, 2));
 	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão") {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
@@ -63,6 +65,8 @@ public class AssinanteCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtNumeroProcesso);
 		pnlCamposEditaveis.add(lblBlocoAssinatura);
 		pnlCamposEditaveis.add(txtBlocoAssinatura);
+		pnlCamposEditaveis.add(lblPastaArquivoProcesso);
+		pnlCamposEditaveis.add(txtPastaArquivoProcesso);
 		
 		btnTornarPadrao.addActionListener(new ActionListener() {
 			@Override
@@ -86,6 +90,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 		chkAtivo.setSelected(true);
 		txtNumeroProcesso.setText("");
 		txtBlocoAssinatura.setText("");
+		txtPastaArquivoProcesso.setText("");
 	}
 
 	public void salvarRegistro() throws Exception {
@@ -99,16 +104,18 @@ public class AssinanteCadastro extends CadastroTemplate {
 				+  "	 , ativo = " + (chkAtivo.isSelected() ? "true" : "false") 
 				+  "     , numeroprocessosei = '" + txtNumeroProcesso.getText() + "' "
 				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
+				+  "     , pastaarquivoprocesso = '" + txtPastaArquivoProcesso.getText() + "' "
 				+  " where assinanteid = " + txtAssinanteId.getText();
 		} else {
-			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocessosei, blocoassinatura) values ("
+			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocessosei, blocoassinatura, pastaarquivoprocesso) values ("
 				+  "'" + txtNome.getText().trim() + "', "
 				+  "'" + txtCargo.getText().trim() + "', "
 				+  "'" + txtSetor.getText().trim() + "', "
 				+  (chkSuperior.isSelected() ? "true" : "false") + ", "
 				+  (chkAtivo.isSelected() ? "true" : "false") + ", "
 				+  "'" + txtNumeroProcesso.getText() + "', "
-				+  "'" + txtBlocoAssinatura.getText() + "') ";
+				+  "'" + txtBlocoAssinatura.getText() + "', "
+				+  "'" + txtPastaArquivoProcesso.getText() + "') ";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -132,6 +139,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 			chkAtivo.setSelected(entidade.getAtivo());
 			txtNumeroProcesso.setText(entidade.getNumeroProcesso());
 			txtBlocoAssinatura.setText(entidade.getBlocoAssinatura());
+			txtPastaArquivoProcesso.setText(entidade.getPastaArquivoProcesso());
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao obter informações do Assinante para edição: \n\n" + e.getMessage());
 			e.printStackTrace();
@@ -139,7 +147,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' end as ativo, numeroprocessosei, blocoassinatura from assinante");
+		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' end as ativo, numeroprocessosei, blocoassinatura, pastaarquivoprocesso from assinante");
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -157,6 +165,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("Ativo?", 80, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Nº Processo", 150, true, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Bloco Assinatura", 100, true, JLabel.CENTER));
+			colunas.add(new MyTableColumn("Pasta arq. proc. indiv.", 200, true));
 		}
 		return this.colunas;
 	}
