@@ -443,6 +443,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 			Select cbxTipoDocumento = new Select(MyUtils.encontrarElemento(wait, By.id("selSerie")));
 			cbxTipoDocumento.selectByVisibleText("Processo");
+			TimeUnit.MILLISECONDS.sleep(800);
 
 			WebElement txtDataDocumento = MyUtils.encontrarElemento(wait, By.id("txtDataElaboracao"));
 			txtDataDocumento.sendKeys(MyUtils.formatarData(new Date(), "dd/MM/yyyy"));
