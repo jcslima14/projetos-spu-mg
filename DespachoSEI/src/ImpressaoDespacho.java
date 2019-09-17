@@ -31,6 +31,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
@@ -144,6 +145,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
+        Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(60))
@@ -232,6 +234,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 					String janelaAtual = driver.getWindowHandle();
 	
 					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
+					passarMouse.moveToElement(lnkDocumento).perform();;
+					TimeUnit.MILLISECONDS.sleep(100);
 					lnkDocumento.click();
 					
 					for (String janelaAberta : driver.getWindowHandles()) {
