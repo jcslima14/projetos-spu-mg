@@ -1,12 +1,39 @@
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "geoinformacao")
 public class Geoinformacao {
+	@Transient
+	@SuppressWarnings("serial")
+	private Map<String, String> ajusteDeEscala = new LinkedHashMap<String, String>() {{ 
+		put("1:50", "1:500"); 
+		put("1:75", "1:500"); 
+		put("1:100", "1:500"); 
+		put("1:125", "1:500"); 
+		put("1:150", "1:500"); 
+		put("1:200", "1:500"); 
+		put("1:250", "1:500"); 
+		put("1:300", "1:500"); 
+		put("1:350", "1:500"); 
+		put("1:400", "1:500"); 
+		put("1:700", "1:500"); 
+		put("1:750", "1:1000"); 
+		put("1:1250", "1:1000"); 
+		put("1:1500", "1:2000"); 
+		put("1:2100", "1:2000"); 
+		put("1:2225", "1:2000"); 
+		put("1:3000", "1:2500"); 
+		put("1:4000", "1:5000"); 
+	}};
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer geoinformacaoId;
@@ -317,5 +344,27 @@ public class Geoinformacao {
 
 	public void setInfadicCamadaInf(String infadicCamadaInf) {
 		this.infadicCamadaInf = infadicCamadaInf;
+	}
+
+	@Transient
+	public String escalaAjustada() {
+		String escalaAjustada = ajusteDeEscala.get(getIdentcdgEscala());
+		if (escalaAjustada == null) escalaAjustada = getIdentcdgEscala();
+		escalaAjustada = escalaAjustada.replace(":", ": ");
+		return escalaAjustada;
+	}
+
+	@Transient
+	public String observacaoEscala() {
+		if (getIdentcdgEscala().equals(escalaAjustada().replace(": ", ":"))) {
+			return "";
+		} else {
+			return "Escala: " + getIdentcdgEscala();
+		}
+	}
+	
+	@Transient
+	public String qualidadeLinhagemAjustada() {
+        return (getQualidadeLinhagem().trim().equals("") ? "Não informado" : getQualidadeLinhagem());
 	}
 }
