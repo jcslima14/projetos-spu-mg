@@ -179,7 +179,9 @@ public class CatalogacaoSPUNet extends JInternalFrame {
         WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
         passarMouse.moveToElement(btnTriagem).perform();
         waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
-        btnTriagem.click();
+        js.executeScript("arguments[0].click();", btnTriagem);
+        TimeUnit.MILLISECONDS.sleep(500);
+        // btnTriagem.click();
 
         List<Geoinformacao> geos = cadastroServico.obterGeoinformacao(null, false, null);
         int cont = 0;
@@ -192,6 +194,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        // seção de identificação
 	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.name("idProdutoCdg"));
+	        cbbFormatoProduto.sendKeys(Keys.ESCAPE);
 	        cbbFormatoProduto.click();
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -304,12 +307,18 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']//md-select[@name = 'vlEscala']"));
 	        passarMouse.moveToElement(cbbListaEscala).perform();
-	        cbbListaEscala.click();
+	        js.executeScript("arguments[0].click();", cbbListaEscala);
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgEscala() + "']]"));
 	        js.executeScript("arguments[0].click();", optListaEscala);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
+	        // optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgEscala() + "']]"));
+	        optListaEscala.sendKeys(Keys.ESCAPE);
+
+	        TimeUnit.MILLISECONDS.sleep(500);
+	        
 	        WebElement cbbIdioma = MyUtils.encontrarElemento(wait15, By.name("coIdiomaIdCdg"));
 	        passarMouse.moveToElement(cbbIdioma).perform();
 	        cbbIdioma.click();
@@ -334,8 +343,8 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        txtDataPublicacao.sendKeys(Keys.ESCAPE);
-	        TimeUnit.MILLISECONDS.sleep(1000);
+	        optUF.sendKeys(Keys.ESCAPE);
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbMunicipio = MyUtils.encontrarElemento(wait15, By.name("geocodigoMunicipioIdentificacaoCdg"));
 	        cbbMunicipio.click();
@@ -344,8 +353,8 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        js.executeScript("arguments[0].click();", optMunicipio);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        txtDataPublicacao.sendKeys(Keys.ESCAPE);
-	        TimeUnit.MILLISECONDS.sleep(1000);
+	        optMunicipio.sendKeys(Keys.ESCAPE);
+	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbDatum = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@name = 'coDatum']"));
 	        cbbDatum.click();
