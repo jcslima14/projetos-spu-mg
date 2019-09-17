@@ -187,6 +187,20 @@ public class ImpressaoDespacho extends JInternalFrame {
 			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait5, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
 			btnGerarPDF.click();
 
+			// encontra a quantidade de registros aptos a serem impressos
+			String quantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
+			quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
+			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
+
+			do {
+				List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]"));
+				if (linhasAptas != null && linhasAptas.size() == Integer.parseInt(quantidadeRegistros)) {
+					break;
+				} else {
+					TimeUnit.SECONDS.sleep(1);
+				}
+			} while (true);
+
 			// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
 			WebElement btnDesmarcarTudo = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Selecionar Tudo']"));
 			btnDesmarcarTudo.click();
