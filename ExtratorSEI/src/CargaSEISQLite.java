@@ -175,7 +175,6 @@ public class CargaSEISQLite extends JInternalFrame {
 		this.show();
 	}
 
-
 	private String validaDatas(String dataInicial, String dataFinal) {
 		if (dataInicial == null || dataInicial.trim().equals("")) return "A data inicial deve ser informada!";
 		if (dataFinal == null || dataFinal.trim().equals("")) return "A data final deve ser informada!";

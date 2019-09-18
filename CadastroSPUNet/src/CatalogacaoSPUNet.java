@@ -6,9 +6,11 @@ import java.io.StringWriter;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -18,14 +20,20 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
@@ -37,6 +45,8 @@ import framework.SpringUtilities;
 @SuppressWarnings("serial")
 public class CatalogacaoSPUNet extends JInternalFrame {
 
+	private JComboBox<String> cbbNavegador = new JComboBox<String>();
+	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private SPUNetServico cadastroServico;
 
 	public CatalogacaoSPUNet(String tituloJanela, EntityManager conexao) {
@@ -61,6 +71,9 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		painelDados.setLayout(new SpringLayout());
 		JButton botaoProcessar = new JButton("Processar"); 
 
+		cbbNavegador.addItem("Chrome");
+		cbbNavegador.addItem("Firefox");
+
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
 		
 		if (espacoEmDisco != null) {
@@ -71,11 +84,13 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
 		painelDados.add(txtSenha);
+		painelDados.add(lblNavegador);
+		painelDados.add(cbbNavegador);
 		painelDados.add(botaoProcessar); 
 		painelDados.add(new JPanel());
 
 		SpringUtilities.makeGrid(painelDados,
-                espacoEmDisco == null ? 3 : 4, 2, //rows, cols
+                espacoEmDisco == null ? 4 : 5, 2, //rows, cols
                 6, 6, //initX, initY
                 6, 6); //xPad, yPad
 
@@ -119,8 +134,16 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-        driver = new ChromeDriver();
+		if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("chrome")) {
+			ChromeOptions opcoes = new ChromeOptions();
+			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+	        driver = new ChromeDriver(opcoes);
+		} else {
+			FirefoxOptions opcoes = new FirefoxOptions();
+			opcoes.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
+			driver = new FirefoxDriver(opcoes);
+		}
 
         // acessando o endereço
         driver.get("http://spunet.planejamento.gov.br");
@@ -140,18 +163,22 @@ public class CatalogacaoSPUNet extends JInternalFrame {
         WebDriverWait waitUntil = new WebDriverWait(driver, 10);
 
         // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.id("username"));
+        WebElement weUsuario = MyUtils.encontrarElemento(wait15, By.id("username"));
         waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
         weUsuario.sendKeys(usuario);
 
         // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.id("password"));
+        WebElement weSenha = MyUtils.encontrarElemento(wait15, By.id("password"));
         weSenha.sendKeys(senha);
 
         // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.xpath("//button[contains(text(), 'Acessar')]"));
+        WebElement botaoAcessar = MyUtils.encontrarElemento(wait15, By.xpath("//button[contains(text(), 'Acessar')]"));
         botaoAcessar.click();
 
+        if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
+        	acceptSecurityAlert(driver);
+        }
+        
         // verifica se foi aberto popup indesejado (fechar o popup)
         String primeiraJanela = "";
         for (String tituloJanela : driver.getWindowHandles()) {
@@ -187,6 +214,11 @@ public class CatalogacaoSPUNet extends JInternalFrame {
             js.executeScript("arguments[0].click();", btnCadastrar);
             TimeUnit.MILLISECONDS.sleep(500);
 
+            try {
+            	btnCadastrar.sendKeys(Keys.ESCAPE);
+            } catch (Exception e) {
+            }
+            
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
 	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": título '" + geo.getIdentTituloProduto() + "'");
@@ -255,6 +287,11 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        try {
+	        	optInstituicao.sendKeys(Keys.ESCAPE);
+	        } catch (Exception e) {
+	        }
 	        
 	        WebElement btnContinuar = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetIdentificacaoForm']//button[text() = 'CONTINUAR/GRAVAR']"));
 	        btnContinuar.click();
@@ -491,5 +528,23 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
         driver.quit();
+	}
+
+	private void acceptSecurityAlert(WebDriver driver) {
+	    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(30))          
+	                                                            .pollingEvery(Duration.ofSeconds(3))          
+	                                                            .ignoring(NoSuchElementException.class);    
+	    Alert alert = wait.until(new Function<WebDriver, Alert>() {       
+
+	        public Alert apply(WebDriver driver) {
+	            try {
+	                return driver.switchTo().alert();
+	            } catch(NoAlertPresentException e) {
+	                return null;
+	            }
+	        }  
+	    });
+
+	    alert.accept();
 	}
 }
