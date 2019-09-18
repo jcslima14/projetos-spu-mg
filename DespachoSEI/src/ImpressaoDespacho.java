@@ -153,8 +153,13 @@ public class ImpressaoDespacho extends JInternalFrame {
         		.ignoring(NoSuchElementException.class);
 
         Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
+        		.withTimeout(Duration.ofSeconds(5))
+        		.pollingEvery(Duration.ofSeconds(1))
+        		.ignoring(NoSuchElementException.class);
+
+        Wait<WebDriver> wait3 = new FluentWait<WebDriver>(driver)
+        		.withTimeout(Duration.ofSeconds(3))
+        		.pollingEvery(Duration.ofSeconds(1))
         		.ignoring(NoSuchElementException.class);
 
         // Find the text input element by its name
@@ -286,6 +291,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 		Map<String, List<SolicitacaoResposta>> respostasARetirar = obterRespostasAProcessar(2, assinanteId);
 		for (String blocoAssinatura : respostasARetirar.keySet()) {
+			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
+			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + respostasRetiradas.size() + " documentos do bloco de assinatura " + blocoAssinatura);
+
 			driver.switchTo().defaultContent();
 			WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
 			btnControleProcessos.click();
@@ -294,7 +302,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			btnBlocosAssinatura.click();
 
 			WebElement lnkBlocoAssinatura = null;
-			
+
 			try {
 				lnkBlocoAssinatura = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Blocos.']/tbody/tr/td/a[text() = '" + blocoAssinatura + "']"));
 			} catch (Exception e) {
@@ -307,20 +315,28 @@ public class ImpressaoDespacho extends JInternalFrame {
 			}
 
 			lnkBlocoAssinatura.click();
-			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
 
+			// aguarda a carga de todos os registros
+			String quantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/caption")).getText();
+			quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
+			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
+
+			// aguarda encontrar a linha que contém o sequencial igual à quantidade de registros lida acima
+			MyUtils.encontrarElemento(wait, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr/td[2][text() = '" + quantidadeRegistros + "']"));
+			
 			for (SolicitacaoResposta respostaARetirar : respostasARetirar.get(blocoAssinatura)) {
 				WebElement chkSelecaoLinha = null;
 				try {
-					chkSelecaoLinha = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
+					chkSelecaoLinha = MyUtils.encontrarElemento(wait3, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
 				} catch (Exception e) {
-					e.printStackTrace();
 				}
 
 				if (chkSelecaoLinha != null) {
 					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 					chkSelecaoLinha.click();
 					respostasRetiradas.add(respostaARetirar);
+				} else {
+					MyUtils.appendLogArea(logArea, "O documento " + respostaARetirar.getNumeroDocumentoSEI() + " não foi encontrado no bloco de assinatura.");
 				}
 			}
 			
