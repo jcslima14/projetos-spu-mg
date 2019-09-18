@@ -236,7 +236,7 @@ public class RespostaSPUNet extends JInternalFrame {
 	        	continue;
 	        } else {
 	        	// busca a resposta referente ao arquivo lido
-	        	resposta = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, numeroDocumentoSEI, false, false));
+	        	resposta = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(null, solicitacao, null, null, null, null, numeroDocumentoSEI, false, false, false));
 	        }
 
 	        if (resposta == null) {

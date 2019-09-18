@@ -124,21 +124,21 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, false, null, null, null, null, true, false);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, false, null, null, null, null, true, false, false);
 		return  respostas;
 	}
 
-	public List<SolicitacaoResposta> obterRespostasAImprimir(Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, null, null, respostaImpressa, respostaNoBlocoAssinatura, assinante, new TipoResposta() {{ setImprimirResposta(tipoRespostaImprimirResposta); }}, null, false, true);
+	public List<SolicitacaoResposta> obterRespostasAImprimir(Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, Boolean tipoRespostaImprimirResposta, boolean pendentesImpressao, boolean pendentesRetiradaBloco) throws Exception {
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, new Solicitacao() {{ setTipoProcesso(TipoProcesso.ELETRONICO); }}, respostaImpressa, respostaNoBlocoAssinatura, assinante, new TipoResposta() {{ setImprimirResposta(tipoRespostaImprimirResposta); }}, null, false, pendentesImpressao, pendentesRetiradaBloco);
 		return  respostas;
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId) throws Exception {
-		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, null, null, false, false);
+		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, false, false, false);
 	}
-	
-	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Origem origem, String numeroProcesso, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
-			TipoResposta tipoResposta, String numeroDocumentoSEI, boolean pendentesGeracao, boolean pendentesImpressao) throws Exception {
+
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
+			TipoResposta tipoResposta, String numeroDocumentoSEI, boolean pendentesGeracao, boolean pendentesImpressao, boolean pendentesRetiradaBlocoAssinatura) throws Exception {
 		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
 
 		StringBuilder sql = new StringBuilder("");
@@ -149,14 +149,20 @@ public class DespachoServico {
 		if (solicitacaoRespostaId != null) {
 			sql.append(" and sr.solicitacaorespostaid = " + solicitacaoRespostaId);
 		} else {
-			if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
-				sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
-			}
-			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and s.origemid = " + origem.getOrigemId());
-			}
-			if (numeroProcesso != null) {
-				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "' ");
+			if (solicitacao != null) {
+				if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
+					sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
+				} else {
+					if (solicitacao != null && solicitacao.getOrigem() != null && solicitacao.getOrigem().getOrigemId() != null) {
+						sql.append(" and s.origemid = " + solicitacao.getOrigem().getOrigemId());
+					}
+					if (solicitacao != null && solicitacao.getTipoProcesso() != null && solicitacao.getTipoProcesso().getTipoProcessoId() != null) {
+						sql.append(" and s.tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
+					}
+					if (solicitacao != null && solicitacao.getNumeroProcesso() != null) {
+						sql.append(" and s.numeroprocesso = '" + solicitacao.getNumeroProcesso() + "' ");
+					}
+				}
 			}
 			if (respostaImpressa != null) {
 				sql.append(" and sr.respostaimpressa = " + (respostaImpressa ? "true" : "false"));
@@ -180,6 +186,11 @@ public class DespachoServico {
 				sql.append(" and coalesce(sr.numerodocumentosei, '') <> '' ");
 				sql.append(" and coalesce(sr.numeroprocessosei, '') <> '' ");
 				sql.append(" and datahoraresposta is not null ");
+			}
+			if (pendentesRetiradaBlocoAssinatura) {
+				sql.append(" and coalesce(sr.numerodocumentosei, '') <> '' ");
+				sql.append(" and coalesce(sr.numeroprocessosei, '') <> '' ");
+				sql.append(" and datahoraimpressao is not null ");
 			}
 		}
 
@@ -768,7 +779,7 @@ public class DespachoServico {
 	}
 
 	public List<SolicitacaoResposta> obterSolicitacaoRespostaPendente(Solicitacao solicitacao) throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, null, null, false, false);
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, false, false, false);
 		Iterator<SolicitacaoResposta> i = respostas.iterator();
 
 		while (i.hasNext()) {
