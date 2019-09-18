@@ -394,20 +394,23 @@ public class ImpressaoDespacho extends JInternalFrame {
 		Map<String, List<SolicitacaoResposta>> retorno = new LinkedHashMap<String, List<SolicitacaoResposta>>();
 		Boolean respostaImpressa = null;
 		Boolean respostaNoBlocoAssinatura = null;
+		boolean pendentesImpressao = false;
+		boolean pendentesRetiraBloco = false;
 		Assinante assinante = (assinanteId.equals(0) ? null : new Assinante(assinanteId));
 
 		if (tipoFiltro == 1) {
 			respostaImpressa = false;
+			pendentesImpressao = true;
 		} else {
 			respostaImpressa = true;
 			respostaNoBlocoAssinatura = true;
+			pendentesRetiraBloco = true;
 		}
 		
-		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAImprimir(respostaImpressa, respostaNoBlocoAssinatura, assinante, true);
+		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAImprimir(respostaImpressa, respostaNoBlocoAssinatura, assinante, true, pendentesImpressao, pendentesRetiraBloco);
 
 		for (SolicitacaoResposta resposta : respostas) {
 			// se for filtro 2 (processos a retirar do bloco de assinatura), certifica-se de pegar somente os registros que já foram impressos; se não foram, desconsidera o registro
-			if (tipoFiltro == 2 && MyUtils.emptyStringIfNull(resposta.getDataHoraImpressao()).equals("")) continue;
 			String chave = (tipoFiltro == 1 ? resposta.getNumeroProcessoSEI() : resposta.getBlocoAssinatura());
 			if (retorno.get(chave) == null) retorno.put(chave, new ArrayList<SolicitacaoResposta>());
 			retorno.get(chave).add(resposta);
