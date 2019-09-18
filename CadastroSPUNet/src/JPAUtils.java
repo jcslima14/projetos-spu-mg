@@ -6,7 +6,7 @@ import javax.persistence.Query;
 
 public class JPAUtils {
 
-	public static <T> void persistir(EntityManager em, T entidade) {
+	public static <T> T persistir(EntityManager em, T entidade) {
 		try {
 			em.getTransaction().begin();
 			em.merge(entidade);
@@ -15,6 +15,8 @@ public class JPAUtils {
 			e.printStackTrace();
 			em.getTransaction().rollback();
 		}
+
+		return entidade;
 	}
 
 	public static <T> void excluir(EntityManager em, T entidade) {

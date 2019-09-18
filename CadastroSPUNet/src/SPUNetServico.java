@@ -32,4 +32,8 @@ public class SPUNetServico {
 
 		return JPAUtils.executeQuery(em, sql.toString(), parametros);
 	}
+
+	public <T> T gravarEntidade(T entidade) {
+		return JPAUtils.persistir(em, entidade);
+	}
 }

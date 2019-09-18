@@ -165,32 +165,31 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
-        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
-        
-        // clica na aba de ofícios
-        WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
-        passarMouse.moveToElement(btnMenuAplicacao).perform();
-        waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
-        btnMenuAplicacao.click();
-
-        WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
-        passarMouse.moveToElement(btnServicos).click().build().perform();
-
-        WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
-        passarMouse.moveToElement(btnTriagem).perform();
-        waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
-        js.executeScript("arguments[0].click();", btnTriagem);
-        TimeUnit.MILLISECONDS.sleep(500);
-        // btnTriagem.click();
-
         List<Geoinformacao> geos = cadastroServico.obterGeoinformacao(null, false, null);
         int cont = 0;
-        
+
         // inicia o loop para leitura dos arquivos do diretório
         for (Geoinformacao geo : geos) {
+            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
+
+            // clica no menu da aplicação
+            WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
+            passarMouse.moveToElement(btnMenuAplicacao).perform();
+            waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
+            btnMenuAplicacao.click();
+
+            WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
+            passarMouse.moveToElement(btnServicos).click().build().perform();
+
+            WebElement btnCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
+            passarMouse.moveToElement(btnCadastrar).perform();
+            waitUntil.until(ExpectedConditions.elementToBeClickable(btnCadastrar));
+            js.executeScript("arguments[0].click();", btnCadastrar);
+            TimeUnit.MILLISECONDS.sleep(500);
+
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": títullo '" + geo.getIdentTituloProduto() + "'");
+	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": título '" + geo.getIdentTituloProduto() + "'");
 
 	        // seção de identificação
 	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.name("idProdutoCdg"));
@@ -207,7 +206,11 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        WebElement optProduto = MyUtils.encontrarElemento(wait15, By.xpath("//md-option[./div[text() = '" + geo.getIdentProdutoCDG() + "']]"));
 	        js.executeScript("arguments[0].click();", optProduto);
-	        TimeUnit.MILLISECONDS.sleep(500);
+	        TimeUnit.MILLISECONDS.sleep(1000);
+	        try {
+	        	optProduto.sendKeys(Keys.ESCAPE);
+	        } catch (Exception e) {
+	        }
 
 	        WebElement optColecao = MyUtils.encontrarElemento(wait15, By.xpath("//md-radio-button[@name = 'radioTipo' and @aria-label = 'Não']"));
 	        optColecao.click();
@@ -432,9 +435,9 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoIdioma() + "']]"));
 	        js.executeScript("arguments[0].click();", optIdioma);
-	        TimeUnit.MILLISECONDS.sleep(500);
+	        TimeUnit.MILLISECONDS.sleep(1000);
 
-	        cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetDistribuicaoForm']//md-select[@name = 'coResponsavel']"));
+	        cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetMetadadosForm']//md-select[@name = 'coResponsavel']"));
 	        cbbInstituicao.click();
 
 	        optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoInstituicao() + "']]"));
@@ -443,7 +446,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        cbbFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetDistribuicaoForm']//md-select[@name = 'coFuncao']"));
+	        cbbFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetMetadadosForm']//md-select[@name = 'coFuncao']"));
 	        cbbFuncao.click();
 
 	        optFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoFuncao() + "']]"));
@@ -457,7 +460,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
 	        // seção informações adicionais
-	        WebElement cbbTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetDistribuicaoForm']//md-select[@name = 'coTipoDeArticulacao']"));
+	        WebElement cbbTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetInfoAdicionaisForm']//md-select[@name = 'coTipoDeArticulacao']"));
 	        cbbTipoArticulacao.click();
 
 	        WebElement optTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getInfadicTipoArticulacao() + "']]"));
@@ -469,6 +472,21 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		        js.executeScript("arguments[0].click();", optCamadaInformacao);
 		        TimeUnit.MILLISECONDS.sleep(500);
 	        }
+
+	        WebElement btnEncaminhar = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetInfoAdicionaisForm']//button[text() = 'ENCAMINHAR']"));
+	        btnEncaminhar.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        WebElement btnOK = MyUtils.encontrarElemento(wait15, By.xpath("//button[text() = 'OK']"));
+	        btnOK.click();
+	        TimeUnit.MILLISECONDS.sleep(500);
+
+	        geo.setCadastrado(true);
+	        cadastroServico.gravarEntidade(geo);
+	        
+	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
