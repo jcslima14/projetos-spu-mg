@@ -1,5 +1,5 @@
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -13,25 +13,26 @@ import javax.persistence.Transient;
 public class Geoinformacao {
 	@Transient
 	@SuppressWarnings("serial")
-	private Map<String, String> ajusteDeEscala = new LinkedHashMap<String, String>() {{ 
-		put("1:50", "1:500"); 
-		put("1:75", "1:500"); 
-		put("1:100", "1:500"); 
-		put("1:125", "1:500"); 
-		put("1:150", "1:500"); 
-		put("1:200", "1:500"); 
-		put("1:250", "1:500"); 
-		put("1:300", "1:500"); 
-		put("1:350", "1:500"); 
-		put("1:400", "1:500"); 
-		put("1:700", "1:500"); 
-		put("1:750", "1:1000"); 
-		put("1:1250", "1:1000"); 
-		put("1:1500", "1:2000"); 
-		put("1:2100", "1:2000"); 
-		put("1:2225", "1:2000"); 
-		put("1:3000", "1:2500"); 
-		put("1:4000", "1:5000"); 
+	private List<String> ajusteDeEscala = new ArrayList<String>() {{ 
+		add("0"); 
+		add("1:50"); 
+		add("1:75"); 
+		add("1:100"); 
+		add("1:125"); 
+		add("1:150"); 
+		add("1:200"); 
+		add("1:250"); 
+		add("1:300"); 
+		add("1:350"); 
+		add("1:400"); 
+		add("1:700"); 
+		add("1:750"); 
+		add("1:1250"); 
+		add("1:1500"); 
+		add("1:2100"); 
+		add("1:2225"); 
+		add("1:3000"); 
+		add("1:4000"); 
 	}};
 	
 	@Id
@@ -348,18 +349,23 @@ public class Geoinformacao {
 
 	@Transient
 	public String escalaAjustada() {
-		String escalaAjustada = ajusteDeEscala.get(getIdentcdgEscala());
-		if (escalaAjustada == null) escalaAjustada = getIdentcdgEscala();
-		escalaAjustada = escalaAjustada.replace(":", ": ");
-		return escalaAjustada;
+		if (ajusteDeEscala.contains(getIdentcdgEscala())) {
+			return "";
+		} else {
+			return getIdentcdgEscala().replace(":", ": ");
+		}
 	}
 
 	@Transient
 	public String observacaoEscala() {
-		if (getIdentcdgEscala().equals(escalaAjustada().replace(": ", ":"))) {
-			return "";
+		if (escalaAjustada().equals("")) {
+			if (getIdentcdgEscala().equals("0")) {
+				return "Escala não informada";
+			} else {
+				return "Escala: " + getIdentcdgEscala();
+			}
 		} else {
-			return "Escala: " + getIdentcdgEscala();
+			return "";
 		}
 	}
 	

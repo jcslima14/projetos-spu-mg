@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -221,7 +222,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
             
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
-	        MyUtils.appendLogArea(logArea, "Processando registro " + (++cont) + " de " + geos.size() + ": título '" + geo.getIdentTituloProduto() + "'");
+	        MyUtils.appendLogArea(logArea, MyUtils.formatarData(new Date(),  "dd/MM/yyyy HH:mm:ss") + " - Processando registro " + (++cont) + " de " + geos.size() + ": título '" + geo.getIdentTituloProduto() + "'");
 
 	        // seção de identificação
 	        WebElement cbbFormatoProduto = MyUtils.encontrarElemento(wait15, By.name("idProdutoCdg"));
@@ -279,10 +280,10 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        js.executeScript("arguments[0].click();", optStatus);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        WebElement cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@aria-label = 'Instituição Responsável']"));
+	        WebElement cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetIdentificacaoForm']//md-select[@name = 'coResponsavel']"));
 	        cbbInstituicao.click();
 
-	        WebElement optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentInstituicao() + "']]"));
+	        WebElement optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentInstituicao() + "']]"));
 	        js.executeScript("arguments[0].click();", optInstituicao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -303,7 +304,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbSistemaReferencia = MyUtils.encontrarElemento(wait15, By.name("coSistemaReferencia"));
 	        cbbSistemaReferencia.click();
 
-	        WebElement optSistemaReferencia = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getSisrefDatum() + "']]"));
+	        WebElement optSistemaReferencia = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getSisrefDatum() + "']]"));
 	        js.executeScript("arguments[0].click();", optSistemaReferencia);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -313,7 +314,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		        WebElement cbbProjecao = MyUtils.encontrarElemento(wait15, By.name("coProjecao"));
 		        cbbProjecao.click();
 
-		        WebElement optProjecao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getSisrefProjecao() + "']]"));
+		        WebElement optProjecao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getSisrefProjecao() + "']]"));
 		        js.executeScript("arguments[0].click();", optProjecao);
 		        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -337,53 +338,55 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbTipoRepresentacaoEspacial = MyUtils.encontrarElemento(wait15, By.name("coRepresentacaoEspacial"));
 	        cbbTipoRepresentacaoEspacial.click();
 
-	        WebElement optTipoRepresentacaoEspacial = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgTipoReprEspacial() + "']]"));
+	        WebElement optTipoRepresentacaoEspacial = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgTipoReprEspacial() + "']]"));
 	        js.executeScript("arguments[0].click();", optTipoRepresentacaoEspacial);
 	        TimeUnit.MILLISECONDS.sleep(500);
-	        
-	        WebElement optEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-radio-group[@name = 'radioDAU']/md-radio-button[@aria-label = 'Escala']"));
-	        optEscala.click();
-	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']//md-select[@name = 'vlEscala']"));
-	        passarMouse.moveToElement(cbbListaEscala).perform();
-	        js.executeScript("arguments[0].click();", cbbListaEscala);
-	        TimeUnit.MILLISECONDS.sleep(500);
+	        if (!geo.escalaAjustada().contentEquals("")) {
+		        WebElement optEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-radio-group[@name = 'radioDAU']/md-radio-button[@aria-label = 'Escala']"));
+		        optEscala.click();
+		        TimeUnit.MILLISECONDS.sleep(500);
 
-	        WebElement optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.escalaAjustada() + "']]"));
-	        js.executeScript("arguments[0].click();", optListaEscala);
-	        TimeUnit.MILLISECONDS.sleep(500);
+		        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-select-menu/md-content/md-select[@name = 'vlEscala']"));
+		        passarMouse.moveToElement(cbbListaEscala).perform();
+		        js.executeScript("arguments[0].click();", cbbListaEscala);
+		        TimeUnit.MILLISECONDS.sleep(500);
 
-	        optListaEscala.sendKeys(Keys.ESCAPE);
+		        WebElement optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.escalaAjustada() + "']]"));
+		        js.executeScript("arguments[0].click();", optListaEscala);
+		        TimeUnit.MILLISECONDS.sleep(500);
 
-	        TimeUnit.MILLISECONDS.sleep(500);
+		        optListaEscala.sendKeys(Keys.ESCAPE);
 
-	        WebElement txtObservacaoEscala = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dsidentcdgobservacao']"));
-	        txtObservacaoEscala.sendKeys(geo.observacaoEscala());
+		        TimeUnit.MILLISECONDS.sleep(500);
+	        } else {
+		        WebElement txtObservacaoEscala = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dsidentcdgobservacao']"));
+		        txtObservacaoEscala.sendKeys(geo.observacaoEscala());
 
-	        do {
-	        	TimeUnit.MILLISECONDS.sleep(500);
-	        } while (!txtObservacaoEscala.getAttribute("value").equals(geo.observacaoEscala()));
+		        do {
+		        	TimeUnit.MILLISECONDS.sleep(500);
+		        } while (!txtObservacaoEscala.getAttribute("value").equals(geo.observacaoEscala()));
+	        }
 
 	        WebElement cbbIdioma = MyUtils.encontrarElemento(wait15, By.name("coIdiomaIdCdg"));
 	        passarMouse.moveToElement(cbbIdioma).perform();
 	        cbbIdioma.click();
 
-	        WebElement optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgIdioma() + "']]"));
+	        WebElement optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgIdioma() + "']]"));
 	        js.executeScript("arguments[0].click();", optIdioma);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbCategoriaTematica = MyUtils.encontrarElemento(wait15, By.name("coCategoriaTematica"));
 	        cbbCategoriaTematica.click();
 
-	        WebElement optCategoriaTematica = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgCategoria() + "']]"));
+	        WebElement optCategoriaTematica = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgCategoria() + "']]"));
 	        js.executeScript("arguments[0].click();", optCategoriaTematica);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        WebElement cbbUF = MyUtils.encontrarElemento(wait15, By.name("geocodigoUf"));
 	        cbbUF.click();
 
-	        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
+	        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
 	        js.executeScript("arguments[0].click();", optUF);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -395,7 +398,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbMunicipio = MyUtils.encontrarElemento(wait15, By.name("geocodigoMunicipioIdentificacaoCdg"));
 	        cbbMunicipio.click();
 
-	        WebElement optMunicipio = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgMunicipio() + "']]"));
+	        WebElement optMunicipio = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-optgroup/md-option[./div[text() = '" + geo.getIdentcdgMunicipio() + "']]"));
 	        js.executeScript("arguments[0].click();", optMunicipio);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -405,7 +408,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbDatum = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@name = 'coDatum']"));
 	        cbbDatum.click();
 
-	        WebElement optDatum = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getIdentcdgDatum() + "']]"));
+	        WebElement optDatum = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgDatum() + "']]"));
 	        js.executeScript("arguments[0].click();", optDatum);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -419,7 +422,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbNivelHierarquico = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@name = 'coNivelHierarquico']"));
 	        cbbNivelHierarquico.click();
 
-	        WebElement optNivelHierarquico = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getQualidadeNivel() + "']]"));
+	        WebElement optNivelHierarquico = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getQualidadeNivel() + "']]"));
 	        js.executeScript("arguments[0].click();", optNivelHierarquico);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -440,14 +443,14 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbFormatoDistribuicao = MyUtils.encontrarElemento(wait15, By.name("coFormatoDistribuicao"));
 	        cbbFormatoDistribuicao.click();
 
-	        WebElement optFormatoDistribuicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getDistribuicaoFormato() + "']]"));
+	        WebElement optFormatoDistribuicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getDistribuicaoFormato() + "']]"));
 	        js.executeScript("arguments[0].click();", optFormatoDistribuicao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetDistribuicaoForm']//md-select[@name = 'coResponsavel']"));
 	        cbbInstituicao.click();
 
-	        optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getDistribuicaoInstituicao() + "']]"));
+	        optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getDistribuicaoInstituicao() + "']]"));
 	        js.executeScript("arguments[0].click();", optInstituicao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -456,7 +459,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetDistribuicaoForm']//md-select[@name = 'coFuncao']"));
 	        cbbFuncao.click();
 
-	        WebElement optFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getDistribuicaoFuncao() + "']]"));
+	        WebElement optFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getDistribuicaoFuncao() + "']]"));
 	        js.executeScript("arguments[0].click();", optFuncao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -470,14 +473,14 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        cbbIdioma = MyUtils.encontrarElemento(wait15, By.name("coIdiomaMetadados"));
 	        cbbIdioma.click();
 
-	        optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoIdioma() + "']]"));
+	        optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getMetadadoIdioma() + "']]"));
 	        js.executeScript("arguments[0].click();", optIdioma);
 	        TimeUnit.MILLISECONDS.sleep(1000);
 
 	        cbbInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetMetadadosForm']//md-select[@name = 'coResponsavel']"));
 	        cbbInstituicao.click();
 
-	        optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoInstituicao() + "']]"));
+	        optInstituicao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getMetadadoInstituicao() + "']]"));
 	        js.executeScript("arguments[0].click();", optInstituicao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -486,7 +489,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        cbbFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetMetadadosForm']//md-select[@name = 'coFuncao']"));
 	        cbbFuncao.click();
 
-	        optFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getMetadadoFuncao() + "']]"));
+	        optFuncao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getMetadadoFuncao() + "']]"));
 	        js.executeScript("arguments[0].click();", optFuncao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -500,7 +503,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement cbbTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetInfoAdicionaisForm']//md-select[@name = 'coTipoDeArticulacao']"));
 	        cbbTipoArticulacao.click();
 
-	        WebElement optTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']//md-option[./div[text() = '" + geo.getInfadicTipoArticulacao() + "']]"));
+	        WebElement optTipoArticulacao = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getInfadicTipoArticulacao() + "']]"));
 	        js.executeScript("arguments[0].click();", optTipoArticulacao);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
