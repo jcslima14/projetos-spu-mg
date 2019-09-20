@@ -179,22 +179,22 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		for (int l = linhaInicial - 1; l < linhaFinal; l++) {
 			Row linha = planilha.getRow(l);
 			String msgRetorno = "";
-			TipoProcesso tipoProcesso = MyUtils.obterValorCelula(linha.getCell(1)).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
+			TipoProcesso tipoProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(1))).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replaceAll("\\D+", "").trim();
-			String chaveBusca = (tipoProcesso.getTipoProcessoId().equals(TipoProcesso.FISICO_ID) ? "" : MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim());
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
-			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
+			String endereco = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(5)));
 			String nomeMunicipio = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(6)));
-			String coordenada = MyUtils.obterValorCelula(linha.getCell(7));
-			coordenada = (coordenada == null || coordenada.trim().length() <= 1 ? "" : coordenada);
-			String area = MyUtils.obterValorCelula(linha.getCell(8));
-			area = (area == null || area.trim().length() <= 1 ? "" : area);
+			String coordenada = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(7)));
+			coordenada = (coordenada.trim().length() <= 1 ? "" : coordenada);
+			String area = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(8)));
+			area = (area.trim().length() <= 1 ? "" : area);
 			String origemProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14)));
+			String chaveBusca = (tipoProcesso.getTipoProcessoId().equals(TipoProcesso.FISICO_ID) || origemProcesso.equalsIgnoreCase("judicial") ? "" : MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim());
 			String tipoResposta = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(15)));
-			String observacao = MyUtils.obterValorCelula(linha.getCell(17));
-			observacao = (observacao == null || observacao.trim().length() <= 1 ? "" : observacao);
+			String observacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(17)));
+			observacao = (observacao.trim().length() <= 1 ? "" : observacao);
 			String statusAtual = "";
 			if (linha.getCell(18) != null) {
 				statusAtual = (new DataFormatter()).formatCellValue(linha.getCell(18));
