@@ -194,7 +194,11 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					}
 	
 					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
-						anexarArquivosProcesso(respostaAGerar, anexos, driver, wait);
+						String msgAnexarArquivos = anexarArquivosProcesso(respostaAGerar, anexos, driver, wait);
+						if (!msgAnexarArquivos.equals("")) {
+							MyUtils.appendLogArea(logArea, msgAnexarArquivos);
+							continue;
+						}
 					}
 
 					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
@@ -213,7 +217,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				
 				// clica em inserir documento
 				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
-				WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
+				WebElement btnIncluirDocumento = null;
+				try {
+					btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
+				} catch (Exception e) {
+					MyUtils.appendLogArea(logArea, "Não foi encontrado o botão de incluir documentos no processo " + respostaAGerar.getNumeroProcessoSEI() + ". Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
+					continue;
+				}
 				btnIncluirDocumento.click();
 				
 				// clica no tipo de documento
@@ -345,7 +355,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				// seleciona o bloco interno desejado
 				Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
 				cbxBlocoAssinatura.selectByValue(respostaAGerar.getBlocoAssinatura());
-				
+
+				// aguardar que a linha com o documento gerado seja carregada
+				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "']]"));
+
 				// clica em incluir
 				WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
 				btnIncluir.click();
@@ -420,7 +433,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		driver.switchTo().defaultContent();
 	}
 	
-	public void anexarArquivosProcesso(SolicitacaoResposta resposta, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
+	public String anexarArquivosProcesso(SolicitacaoResposta resposta, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
 		for (File anexo : anexos) {
 			driver.switchTo().defaultContent();
 
@@ -435,7 +448,12 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			driver.switchTo().frame(ifrVisualizacao);
 
 			// incluir os documentos no processo
-			WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Incluir Documento']"));
+			WebElement btnIncluirDocumento = null;
+			try {
+				btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
+			} catch (Exception e) {
+				return "Não foi encontrado o botão de incluir documentos no processo " + resposta.getNumeroProcessoSEI() + ". Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.";
+			}
 			btnIncluirDocumento.click();
 
 			WebElement lnkTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = ' Externo']"));
@@ -480,6 +498,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		
 		resposta.getSolicitacao().setArquivosAnexados(true);
 		atualizarArquivosAnexados(resposta);
+
+		return "";
 	}
 
 	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {

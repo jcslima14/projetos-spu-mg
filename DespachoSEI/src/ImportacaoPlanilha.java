@@ -186,13 +186,13 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			String autor = MyUtils.obterValorCelula(linha.getCell(3));
 			String cartorio = "";
 			String endereco = MyUtils.obterValorCelula(linha.getCell(5));
-			String nomeMunicipio = MyUtils.obterValorCelula(linha.getCell(6));
+			String nomeMunicipio = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(6)));
 			String coordenada = MyUtils.obterValorCelula(linha.getCell(7));
 			coordenada = (coordenada == null || coordenada.trim().length() <= 1 ? "" : coordenada);
 			String area = MyUtils.obterValorCelula(linha.getCell(8));
 			area = (area == null || area.trim().length() <= 1 ? "" : area);
-			String origemProcesso = MyUtils.obterValorCelula(linha.getCell(14));
-			String tipoResposta = MyUtils.obterValorCelula(linha.getCell(15));
+			String origemProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14)));
+			String tipoResposta = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(15)));
 			String observacao = MyUtils.obterValorCelula(linha.getCell(17));
 			observacao = (observacao == null || observacao.trim().length() <= 1 ? "" : observacao);
 			String statusAtual = "";
@@ -201,18 +201,20 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			}
 
 			// define a origem do processo
-			Origem origem;
+			Origem origem = null;
 			if (origemProcesso.equalsIgnoreCase("judicial")) {
 				origem = Origem.SAPIENS;
-			} else {
+			} else if (!origemProcesso.equals("")) {
 				origem = Origem.SPUNET;
+			} else {
+				msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Origem do processo não identificada";
 			}
 
 			// verifica se o número do processo foi informado corretamente
 			if (numeroProcesso.length() <= 1) {
 				numeroProcesso = "-";
 			} else {
-				if (origem.getOrigemId().equals(Origem.SAPIENS_ID)) {
+				if (origem != null && origem.getOrigemId().equals(Origem.SAPIENS_ID)) {
 					if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
 						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
 					}
@@ -237,10 +239,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				TipoImovel tipoImovel = endereco.trim().toLowerCase().replace("ó", "o").contains("imovel rural") ? TipoImovel.RURAL : TipoImovel.URBANO;
 
 				// ajusta o tipo de resposta para consulta a órgão ambiental (ICMBio, IBAMA, MMA)
-				if (tipoResposta.trim().equalsIgnoreCase("consultar icmbio") || 
-					tipoResposta.trim().equalsIgnoreCase("consultar icmbio/mma") ||
-					tipoResposta.trim().equalsIgnoreCase("consultar mma/ibama")) {
-					tipoResposta = "consultar órgão ambiental";
+				if (tipoResposta.trim().equalsIgnoreCase("consultar órgão ambiental")) {
 					observacao = observacao.replaceFirst("APAF ", "");
 				}
 
