@@ -347,17 +347,13 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		        optEscala.click();
 		        TimeUnit.MILLISECONDS.sleep(500);
 
-		        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']/md-select-menu/md-content/md-select[@name = 'vlEscala']"));
+		        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']//md-select[@name = 'vlEscala']"));
 		        passarMouse.moveToElement(cbbListaEscala).perform();
 		        js.executeScript("arguments[0].click();", cbbListaEscala);
 		        TimeUnit.MILLISECONDS.sleep(500);
 
 		        WebElement optListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.escalaAjustada() + "']]"));
 		        js.executeScript("arguments[0].click();", optListaEscala);
-		        TimeUnit.MILLISECONDS.sleep(500);
-
-		        optListaEscala.sendKeys(Keys.ESCAPE);
-
 		        TimeUnit.MILLISECONDS.sleep(500);
 	        } else {
 		        WebElement txtObservacaoEscala = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dsidentcdgobservacao']"));
