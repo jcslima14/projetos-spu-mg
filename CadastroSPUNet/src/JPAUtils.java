@@ -9,7 +9,7 @@ public class JPAUtils {
 	public static <T> T persistir(EntityManager em, T entidade) {
 		try {
 			em.getTransaction().begin();
-			entidade = em.merge(entidade);
+			em.merge(entidade);
 			em.getTransaction().commit();;
 		} catch (Exception e) {
 			e.printStackTrace();

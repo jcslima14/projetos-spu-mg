@@ -103,7 +103,6 @@ public class CargaSEISQLite extends JInternalFrame {
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
 		JButton botaoCarregar = new JButton("Carregar"); 
-		JButton botaoSair = new JButton("Sair"); 
 		JCheckBox chkExibirNavegador = new JCheckBox("Exibir nevagador", true);
 
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
@@ -127,7 +126,7 @@ public class CargaSEISQLite extends JInternalFrame {
 		painelDados.add(chkExibirNavegador);
 		painelDados.add(new JPanel());
 		painelDados.add(botaoCarregar); 
-		painelDados.add(botaoSair); 
+		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeGrid(painelDados,
                 espacoEmDisco == null ? 7 : 8, 2, //rows, cols
@@ -167,12 +166,6 @@ public class CargaSEISQLite extends JInternalFrame {
 				}).start();
 			} 
 		}); 
-
-		botaoSair.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) { 
-				System.exit(0);
-			} 
-		}); 
     }
 
 	public void abrirJanela() {
@@ -181,7 +174,6 @@ public class CargaSEISQLite extends JInternalFrame {
 		this.setVisible(true);
 		this.show();
 	}
-
 
 	private String validaDatas(String dataInicial, String dataFinal) {
 		if (dataInicial == null || dataInicial.trim().equals("")) return "A data inicial deve ser informada!";
