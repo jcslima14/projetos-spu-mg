@@ -201,26 +201,27 @@ public class CatalogacaoSPUNet extends JInternalFrame {
             MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
 
             // clica no menu da aplicação
-            WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
-            passarMouse.moveToElement(btnMenuAplicacao).perform();
-            waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
-            btnMenuAplicacao.click();
-
-            WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
-            passarMouse.moveToElement(btnServicos).click().build().perform();
-
-            WebElement btnCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
-            passarMouse.moveToElement(btnCadastrar).perform();
-            waitUntil.until(ExpectedConditions.elementToBeClickable(btnCadastrar));
-            js.executeScript("arguments[0].click();", btnCadastrar);
-            TimeUnit.MILLISECONDS.sleep(500);
-
-            try {
-            	btnCadastrar.sendKeys(Keys.ESCAPE);
-            } catch (Exception e) {
-            }
+            driver.get("http://spunet.planejamento.gov.br/#/geometadados/cadastrar");
+//            WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
+//            passarMouse.moveToElement(btnMenuAplicacao).perform();
+//            waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
+//            btnMenuAplicacao.click();
+//
+//            WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
+//            passarMouse.moveToElement(btnServicos).click().build().perform();
+//
+//            WebElement btnCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
+//            passarMouse.moveToElement(btnCadastrar).perform();
+//            waitUntil.until(ExpectedConditions.elementToBeClickable(btnCadastrar));
+//            js.executeScript("arguments[0].click();", btnCadastrar);
+//            TimeUnit.MILLISECONDS.sleep(500);
+//
+//            try {
+//            	btnCadastrar.sendKeys(Keys.ESCAPE);
+//            } catch (Exception e) {
+//            }
             
-	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	        MyUtils.esperarCarregamento(1000, wait5, "//p[contains(text(), 'Carregando')]");
 
 	        MyUtils.appendLogArea(logArea, MyUtils.formatarData(new Date(),  "dd/MM/yyyy HH:mm:ss") + " - Processando registro " + (++cont) + " de " + geos.size() + ": título '" + geo.getIdentTituloProduto() + "'");
 
@@ -321,12 +322,14 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 	        }
 
-	        WebElement txtObservacao = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dssisrefobservacao']"));
-	        txtObservacao.sendKeys(geo.getSisrefObservacao());
-	        
-	        do {
-	        	TimeUnit.MILLISECONDS.sleep(500);
-	        } while (!txtObservacao.getAttribute("value").equals(geo.getSisrefObservacao()));
+	        if (!geo.getSisrefObservacao().equals("")) {
+		        WebElement txtObservacao = MyUtils.encontrarElemento(wait15, By.xpath("//textarea[@ng-model = 'metadados.dssisrefobservacao']"));
+		        txtObservacao.sendKeys(geo.getSisrefObservacao());
+		        
+		        do {
+		        	TimeUnit.MILLISECONDS.sleep(500);
+		        } while (!txtObservacao.getAttribute("value").equals(geo.getSisrefObservacao()));
+	        }
 	        
 	        btnContinuar = MyUtils.encontrarElemento(wait15, By.xpath("//form[@name = 'cadastroMetSistemaReferenciaForm']//button[text() = 'CONTINUAR/GRAVAR']"));
 	        btnContinuar.click();
@@ -348,7 +351,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 		        TimeUnit.MILLISECONDS.sleep(500);
 
 		        WebElement cbbListaEscala = MyUtils.encontrarElemento(wait15, By.xpath("//div[contains(@ng-show, 'idRepresentacaoEspacial') and @aria-hidden = 'false']//md-select[@name = 'vlEscala']"));
-		        passarMouse.moveToElement(cbbListaEscala).perform();
+		        // passarMouse.moveToElement(cbbListaEscala).perform();
 		        js.executeScript("arguments[0].click();", cbbListaEscala);
 		        TimeUnit.MILLISECONDS.sleep(500);
 
@@ -365,7 +368,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        }
 
 	        WebElement cbbIdioma = MyUtils.encontrarElemento(wait15, By.name("coIdiomaIdCdg"));
-	        passarMouse.moveToElement(cbbIdioma).perform();
+	        // passarMouse.moveToElement(cbbIdioma).perform();
 	        cbbIdioma.click();
 
 	        WebElement optIdioma = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgIdioma() + "']]"));
@@ -379,28 +382,57 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        js.executeScript("arguments[0].click();", optCategoriaTematica);
 	        TimeUnit.MILLISECONDS.sleep(500);
 
-	        WebElement cbbUF = MyUtils.encontrarElemento(wait15, By.name("geocodigoUf"));
-	        cbbUF.click();
+	        int tentativas = 1;
+	        
+	        do {
+		        WebElement cbbUF = MyUtils.encontrarElemento(wait15, By.name("geocodigoUf"));
+		        cbbUF.click();
+	
+		        ((JavascriptExecutor) driver).executeScript("window.scrollBy(0,100)", "");
+		        
+		        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
+		        // js.executeScript("arguments[0].click();", optUF);
+		        // passarMouse.moveToElement(optUF).perform();
+		        
+		        if (optUF.getAttribute("selected") != null) {
+		        	optUF.click();
+		        }
 
-	        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
-	        js.executeScript("arguments[0].click();", optUF);
-	        TimeUnit.MILLISECONDS.sleep(500);
+		        TimeUnit.MILLISECONDS.sleep(500);
+		        optUF.click();
+		        TimeUnit.MILLISECONDS.sleep(1000);
+	
+		        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	
+		        TimeUnit.MILLISECONDS.sleep(1000);
+		        optUF.sendKeys(Keys.ESCAPE);
+		        TimeUnit.MILLISECONDS.sleep(500);
+	
+		        WebElement cbbMunicipio = MyUtils.encontrarElemento(wait15, By.name("geocodigoMunicipioIdentificacaoCdg"));
+		        // js.executeScript("arguments[0].click();", cbbMunicipio);
+		        TimeUnit.MILLISECONDS.sleep(1000);
+		        cbbMunicipio.click();
+		        TimeUnit.MILLISECONDS.sleep(2000);
+	
+		        WebElement optMunicipio = null;
+		        try {
+		        	optMunicipio = MyUtils.encontrarElemento(wait5, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-optgroup/md-option[./div[text() = '" + geo.getIdentcdgMunicipio() + "']]"));
+		        } catch (Exception e) {
+		        	MyUtils.appendLogArea(logArea, "Falhou tentativa " + (tentativas++) + " de obter a lista de municípios");
+		        	MyUtils.encontrarElemento(wait5, By.xpath("//body")).click();
+		        	TimeUnit.MILLISECONDS.sleep(500);
+		        	continue;
+		        }
 
-	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+		        js.executeScript("arguments[0].click();", optMunicipio);
+		        TimeUnit.MILLISECONDS.sleep(500);
+		        
+		        optMunicipio.sendKeys(Keys.ESCAPE);
+		        TimeUnit.MILLISECONDS.sleep(500);
 
-	        optUF.sendKeys(Keys.ESCAPE);
-	        TimeUnit.MILLISECONDS.sleep(500);
-
-	        WebElement cbbMunicipio = MyUtils.encontrarElemento(wait15, By.name("geocodigoMunicipioIdentificacaoCdg"));
-	        cbbMunicipio.click();
-
-	        WebElement optMunicipio = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-optgroup/md-option[./div[text() = '" + geo.getIdentcdgMunicipio() + "']]"));
-	        js.executeScript("arguments[0].click();", optMunicipio);
-	        TimeUnit.MILLISECONDS.sleep(500);
-
-	        optMunicipio.sendKeys(Keys.ESCAPE);
-	        TimeUnit.MILLISECONDS.sleep(500);
-
+		        break;
+	        } while (true);
+	        
 	        WebElement cbbDatum = MyUtils.encontrarElemento(wait15, By.xpath("//md-select[@name = 'coDatum']"));
 	        cbbDatum.click();
 
@@ -434,6 +466,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        TimeUnit.MILLISECONDS.sleep(500);
 
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+	        TimeUnit.MILLISECONDS.sleep(1000);
 
 	        // seção distribuição
 	        WebElement cbbFormatoDistribuicao = MyUtils.encontrarElemento(wait15, By.name("coFormatoDistribuicao"));
