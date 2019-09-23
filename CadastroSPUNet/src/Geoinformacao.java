@@ -41,6 +41,8 @@ public class Geoinformacao {
 	
 	private Boolean cadastrado;
 	
+	private Integer idSPUNet;
+	
 	private String identFormatoProdutoCDG;
 	
 	private String identProdutoCDG;
@@ -113,6 +115,14 @@ public class Geoinformacao {
 
 	public void setCadastrado(Boolean cadastrado) {
 		this.cadastrado = cadastrado;
+	}
+
+	public Integer getIdSPUNet() {
+		return idSPUNet;
+	}
+
+	public void setIdSPUNet(Integer idSPUNet) {
+		this.idSPUNet = idSPUNet;
 	}
 
 	public String getIdentFormatoProdutoCDG() {

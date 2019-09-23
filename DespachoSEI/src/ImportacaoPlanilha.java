@@ -218,7 +218,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					if (numeroProcesso.length() != 17 && numeroProcesso.length() != 20) {
 						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1, 17 ou 20 caracteres)";
 					}
-				} else {
+				} else if (origem != null && origem.getOrigemId().equals(Origem.SPUNET_ID)) {
 					if (numeroProcesso.length() != 17) {
 						msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do processo parece estar errado (tamanho diferente de 1 ou 17 caracteres)";
 					}

@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import javax.persistence.EntityManager;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
@@ -15,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -41,6 +41,8 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private SPUNetServico cadastroServico;
+	private JTextField txtPlanilha = new JTextField("0");
+	private JLabel lblPlanilha = new JLabel("ID Inicial:") {{ setLabelFor(txtPlanilha); }};
 
 	public ImportacaoPlanilha(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -64,11 +66,13 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		}
 		painelDados.add(painelArquivo);
 		painelDados.add(lblNomeArquivo);
+		painelDados.add(lblPlanilha); 
+		painelDados.add(txtPlanilha); 
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeCompactGrid(painelDados,
-	            espacoEmDisco == null ? 2 : 3, 2, //rows, cols
+	            espacoEmDisco == null ? 3 : 4, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -139,7 +143,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private void importarArquivo(String arquivo) throws Exception {
 		File fileInput = new File(arquivo);
 		Workbook wb = WorkbookFactory.create(fileInput);
-		Sheet planilha = wb.getSheetAt(0);
+		Sheet planilha = wb.getSheetAt(Integer.parseInt(txtPlanilha.getText()));
 		DataFormatter df = new DataFormatter();
 
 		for (int l = 2; l < planilha.getLastRowNum() - 1; l++) {
@@ -180,7 +184,6 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setInfadicTipoArticulacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 29)).trim());
 				geo.setInfadicCamadaInf(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 30)).trim());
 
-
 				String msgValidacao = validar(geo);
 
 				if (msgValidacao.equals("")) {
@@ -197,7 +200,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				msgRetorno += "registro não está com indicador de ok";
 			}
 
-			MyUtils.appendLogArea(logArea, msgRetorno);
+			// if (msgRetorno.trim().length() > 20) {
+				MyUtils.appendLogArea(logArea, msgRetorno);
+			// }
 		}
 		MyUtils.appendLogArea(logArea, "------------------------------------------------------------------------------------");
 		MyUtils.appendLogArea(logArea, "Fim de leitura do arquivo!");

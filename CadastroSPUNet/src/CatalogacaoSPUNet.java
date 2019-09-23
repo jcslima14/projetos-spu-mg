@@ -33,7 +33,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
@@ -148,7 +147,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
         // acessando o endereço
         driver.get("http://spunet.planejamento.gov.br");
-        Actions passarMouse = new Actions(driver);
+        // Actions passarMouse = new Actions(driver);
         JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)

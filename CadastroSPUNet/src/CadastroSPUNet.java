@@ -29,10 +29,21 @@ public class CadastroSPUNet extends JFrame {
 
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
 		JMenuItem sbmCatalogacaoSPUNet = new JMenuItem("Catalogação no SPUNet");
+		JMenuItem sbmBuscaIdCartografia = new JMenuItem("Busca dos IDs de Cartografia");
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); 
 															   add(sbmCatalogacaoSPUNet); 
+															   add(sbmBuscaIdCartografia); 
 															}};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuProcessamento); }};
+
+		sbmBuscaIdCartografia.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				BuscaIDCartografia janela = new BuscaIDCartografia("Busca de IDs da Cartografia Cadastrada no SPUNet", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
 
 		sbmCatalogacaoSPUNet.addActionListener(new ActionListener() {
 			@Override
@@ -110,6 +121,7 @@ public class CadastroSPUNet extends JFrame {
 						 "(" + 
 						 "  geoinformacaoid integer primary key autoincrement not null," + 
 						 "  cadastrado boolean NOT NULL," + 
+						 "  idspunet integer NULL," + 
 						 "  identformatoprodutocdg varchar NOT NULL," + 
 						 "  identprodutocdg varchar NOT NULL," + 
 						 "  identtituloproduto varchar NOT NULL," + 
