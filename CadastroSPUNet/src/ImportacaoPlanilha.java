@@ -117,8 +117,8 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		btnAbrirArquivo.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				detalhes.actionPerformed(null);
+				// Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
+				// detalhes.actionPerformed(null);
 				int retorno = filArquivo.showOpenDialog(ImportacaoPlanilha.this);
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filArquivo.getSelectedFile().exists()) {
@@ -157,7 +157,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setIdentDataDigitalizacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 5, df)).trim());
 				geo.setIdentResumo(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 6)).trim());
 				geo.setIdentStatus(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 7)).trim());
-				geo.setIdentInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 8)).trim());
+				geo.setIdentInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 8)).trim() + " - Geoinformação");
 				geo.setIdentFuncao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 9)).trim());
 				geo.setSisrefDatum(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 10)).trim());
 				geo.setSisrefProjecao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 11)).trim());
@@ -166,16 +166,16 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				geo.setIdentcdgEscala(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 14, df)).trim());
 				geo.setIdentcdgIdioma(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 16)).trim());
 				geo.setIdentcdgCategoria(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 17)).trim());
-				geo.setIdentcdgUF(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 18)).trim());
+				geo.setIdentcdgUF("Minas Gerais");
 				geo.setIdentcdgMunicipio(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 19)).trim());
 				geo.setIdentcdgDatum(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 20)).trim());
 				geo.setQualidadeNivel(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 21)).trim());
 				geo.setQualidadeLinhagem(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 22)).trim());
 				geo.setDistribuicaoFormato(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 23)).trim());
-				geo.setDistribuicaoInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 24)).trim());
+				geo.setDistribuicaoInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 24)).trim() + " - Geoinformação");
 				geo.setDistribuicaoFuncao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 25)).trim());
 				geo.setMetadadoIdioma(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 26)).trim());
-				geo.setMetadadoInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 27)).trim());
+				geo.setMetadadoInstituicao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 27)).trim() + " - Geoinformação");
 				geo.setMetadadoFuncao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 28)).trim());
 				geo.setInfadicTipoArticulacao(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 29)).trim());
 				geo.setInfadicCamadaInf(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 30)).trim());
@@ -209,6 +209,10 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		
 		if (geoCadastrada != null) {
 			return "título '" + geo.getIdentTituloProduto() + "' já está cadastrado na base de dados para catalogação";
+		}
+		
+		if (geo.getQualidadeNivel().trim().equals("")) {
+			return "título '" + geo.getIdentTituloProduto() + "' qualidade/nível não foi informado";
 		}
 
 		try {
