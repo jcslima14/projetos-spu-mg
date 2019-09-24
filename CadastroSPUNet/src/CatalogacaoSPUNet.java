@@ -192,33 +192,15 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
+        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
+
         List<Geoinformacao> geos = cadastroServico.obterGeoinformacao(null, false, null);
         int cont = 0;
 
         // inicia o loop para leitura dos arquivos do diretório
         for (Geoinformacao geo : geos) {
-            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
-
-            // clica no menu da aplicação
+            // acessa o endereço de cadastrar nova cartografia
             driver.get("http://spunet.planejamento.gov.br/#/geometadados/cadastrar");
-//            WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
-//            passarMouse.moveToElement(btnMenuAplicacao).perform();
-//            waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
-//            btnMenuAplicacao.click();
-//
-//            WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'GEOINFORMAÇÃO')]]"));
-//            passarMouse.moveToElement(btnServicos).click().build().perform();
-//
-//            WebElement btnCadastrar = MyUtils.encontrarElemento(wait15, By.xpath("//a[@href = '#/geometadados/cadastrar']"));
-//            passarMouse.moveToElement(btnCadastrar).perform();
-//            waitUntil.until(ExpectedConditions.elementToBeClickable(btnCadastrar));
-//            js.executeScript("arguments[0].click();", btnCadastrar);
-//            TimeUnit.MILLISECONDS.sleep(500);
-//
-//            try {
-//            	btnCadastrar.sendKeys(Keys.ESCAPE);
-//            } catch (Exception e) {
-//            }
             
 	        MyUtils.esperarCarregamento(1000, wait5, "//p[contains(text(), 'Carregando')]");
 
@@ -386,7 +368,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        do {
 		        WebElement cbbUF = MyUtils.encontrarElemento(wait15, By.name("geocodigoUf"));
 		        cbbUF.click();
-	
+
 		        ((JavascriptExecutor) driver).executeScript("window.scrollBy(0,100)", "");
 		        
 		        WebElement optUF = MyUtils.encontrarElemento(wait15, By.xpath("//div[@aria-hidden = 'false']/md-select-menu/md-content/md-option[./div[text() = '" + geo.getIdentcdgUF() + "']]"));
@@ -550,11 +532,14 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 	        WebElement btnOK = MyUtils.encontrarElemento(wait15, By.xpath("//button[text() = 'OK']"));
 	        btnOK.click();
 	        TimeUnit.MILLISECONDS.sleep(500);
-
-	        geo.setCadastrado(true);
-	        cadastroServico.gravarEntidade(geo);
 	        
 	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+
+	        String[] url = driver.getCurrentUrl().split("\\/");
+
+	        geo.setCadastrado(true);
+	        geo.setIdSPUNet(Integer.parseInt(url[url.length - 1]));
+	        cadastroServico.gravarEntidade(geo);
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");

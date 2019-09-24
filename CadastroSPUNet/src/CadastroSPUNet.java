@@ -30,11 +30,23 @@ public class CadastroSPUNet extends JFrame {
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
 		JMenuItem sbmCatalogacaoSPUNet = new JMenuItem("Catalogação no SPUNet");
 		JMenuItem sbmBuscaIdCartografia = new JMenuItem("Busca dos IDs de Cartografia");
+		JMenuItem sbmMunicipio = new JMenuItem("Cadastro de Município");
+		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmMunicipio); 
+												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); 
 															   add(sbmCatalogacaoSPUNet); 
 															   add(sbmBuscaIdCartografia); 
 															}};
-		JMenuBar barraMenu = new JMenuBar() {{ add(mnuProcessamento); }};
+		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); }};
+
+		sbmMunicipio.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				MunicipioCadastro janela = new MunicipioCadastro("Cadastro de Municípios", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
 
 		sbmBuscaIdCartografia.addActionListener(new ActionListener() {
 			@Override
@@ -113,6 +125,7 @@ public class CadastroSPUNet extends JFrame {
 
 	private void criarTabelas(EntityManager conexao) throws Exception {
 		criarTabelaGeoinformacao(conexao);
+		criarTabelaMunicipio(conexao);
 	}
 
 	private void criarTabelaGeoinformacao(EntityManager conexao) throws Exception {
@@ -151,6 +164,18 @@ public class CadastroSPUNet extends JFrame {
 						 "  metadadofuncao varchar NOT NULL," + 
 						 "  infadictipoarticulacao varchar NOT NULL," + 
 						 "  infadiccamadainf varchar NOT NULL" + 
+						 ")";
+	
+			JPAUtils.executeUpdate(conexao, sql);
+		}
+	}
+
+	private void criarTabelaMunicipio(EntityManager conexao) throws Exception {
+		if (!tabelaExiste(conexao, "municipio")) {
+			String sql = "CREATE TABLE municipio " + 
+						 "(" + 
+						 "  municipioid integer primary key autoincrement not null," + 
+						 "  nome varchar NOT NULL" + 
 						 ")";
 	
 			JPAUtils.executeUpdate(conexao, sql);

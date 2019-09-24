@@ -33,6 +33,24 @@ public class SPUNetServico {
 		return JPAUtils.executeQuery(em, sql.toString(), parametros);
 	}
 
+	public List<Municipio> obterMunicipio(Integer municipioId, String nome) throws Exception {
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select m from Municipio m ");
+		sql.append(" where 1 = 1 ");
+		if (municipioId != null) {
+			sql.append(" and municipioId = :municipioId");
+			parametros.put("municipioId", municipioId);
+		} else {
+			if (nome != null) {
+				sql.append(" and nome = :nome ");
+				parametros.put("nome", nome);
+			}
+		}
+
+		return JPAUtils.executeQuery(em, sql.toString(), parametros);
+	}
+
 	public <T> T gravarEntidade(T entidade) {
 		return JPAUtils.persistir(em, entidade);
 	}

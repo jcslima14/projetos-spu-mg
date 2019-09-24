@@ -156,7 +156,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 
 		MyUtils.appendLogArea(txtTexto, "Lendo as informações da planilha...");
 
-		for (int l = 1; l < planilha.getLastRowNum() - 1; l++) {
+		for (int l = 1; l <= planilha.getLastRowNum(); l++) {
 			Row linha = planilha.getRow(l);
 			String nome = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 0)).trim();
 			String comarca = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 1)).trim();

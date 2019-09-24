@@ -46,13 +46,13 @@ public class DespachoServico {
 				sql.append(" and municipioid = " + municipio.getMunicipioId());
 			}
 			if (autor != null) {
-				sql.append(" and autor like '" + autor + "'");
+				sql.append(" and autor like '" + autor.replace("'", "''") + "'");
 			}
 			if (cartorio != null) {
-				sql.append(" and coalesce(cartorio, '') like '" + cartorio + "'");
+				sql.append(" and coalesce(cartorio, '') like '" + cartorio.replace("'", "''") + "'");
 			}
 			if (endereco != null) {
-				sql.append(" and coalesce(endereco, '') like '" + endereco + "'");
+				sql.append(" and coalesce(endereco, '') like '" + endereco.replace("'", "''") + "'");
 			}
 		}
 
@@ -669,7 +669,7 @@ public class DespachoServico {
 			sql.append(" 					  and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
 			// se o número de processo não for significativo, adiciona a verificação por outros dados
 			if (solicitacao.getNumeroProcesso().trim().length() <= 1) {
-				sql.append("					  and autor like '" + solicitacao.getAutor() + "'");
+				sql.append("					  and autor like '" + solicitacao.getAutor().replace("'", "''") + "'");
 				sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
 				sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim().replace("'", "''") + "'");
 				sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim().replace("'", "''") + "'");

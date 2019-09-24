@@ -3,6 +3,7 @@
     <persistence-unit name="CadastroSPUNet" transaction-type="RESOURCE_LOCAL">
     	<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     	<class>Geoinformacao</class>
+    	<class>Municipio</class>
         <properties>
             <property name="hibernate.archive.autodetection" value="class" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.SQLiteDialect" />
