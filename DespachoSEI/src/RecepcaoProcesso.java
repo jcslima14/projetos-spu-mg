@@ -182,13 +182,13 @@ public class RecepcaoProcesso extends JInternalFrame {
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
         Actions passarMouse = new Actions(driver);
 
-        Wait<WebDriver> wait30 = new FluentWait<WebDriver>(driver)
+        Wait<WebDriver> wait60 = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
 
         Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
+        		.withTimeout(Duration.ofSeconds(5))
         		.pollingEvery(Duration.ofSeconds(1))
         		.ignoring(NoSuchElementException.class);
 
@@ -232,12 +232,7 @@ public class RecepcaoProcesso extends JInternalFrame {
         apagaPastaDeDownloads(pastaDeDownload);
 
         while (true) {
-    		TimeUnit.SECONDS.sleep(1);
-
-	        WebElement infCarregando = null;
-	        do {
-		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-	        } while (infCarregando != null && infCarregando.isDisplayed());
+    		MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
     		TimeUnit.SECONDS.sleep(2);
 
@@ -296,7 +291,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        	// busca o nome do autor da solicitação
 		        	String autor = null;
 		        	try {
-		        		autor = MyUtils.encontrarElemento(wait30, By.xpath("//div[@id = 'dadosInteressadosFC-innerCt']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td/div[text() = 'REQUERENTE (PÓLO ATIVO)']]/td[2]")).getText();
+		        		autor = MyUtils.encontrarElemento(wait60, By.xpath("//div[@id = 'dadosInteressadosFC-innerCt']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td/div[text() = 'REQUERENTE (PÓLO ATIVO)']]/td[2]")).getText();
 		        	} catch (Exception e) {
 		        		autor = "";
 		        	}
@@ -309,9 +304,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	        		Integer seqAnterior = -1;
 
 		        	do {
-		    	        do {
-		    		        infCarregando = MyUtils.encontrarElemento(wait5, By.xpath("//div[text() = 'Carregando...']"));
-		    	        } while (infCarregando != null && infCarregando.isDisplayed());
+		        		MyUtils.esperarCarregamento(100, wait5, "//div[text() = 'Carregando...']");
 
 		        		TimeUnit.SECONDS.sleep(1);
 

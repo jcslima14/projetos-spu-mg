@@ -162,8 +162,11 @@ public class RespostaSPUNet extends JInternalFrame {
 		}
 
         // acessando o endereço
+		MyUtils.appendLogArea(logArea, "Acessando o SPUNet...");
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET));
         Actions passarMouse = new Actions(driver);
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
 
         Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(15))
@@ -177,6 +180,9 @@ public class RespostaSPUNet extends JInternalFrame {
 
         WebDriverWait waitUntil = new WebDriverWait(driver, 10);
 
+        TimeUnit.MILLISECONDS.sleep(1000);
+		MyUtils.appendLogArea(logArea, "Informando credenciais...");
+
         // Find the text input element by its name
         WebElement weUsuario = driver.findElement(By.id("username"));
         waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
@@ -189,6 +195,10 @@ public class RespostaSPUNet extends JInternalFrame {
         // Find the text input element by its name
         WebElement botaoAcessar = driver.findElement(By.xpath("//button[contains(text(), 'Acessar')]"));
         botaoAcessar.click();
+
+        if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
+        	MyUtils.acceptSecurityAlert(driver);
+        }
 
         // verifica se foi aberto popup indesejado (fechar o popup)
         String primeiraJanela = "";
@@ -204,25 +214,26 @@ public class RespostaSPUNet extends JInternalFrame {
         driver.switchTo().window(primeiraJanela);
 
         MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
-        
+
         // clica na aba de ofícios
-        WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
-        passarMouse.moveToElement(btnMenuAplicacao).perform();
-        waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
-        btnMenuAplicacao.click();
+//        WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
+//        passarMouse.moveToElement(btnMenuAplicacao).perform();
+//        waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
+//        btnMenuAplicacao.click();
+//
+//        WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'SERVIÇOS (PORTAL SPU/MP)')]]"));
+//        passarMouse.moveToElement(btnServicos).click().build().perform();
+//
+//        WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[text() = 'Triagem']"));
+//        passarMouse.moveToElement(btnTriagem).perform();
+//        waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
+//        btnTriagem.click();
 
-        WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'SERVIÇOS (PORTAL SPU/MP)')]]"));
-        passarMouse.moveToElement(btnServicos).click().build().perform();
-
-        WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[text() = 'Triagem']"));
-        passarMouse.moveToElement(btnTriagem).perform();
-        waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
-        btnTriagem.click();
+        driver.get("http://spunet.planejamento.gov.br/#/servicos/triagem");
+        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
-	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
-
 	        String nomeArquivo = arquivo.getName().split("\\.")[0];
 	        String[] dadosResposta = nomeArquivo.split("\\-");
         	String numeroAtendimento = dadosResposta[0];
@@ -252,6 +263,7 @@ public class RespostaSPUNet extends JInternalFrame {
         	MyUtils.appendLogArea(logArea, "Nº do Processo: " + solicitacao.getNumeroProcesso() + " (Nº Atendimento: " + numeroAtendimento + ") - Arquivo: " + arquivo.getAbsolutePath());
 
 	        WebElement txtNumeroAtendimento = MyUtils.encontrarElemento(wait15, By.xpath("//input[@ng-model = 'filtro.nuAtendimento']"));
+	        txtNumeroAtendimento.clear();
 	        txtNumeroAtendimento.sendKeys(numeroAtendimento);
 
 	        WebElement btnPesquisar = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label = 'Pesquisar']"));
@@ -268,11 +280,15 @@ public class RespostaSPUNet extends JInternalFrame {
 	        	}
 	        	
 	        	WebElement btnExpandirOpcoes = linhasRetornadas.iterator().next().findElement(By.xpath("//md-fab-trigger"));
-	        	passarMouse.moveToElement(btnExpandirOpcoes).click().build().perform();
+		        js.executeScript("arguments[0].click();", btnExpandirOpcoes);
+		        TimeUnit.MILLISECONDS.sleep(500);
+	        	// passarMouse.moveToElement(btnExpandirOpcoes).click().build().perform();
 	        	
 	        	WebElement btnDetalhar = linhasRetornadas.iterator().next().findElement(By.xpath("//a[@ng-click = 'irParaDetalhar(item);']"));
-	            passarMouse.moveToElement(btnDetalhar).perform();
-	        	btnDetalhar.click();
+		        js.executeScript("arguments[0].click();", btnDetalhar);
+		        TimeUnit.MILLISECONDS.sleep(500);
+//	            passarMouse.moveToElement(btnDetalhar).perform();
+//	        	btnDetalhar.click();
 	        	
 	            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
 	            
@@ -288,7 +304,6 @@ public class RespostaSPUNet extends JInternalFrame {
 	            
 	            TimeUnit.MILLISECONDS.sleep(500);
 	
-	            JavascriptExecutor js = (JavascriptExecutor) driver;
 	            js.executeScript("arguments[0].style.visibility = 'visible'; arguments[0].style.overflow = 'visible'; arguments[0].style.height = '1px'; arguments[0].style.width = '1px'; arguments[0].style.opacity = 1", txtUpload);
 	
 	            TimeUnit.MILLISECONDS.sleep(500);

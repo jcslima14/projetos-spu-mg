@@ -7,7 +7,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -21,11 +20,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -162,6 +159,8 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
         WebDriverWait waitUntil = new WebDriverWait(driver, 10);
 
+        TimeUnit.MILLISECONDS.sleep(1000);
+
         // Find the text input element by its name
         WebElement weUsuario = MyUtils.encontrarElemento(wait15, By.id("username"));
         waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
@@ -176,7 +175,7 @@ public class CatalogacaoSPUNet extends JInternalFrame {
         botaoAcessar.click();
 
         if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
-        	acceptSecurityAlert(driver);
+        	MyUtils.acceptSecurityAlert(driver);
         }
         
         // verifica se foi aberto popup indesejado (fechar o popup)
@@ -544,23 +543,5 @@ public class CatalogacaoSPUNet extends JInternalFrame {
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
         driver.quit();
-	}
-
-	private void acceptSecurityAlert(WebDriver driver) {
-	    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(30))          
-	                                                            .pollingEvery(Duration.ofSeconds(3))          
-	                                                            .ignoring(NoSuchElementException.class);    
-	    Alert alert = wait.until(new Function<WebDriver, Alert>() {       
-
-	        public Alert apply(WebDriver driver) {
-	            try {
-	                return driver.switchTo().alert();
-	            } catch(NoAlertPresentException e) {
-	                return null;
-	            }
-	        }  
-	    });
-
-	    alert.accept();
 	}
 }

@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,10 +26,14 @@ import javax.swing.JTextArea;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
@@ -397,5 +402,23 @@ public class MyUtils {
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		}
+	}
+
+	public static void acceptSecurityAlert(WebDriver driver) {
+	    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(30))          
+	                                                            .pollingEvery(Duration.ofSeconds(3))          
+	                                                            .ignoring(NoSuchElementException.class);    
+	    Alert alert = wait.until(new Function<WebDriver, Alert>() {       
+
+	        public Alert apply(WebDriver driver) {
+	            try {
+	                return driver.switchTo().alert();
+	            } catch(NoAlertPresentException e) {
+	                return null;
+	            }
+	        }  
+	    });
+
+	    alert.accept();
 	}
 }
