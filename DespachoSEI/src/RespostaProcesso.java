@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -162,6 +163,7 @@ public class RespostaProcesso extends JInternalFrame {
 
         // acessando o endereço
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
         Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
@@ -204,9 +206,11 @@ public class RespostaProcesso extends JInternalFrame {
 
         // clica na aba de ofícios
         WebElement abaOficios = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[text() = 'Ofícios']]"));
-        passarMouse.moveToElement(abaOficios).click().build().perform();
-        Thread.sleep(2000);
-        abaOficios.click();
+        js.executeScript("arguments[0].scrollIntoView(true);", abaOficios);
+//        passarMouse.moveToElement(abaOficios).click().build().perform();
+        TimeUnit.MILLISECONDS.sleep(500);
+        js.executeScript("arguments[0].click();", abaOficios);
+//        abaOficios.click();
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
@@ -228,18 +232,27 @@ public class RespostaProcesso extends JInternalFrame {
         	String textoBotaoBusca = (chaveBusca.equals(numeroProcesso) ? "Processo Judicial" : "NUP");
 	        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]"));
         	TimeUnit.SECONDS.sleep(1);
-	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
+            js.executeScript("arguments[0].scrollIntoView(true);", cbcProcessoJudicial);
+            js.executeScript("arguments[0].click();", cbcProcessoJudicial);
+            TimeUnit.MILLISECONDS.sleep(500);
+//	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
 	
 	        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]/div"));
-        	TimeUnit.SECONDS.sleep(1);
-	        btnExpandirMenu.click();
+            js.executeScript("arguments[0].click();", btnExpandirMenu);
+            TimeUnit.MILLISECONDS.sleep(500);
+//        	TimeUnit.SECONDS.sleep(1);
+//	        btnExpandirMenu.click();
 	
 	        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
         	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
-	        passarMouse.moveToElement(divFiltro).click().build().perform();
-	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
-	        Thread.sleep(500);
+//            js.executeScript("arguments[0].scrollIntoView(true);", divFiltro);
+//            js.executeScript("arguments[0].click();", divFiltro);
+//            TimeUnit.MILLISECONDS.sleep(500);
+	        passarMouse.moveToElement(divFiltro).build().perform();
+	        // WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
+	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
+	        TimeUnit.MILLISECONDS.sleep(500);
 	        iptPesquisar.clear();
 	        iptPesquisar.sendKeys(chaveBusca);
 	
