@@ -6,7 +6,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
@@ -204,114 +207,131 @@ public class RespostaProcesso extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
-        // clica na aba de ofícios
-        WebElement abaOficios = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[text() = 'Ofícios']]"));
-        js.executeScript("arguments[0].scrollIntoView(true);", abaOficios);
-//        passarMouse.moveToElement(abaOficios).click().build().perform();
-        TimeUnit.MILLISECONDS.sleep(500);
-        js.executeScript("arguments[0].click();", abaOficios);
-//        abaOficios.click();
-
+        Map<String, List<Object[]>> mapaArquivos = separarArquivosPorTipoFiltro(MyUtils.obterArquivos(pastaDespachosSalvos));
+        
         // inicia o loop para leitura dos arquivos do diretório
-        for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
-        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+        for (String tipoFiltro : mapaArquivos.keySet()) {
+        	List<Object[]> listaArquivos = mapaArquivos.get(tipoFiltro);
 
-        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
-        	String chaveBusca = numeroProcesso;
-
-        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
-
-        	// tenta obter o número da chave de busca para o número do processo lido do nome do arquivo
-        	Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, null));
-        	
-        	if (solicitacao != null && !solicitacao.getChaveBusca().trim().equals("")) {
-        		chaveBusca = solicitacao.getChaveBusca().trim();
-        	}
-        	
-	        // clica no botão de filtro
-        	String textoBotaoBusca = (chaveBusca.equals(numeroProcesso) ? "Processo Judicial" : "NUP");
-	        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]"));
-        	TimeUnit.SECONDS.sleep(1);
-            js.executeScript("arguments[0].scrollIntoView(true);", cbcProcessoJudicial);
-            js.executeScript("arguments[0].click();", cbcProcessoJudicial);
+            // clica na aba de ofícios
+            WebElement abaOficios = MyUtils.encontrarElemento(wait15, By.xpath("//a[.//span[text() = 'Ofícios']]"));
+            js.executeScript("arguments[0].scrollIntoView(true);", abaOficios);
             TimeUnit.MILLISECONDS.sleep(500);
-//	        passarMouse.moveToElement(cbcProcessoJudicial).click().build().perform();
-	
-	        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + textoBotaoBusca + "']]/div"));
-            js.executeScript("arguments[0].click();", btnExpandirMenu);
-            TimeUnit.MILLISECONDS.sleep(500);
-//        	TimeUnit.SECONDS.sleep(1);
-//	        btnExpandirMenu.click();
-	
-	        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
-        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+            js.executeScript("arguments[0].click();", abaOficios);
 
-//            js.executeScript("arguments[0].scrollIntoView(true);", divFiltro);
-//            js.executeScript("arguments[0].click();", divFiltro);
-//            TimeUnit.MILLISECONDS.sleep(500);
-	        passarMouse.moveToElement(divFiltro).build().perform();
-	        // WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'hidden'))]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and not(@style)]"));
-	        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
-	        TimeUnit.MILLISECONDS.sleep(500);
-	        iptPesquisar.clear();
-	        iptPesquisar.sendKeys(chaveBusca);
-	
-        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
-		        
-	        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
-	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+        	for (Object[] objArquivo : listaArquivos) {
+        		String chaveBusca = objArquivo[0].toString();
+        		File arquivo = (File) objArquivo[1];
+	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
-			if (linhasRetornadas.size() == 1) {
-				WebElement divLinhaResultado = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
-				passarMouse.moveToElement(divLinhaResultado).click().build().perform();
-				passarMouse.contextClick(divLinhaResultado).perform();
-			} else {
-				if (linhasRetornadas.size() == 0) {
-					MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
+	        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
+
+	        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
+
+		        // clica no botão de filtro
+		        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]"));
+	        	TimeUnit.SECONDS.sleep(1);
+	            js.executeScript("arguments[0].scrollIntoView(true);", cbcProcessoJudicial);
+	            js.executeScript("arguments[0].click();", cbcProcessoJudicial);
+	            TimeUnit.MILLISECONDS.sleep(500);
+
+		        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]/div"));
+	            js.executeScript("arguments[0].click();", btnExpandirMenu);
+	            TimeUnit.MILLISECONDS.sleep(500);
+
+		        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
+	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+	
+		        passarMouse.moveToElement(divFiltro).build().perform();
+		        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'visibility: hidden')) and contains(@class, 'x-menu-plain')]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
+		        TimeUnit.MILLISECONDS.sleep(500);
+		        iptPesquisar.clear();
+		        iptPesquisar.sendKeys(chaveBusca);
+		
+	        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
+			        
+		        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
+		        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+	
+				if (linhasRetornadas.size() == 1) {
+					WebElement divLinhaResultado = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
+					passarMouse.moveToElement(divLinhaResultado).click().build().perform();
+					passarMouse.contextClick(divLinhaResultado).perform();
 				} else {
-					MyUtils.appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
+					if (linhasRetornadas.size() == 0) {
+						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
+					} else {
+						MyUtils.appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
+					}
+					continue;
 				}
-				continue;
-			}
+		
+	        	TimeUnit.SECONDS.sleep(1);
+				
+				// clicar no botão responder
+				WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
+				passarMouse.moveToElement(divResponder).click().build().perform();
 	
-        	TimeUnit.SECONDS.sleep(1);
-			
-			// clicar no botão responder
-			WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
-			passarMouse.moveToElement(divResponder).click().build().perform();
-
-        	TimeUnit.SECONDS.sleep(1);
-
-			// clicar no botão de upload de arquivos
-			WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
-			passarMouse.moveToElement(btnUploadArquivo).perform();
+	        	TimeUnit.SECONDS.sleep(1);
 	
-			WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
-			inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
-			
-			WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
-			passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
+				// clicar no botão de upload de arquivos
+				WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
+				passarMouse.moveToElement(btnUploadArquivo).perform();
+		
+				WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
+				inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
+				
+				WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
+				passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
+	
+				WebElement infUploadCompleto = null;
+				
+				do {
+					infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
+				} while (infUploadCompleto == null);
+	
+	        	TimeUnit.SECONDS.sleep(1);
+	
+				WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
+				passarMouse.moveToElement(btnFechar).click().build().perform();
+	
+	        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
+				
+				// mover o arquivo
+		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
+				arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
+	        }
 
-			WebElement infUploadCompleto = null;
-			
-			do {
-				infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
-			} while (infUploadCompleto == null);
-
-        	TimeUnit.SECONDS.sleep(1);
-
-			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
-			passarMouse.moveToElement(btnFechar).click().build().perform();
-
-        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
-			
-			// mover o arquivo
-	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
-			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
+        	// ao terminar o tipo de filtro, dar um refresh na página para limpar os filtros e reiniciar o processo para o segundo tipo de filtro
+        	driver.navigate().refresh();
         }
 		
         MyUtils.appendLogArea(logArea, "Fim do processamento...");
         // driver.close();
         driver.quit();
+	}
+	
+	private Map<String, List<Object[]>> separarArquivosPorTipoFiltro(List<File> arquivos) throws Exception {
+		Map<String, List<Object[]>> retorno = new LinkedHashMap<String, List<Object[]>>();
+
+		for (File arquivo : arquivos) {
+        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
+        	String chaveBusca = numeroProcesso;
+
+        	// tenta obter o número da chave de busca para o número do processo lido do nome do arquivo
+        	Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SAPIENS, TipoProcesso.ELETRONICO, numeroProcesso, null));
+
+        	if (solicitacao != null && !solicitacao.getChaveBusca().trim().equals("")) {
+        		chaveBusca = solicitacao.getChaveBusca().trim();
+        	}
+
+	        // determina o tipo de filtro de busca
+        	String textoBotaoBusca = (chaveBusca.equals(numeroProcesso) ? "Processo Judicial" : "NUP");
+        	
+        	if (retorno.get(textoBotaoBusca) == null) retorno.put(textoBotaoBusca, new ArrayList<Object[]>());
+        	retorno.get(textoBotaoBusca).add(new Object[] { chaveBusca, arquivo });
+		}
+
+		return retorno;
 	}
 }
