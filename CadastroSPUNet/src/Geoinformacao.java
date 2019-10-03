@@ -13,26 +13,24 @@ import javax.persistence.Transient;
 public class Geoinformacao {
 	@Transient
 	@SuppressWarnings("serial")
-	private List<String> ajusteDeEscala = new ArrayList<String>() {{ 
-		add("0"); 
-		add("1:50"); 
-		add("1:75"); 
-		add("1:100"); 
-		add("1:125"); 
-		add("1:150"); 
-		add("1:200"); 
-		add("1:250"); 
-		add("1:300"); 
-		add("1:350"); 
-		add("1:400"); 
-		add("1:700"); 
-		add("1:750"); 
-		add("1:1250"); 
-		add("1:1500"); 
-		add("1:2100"); 
-		add("1:2225"); 
-		add("1:3000"); 
-		add("1:4000"); 
+	private List<String> escalasDisponiveis = new ArrayList<String>() {{ 
+		add("1:500"); 
+		add("1:1000"); 
+		add("1:2000"); 
+		add("1:2500"); 
+		add("1:5000"); 
+		add("1:7500"); 
+		add("1:8000"); 
+		add("1:10000"); 
+		add("1:12500"); 
+		add("1:20000"); 
+		add("1:25000"); 
+		add("1:50000"); 
+		add("1:100000"); 
+		add("1:200000"); 
+		add("1:250000"); 
+		add("1:500000"); 
+		add("1:1000000"); 
 	}};
 	
 	@Id
@@ -359,10 +357,10 @@ public class Geoinformacao {
 
 	@Transient
 	public String escalaAjustada() {
-		if (ajusteDeEscala.contains(getIdentcdgEscala())) {
-			return "";
-		} else {
+		if (escalasDisponiveis.contains(getIdentcdgEscala())) {
 			return getIdentcdgEscala().replace(":", ": ");
+		} else {
+			return "";
 		}
 	}
 
