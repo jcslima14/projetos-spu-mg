@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -31,7 +32,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
@@ -52,6 +54,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
 	private JPasswordField txtSenha = new JPasswordField(15);
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
+	private JComboBox<String> cbbNavegador = new JComboBox<String>();
+	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
 	private JTextArea logArea = new JTextArea(30, 100);
@@ -68,6 +72,10 @@ public class ImpressaoDespacho extends JInternalFrame {
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(conexao);
 
+		cbbNavegador.addItem("Chrome");
+		cbbNavegador.addItem("Firefox");
+		cbbNavegador.setSelectedItem(despachoServico.obterConteudoParametro(Parametro.DEFAULT_BROWSER, "Firefox"));
+
 		opcoesAssinante();
 
 		painelDados.add(lblAssinante);
@@ -76,11 +84,13 @@ public class ImpressaoDespacho extends JInternalFrame {
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
 		painelDados.add(txtSenha);
+		painelDados.add(lblNavegador);
+		painelDados.add(cbbNavegador);
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
 		
 		SpringUtilities.makeGrid(painelDados,
-	            4, 2, //rows, cols
+	            5, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -97,7 +107,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));;
+								imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante), cbbNavegador.getSelectedItem().toString());;
 							} catch (Exception e) {
 								MyUtils.appendLogArea(logArea, "Erro ao imprimir as respostas do SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 								e.printStackTrace();
@@ -129,7 +139,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 		this.show();
 	}
 
-	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
+	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId, String navegador) throws Exception {
         String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
         String msgValidacao = validarPastas(pastaRespostasImpressas);
         if (!msgValidacao.equals("")) {
@@ -138,14 +148,37 @@ public class ImpressaoDespacho extends JInternalFrame {
         }
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		ChromeOptions opcoes = new ChromeOptions();
-		opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ put("download.prompt_for_download", false); put("download.default_directory", pastaRespostasImpressas); }});
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-        WebDriver driver = new ChromeDriver(opcoes);
+		WebDriver driver = null;
+		if (navegador.equalsIgnoreCase("chrome")) {
+			ChromeOptions opcoes = new ChromeOptions();
+			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
+				put("download.prompt_for_download", false); 
+				put("download.default_directory", pastaRespostasImpressas); 
+				put("pdfjs.disabled", true); 
+				put("plugins.always_open_pdf_externally", true);
+				}});
+			opcoes.addArguments("--disable-extensions");
+			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+	        driver = new ChromeDriver(opcoes);
+		} else {
+			FirefoxOptions opcoes = new FirefoxOptions();
+			// FirefoxProfile perfil = new FirefoxProfile();
+			opcoes.addPreference("browser.download.folderList", 2);
+			opcoes.addPreference("browser.download.dir", pastaRespostasImpressas);
+			opcoes.addPreference("browser.download.useDownloadDir", true);
+			opcoes.addPreference("browser.helperApps.neverAsk.saveToDisk", "application/pdf");
+			opcoes.addPreference("browser.link.open_newwindow", 3);
+			opcoes.addPreference("pdfjs.disabled", true);  // disable the built-in PDF viewer
+			opcoes.addPreference("pdfjs.previousHandler.alwaysAskBeforeHandling", true);
+			opcoes.addPreference("pdfjs.previousHandler.preferredAction", 4);
+			opcoes.addPreference("pdfjs.enabledCache.state", false);
+			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
+			driver = new FirefoxDriver(opcoes);
+		}
 
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-        Actions passarMouse = new Actions(driver);
+//        Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(60))
@@ -190,8 +223,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 			txtPesquisaRapida.sendKeys(Keys.ENTER);
 
 			// clicar em gerar documentos
-			driver.switchTo().frame("ifrVisualizacao");
-			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait5, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
+			WebElement ifrVisualizacao = MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao"));
+			driver.switchTo().frame(ifrVisualizacao);
+			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
 			btnGerarPDF.click();
 
 			// encontra a quantidade de registros aptos a serem impressos
@@ -239,9 +273,16 @@ public class ImpressaoDespacho extends JInternalFrame {
 					String janelaAtual = driver.getWindowHandle();
 	
 					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
-					passarMouse.moveToElement(lnkDocumento).perform();;
-					TimeUnit.MILLISECONDS.sleep(100);
+//					TimeUnit.MILLISECONDS.sleep(100);
+//					passarMouse.moveToElement(lnkDocumento).perform();
 					lnkDocumento.click();
+
+					do {
+						if (driver.getWindowHandles().size() > 1) {
+							break;
+						}
+						TimeUnit.SECONDS.sleep(1);
+					} while (true);
 					
 					for (String janelaAberta : driver.getWindowHandles()) {
 						driver.switchTo().window(janelaAberta);
@@ -255,7 +296,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 					driver.close();
 					driver.switchTo().window(janelaAtual);
 					driver.switchTo().defaultContent();
-					driver.switchTo().frame("ifrVisualizacao");
+					ifrVisualizacao = MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao"));
+					driver.switchTo().frame(ifrVisualizacao);
 	
 					int quantidadeAssinaturas = respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas();
 					
