@@ -325,8 +325,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 		Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
 		for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
-			List<SolicitacaoResposta> respostasARetirar = blocosDeAssinatura.get(blocoAssinatura);
-			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + respostasARetirar.size() + " documentos do bloco de assinatura " + blocoAssinatura);
+			List<SolicitacaoResposta> respostasRetirada = new ArrayList<SolicitacaoResposta>();
+			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
 
 			driver.switchTo().defaultContent();
 			WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
@@ -366,7 +366,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			// aguarda encontrar a linha que contém o sequencial igual à quantidade de registros lida acima
 			MyUtils.encontrarElemento(wait, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr/td[2][text() = '" + quantidadeRegistros + "']"));
 			
-			for (SolicitacaoResposta respostaARetirar : respostasARetirar) {
+			for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
 				WebElement chkSelecaoLinha = null;
 				try {
 					chkSelecaoLinha = MyUtils.encontrarElemento(wait3, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
@@ -376,14 +376,14 @@ public class ImpressaoDespacho extends JInternalFrame {
 				if (chkSelecaoLinha != null) {
 					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 					chkSelecaoLinha.click();
-					respostasARetirar.add(respostaARetirar);
+					respostasRetirada.add(respostaARetirar);
 				} else {
 					MyUtils.appendLogArea(logArea, "O documento " + respostaARetirar.getNumeroDocumentoSEI() + " não foi encontrado no bloco de assinatura.");
-					respostasARetirar.add(respostaARetirar);
+					respostasRetirada.add(respostaARetirar);
 				}
 			}
 			
-			if (respostasARetirar.size() > 0) {
+			if (respostasRetirada.size() > 0) {
 				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
 				WebElement btnExcluir = MyUtils.encontrarElemento(wait5, By.id("btnExcluir"));
 				btnExcluir.click();
@@ -394,7 +394,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 				MyUtils.encontrarElemento(wait5, By.id("btnFechar"));
 
 				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
-				for (SolicitacaoResposta respostaRetirada : respostasARetirar) {
+				for (SolicitacaoResposta respostaRetirada : respostasRetirada) {
 					atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
 				}
 			}
