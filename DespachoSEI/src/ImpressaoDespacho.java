@@ -34,6 +34,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
@@ -178,7 +179,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-//        Actions passarMouse = new Actions(driver);
+        Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(60))
@@ -228,19 +229,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
 			btnGerarPDF.click();
 
-			// encontra a quantidade de registros aptos a serem impressos
-			String quantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
-			quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
-			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
-
-			do {
-				List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]"));
-				if (linhasAptas != null && linhasAptas.size() == Integer.parseInt(quantidadeRegistros)) {
-					break;
-				} else {
-					TimeUnit.SECONDS.sleep(1);
-				}
-			} while (true);
+			aguardarCargaListaDocumentos(wait);
 
 			// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
 			WebElement btnDesmarcarTudo = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Selecionar Tudo']"));
@@ -273,8 +262,6 @@ public class ImpressaoDespacho extends JInternalFrame {
 					String janelaAtual = driver.getWindowHandle();
 	
 					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
-//					TimeUnit.MILLISECONDS.sleep(100);
-//					passarMouse.moveToElement(lnkDocumento).perform();
 					lnkDocumento.click();
 
 					do {
@@ -304,6 +291,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 					if (assinaturas.size() != quantidadeAssinaturas) {
 						MyUtils.appendLogArea(logArea, "Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.");
 					} else {
+						passarMouse.moveToElement(chkSelecionarDocumento).perform();
 						chkSelecionarDocumento.click();
 	
 						// apaga arquivo com o nome do processo, caso já exista
@@ -318,7 +306,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 	
 						// atualiza o indicativo de que o documento foi impresso
 						atualizarRespostaImpressa(respostaAImprimir, nomeArquivoPasta);
-	
+
+						MyUtils.esperarCarregamento(200, wait5, "//div[@id = 'divInfraAvisoFundo' and contains(@style, 'visibility: visible')]//span[@id = 'spnInfraAviso']");
+
+						aguardarCargaListaDocumentos(wait);
+
 						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 						chkSelecionarDocumento.click();
 					}
@@ -331,10 +323,10 @@ public class ImpressaoDespacho extends JInternalFrame {
 		// início da retirada dos documentos do bloco de assinatura
 		MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...");
 
-		Map<String, List<SolicitacaoResposta>> respostasARetirar = obterRespostasAProcessar(2, assinanteId);
-		for (String blocoAssinatura : respostasARetirar.keySet()) {
-			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
-			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + respostasRetiradas.size() + " documentos do bloco de assinatura " + blocoAssinatura);
+		Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
+		for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
+			List<SolicitacaoResposta> respostasARetirar = blocosDeAssinatura.get(blocoAssinatura);
+			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + respostasARetirar.size() + " documentos do bloco de assinatura " + blocoAssinatura);
 
 			driver.switchTo().defaultContent();
 			WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
@@ -359,14 +351,22 @@ public class ImpressaoDespacho extends JInternalFrame {
 			lnkBlocoAssinatura.click();
 
 			// aguarda a carga de todos os registros
-			String quantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/caption")).getText();
+			WebElement capQuantidadeRegistros = null;
+			try {
+				capQuantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/caption"));
+			} catch (Exception e) {
+				MyUtils.appendLogArea(logArea, "O bloco de assinatura " + blocoAssinatura + " não possui nenhum documento para ser retirado.");
+				continue;
+			}
+
+			String quantidadeRegistros = capQuantidadeRegistros.getText();
 			quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
 			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
 
 			// aguarda encontrar a linha que contém o sequencial igual à quantidade de registros lida acima
 			MyUtils.encontrarElemento(wait, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr/td[2][text() = '" + quantidadeRegistros + "']"));
 			
-			for (SolicitacaoResposta respostaARetirar : respostasARetirar.get(blocoAssinatura)) {
+			for (SolicitacaoResposta respostaARetirar : respostasARetirar) {
 				WebElement chkSelecaoLinha = null;
 				try {
 					chkSelecaoLinha = MyUtils.encontrarElemento(wait3, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
@@ -376,13 +376,14 @@ public class ImpressaoDespacho extends JInternalFrame {
 				if (chkSelecaoLinha != null) {
 					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 					chkSelecaoLinha.click();
-					respostasRetiradas.add(respostaARetirar);
+					respostasARetirar.add(respostaARetirar);
 				} else {
 					MyUtils.appendLogArea(logArea, "O documento " + respostaARetirar.getNumeroDocumentoSEI() + " não foi encontrado no bloco de assinatura.");
+					respostasARetirar.add(respostaARetirar);
 				}
 			}
 			
-			if (respostasRetiradas.size() > 0) {
+			if (respostasARetirar.size() > 0) {
 				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
 				WebElement btnExcluir = MyUtils.encontrarElemento(wait5, By.id("btnExcluir"));
 				btnExcluir.click();
@@ -393,7 +394,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 				MyUtils.encontrarElemento(wait5, By.id("btnFechar"));
 
 				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
-				for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
+				for (SolicitacaoResposta respostaRetirada : respostasARetirar) {
 					atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
 				}
 			}
@@ -403,6 +404,22 @@ public class ImpressaoDespacho extends JInternalFrame {
 
         driver.close();
         driver.quit();
+	}
+
+	private void aguardarCargaListaDocumentos(Wait<WebDriver> wait) throws InterruptedException {
+		// encontra a quantidade de registros aptos a serem impressos
+		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
+		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
+		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
+
+		do {
+			List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]"));
+			if (linhasAptas != null && linhasAptas.size() == Integer.parseInt(quantidadeRegistros)) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
 	}
 
 	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) {
@@ -470,7 +487,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 		for (SolicitacaoResposta resposta : respostas) {
 			// se for filtro 2 (processos a retirar do bloco de assinatura), certifica-se de pegar somente os registros que já foram impressos; se não foram, desconsidera o registro
 			String chave = (tipoFiltro == 1 ? resposta.getNumeroProcessoSEI() : resposta.getBlocoAssinatura());
-			if (retorno.get(chave) == null) retorno.put(chave, new ArrayList<SolicitacaoResposta>());
+			if (retorno.get(chave) == null) {
+				retorno.put(chave, new ArrayList<SolicitacaoResposta>());
+			}
 			retorno.get(chave).add(resposta);
 		}
 
