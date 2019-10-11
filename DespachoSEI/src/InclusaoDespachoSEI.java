@@ -351,7 +351,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
 				WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
 				btnIncluirBlocoAssinatura.click();
-				
+
 				// seleciona o bloco interno desejado
 				Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
 				cbxBlocoAssinatura.selectByValue(respostaAGerar.getBlocoAssinatura());
@@ -362,6 +362,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				// clica em incluir
 				WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
 				btnIncluir.click();
+
+				// aguardar que a linha retorno indicando que o registro está inserido no bloco
+				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "'] and ./td[5]/a[text() = '" + respostaAGerar.getBlocoAssinatura() + "']]"));
 				
 				driver.switchTo().defaultContent();
 				
