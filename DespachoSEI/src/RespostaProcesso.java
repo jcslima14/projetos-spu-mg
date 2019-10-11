@@ -141,6 +141,8 @@ public class RespostaProcesso extends JInternalFrame {
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
         String pastaDespachosSalvos = MyUtils.emptyStringIfNull(sapiens.getPastaPDFResposta());
+        int tempoEsperaUpload = Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_ESPERA));
+        
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
         	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem Sapiens (" + Origem.SAPIENS_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
         	return;
@@ -241,23 +243,19 @@ public class RespostaProcesso extends JInternalFrame {
 
 		        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
 	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
-	
+
 		        passarMouse.moveToElement(divFiltro).build().perform();
 		        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'visibility: hidden')) and contains(@class, 'x-menu-plain')]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
 		        TimeUnit.MILLISECONDS.sleep(500);
 		        iptPesquisar.clear();
 		        iptPesquisar.sendKeys(chaveBusca);
-		
+
 	        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
-			        
+
 		        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
 		        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
-	
-				if (linhasRetornadas.size() == 1) {
-					WebElement divLinhaResultado = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
-					passarMouse.moveToElement(divLinhaResultado).click().build().perform();
-					passarMouse.contextClick(divLinhaResultado).perform();
-				} else {
+
+				if (linhasRetornadas.size() != 1) {
 					if (linhasRetornadas.size() == 0) {
 						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
 					} else {
@@ -265,9 +263,28 @@ public class RespostaProcesso extends JInternalFrame {
 					}
 					continue;
 				}
-		
-	        	TimeUnit.SECONDS.sleep(1);
+
+				WebElement colID = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
+				WebElement colNUP = linhasRetornadas.iterator().next().findElement(By.xpath("./td[2]/div//a"));
+				WebElement colNumeroProcessoJudicial = linhasRetornadas.iterator().next().findElement(By.xpath("./td[3]/div"));
+				String nup = colNUP.getText().trim().replaceAll("\\D+", "");
+				String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
 				
+				if (!nup.startsWith(chaveBusca)) {
+					MyUtils.appendLogArea(logArea, "O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
+					continue;
+				}
+				
+				if (!numeroProcessoJudicial.startsWith(numeroProcesso)) {
+					MyUtils.appendLogArea(logArea, "O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
+					continue;
+				}
+
+				passarMouse.moveToElement(colID).perform();
+				passarMouse.contextClick(colID).perform();
+
+	        	TimeUnit.SECONDS.sleep(1);
+
 				// clicar no botão responder
 				WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
 				passarMouse.moveToElement(divResponder).click().build().perform();
@@ -280,16 +297,18 @@ public class RespostaProcesso extends JInternalFrame {
 		
 				WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
 				inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
-				
+
+	        	TimeUnit.SECONDS.sleep(tempoEsperaUpload);
+
 				WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
 				passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
-	
+
 				WebElement infUploadCompleto = null;
-				
+
 				do {
 					infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
 				} while (infUploadCompleto == null);
-	
+
 	        	TimeUnit.SECONDS.sleep(1);
 	
 				WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));

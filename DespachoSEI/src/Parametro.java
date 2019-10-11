@@ -12,6 +12,8 @@ public class Parametro {
 	static int ENDERECO_SPUNET = 8;
 	static int PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS = 9;
 	static int UNIDADE_PADRAO_SEI = 10;
+	static int BAIXAR_TODO_PROCESSO_SAPIENS = 11;
+	static int TEMPO_ESPERA = 12;
 
 	@SuppressWarnings("serial")
 	static Map<Integer, String[]> DESCRICOES = new LinkedHashMap<Integer, String[]>() {{ 
@@ -25,6 +27,8 @@ public class Parametro {
 		put(ENDERECO_SPUNET, new String[] { "Endereço do SPUNet", "http://spunet.planejamento.gov.br" });
 		put(PASTA_ARQUIVOS_PROCESSOS_INDIVIDUAIS, new String[] { "Pasta de arquivos para anexar aos processos individuais", "" });
 		put(UNIDADE_PADRAO_SEI, new String[] { "Unidade padrão ao acessar o SEI", "SPU-MG-NUSUC" });
+		put(BAIXAR_TODO_PROCESSO_SAPIENS, new String[] { "Baixar todo o processo do Sapiens", "Não" });
+		put(TEMPO_ESPERA, new String[] { "Tempo de espera para verificação (em segundos)", "0" });
 	}};
 
 	public static String obterDescricao(int parametroId) {

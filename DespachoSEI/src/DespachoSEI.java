@@ -256,7 +256,7 @@ public class DespachoSEI extends JFrame {
 
 		try {
 			conexao = DriverManager.getConnection("jdbc:sqlite:DespachoSEI.db");
-			// conexao = DriverManager.getConnection("jdbc:sqlite:L:\\DIVERSOS\\Ferramentas SPU\\Despacho SEI\\DespachoSEI.db");
+//			conexao = DriverManager.getConnection("jdbc:sqlite:L:\\DIVERSOS\\Ferramentas SPU\\Despacho SEI\\DespachoSEI.db");
 			criarTabelas(conexao);
 		} catch (Exception e1) {
 			JOptionPane.showMessageDialog(null, "Erro ao conectar com o banco de dados. \n \n" + e1.getMessage());
