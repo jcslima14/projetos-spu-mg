@@ -252,7 +252,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 				// encontra e marca o checkbox do documento
 				WebElement chkSelecionarDocumento = null;
 				try {
-					chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+					chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -262,6 +262,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 					String janelaAtual = driver.getWindowHandle();
 	
 					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
+					TimeUnit.MILLISECONDS.sleep(100);
+					try {
+						passarMouse.moveToElement(lnkDocumento).perform();
+					} catch (Exception e) {
+					}
 					lnkDocumento.click();
 
 					do {
@@ -294,6 +299,15 @@ public class ImpressaoDespacho extends JInternalFrame {
 						passarMouse.moveToElement(chkSelecionarDocumento).perform();
 						chkSelecionarDocumento.click();
 	
+						// certifica-se de que o documento está marcado e que somente 1 documento está marcado na lista
+						MyUtils.encontrarElemento(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+						
+						List<WebElement> documentosMarcados = MyUtils.encontrarElementos(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada')]/*/input[@class = 'infraCheckbox']"));
+						if (documentosMarcados.size() != 1) {
+							MyUtils.appendLogArea(logArea, "A lista de documentos a serem impressos deveria ter apenas 1 documento marcado, mas está com " + documentosMarcados.size() + " marcados. Tente imprimir o documento novamente mais tarde.");
+							continue;
+						}
+
 						// apaga arquivo com o nome do processo, caso já exista
 						apagarArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI);
 	
@@ -311,8 +325,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 						aguardarCargaListaDocumentos(wait);
 
-						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 						chkSelecionarDocumento.click();
+						
+						// verifica se o documento está mesmo desmcarcado
+						MyUtils.encontrarElemento(wait5, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 					}
 				} else {
 					MyUtils.appendLogArea(logArea, "Documento não encontrado ou não habilitado para geração em PDF");
@@ -325,7 +342,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 		Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
 		for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
-			List<SolicitacaoResposta> respostasRetirada = new ArrayList<SolicitacaoResposta>();
+			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
 			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
 
 			driver.switchTo().defaultContent();
@@ -376,14 +393,14 @@ public class ImpressaoDespacho extends JInternalFrame {
 				if (chkSelecaoLinha != null) {
 					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 					chkSelecaoLinha.click();
-					respostasRetirada.add(respostaARetirar);
+					respostasRetiradas.add(respostaARetirar);
 				} else {
 					MyUtils.appendLogArea(logArea, "O documento " + respostaARetirar.getNumeroDocumentoSEI() + " não foi encontrado no bloco de assinatura.");
-					respostasRetirada.add(respostaARetirar);
+					respostasRetiradas.add(respostaARetirar);
 				}
 			}
 			
-			if (respostasRetirada.size() > 0) {
+			if (respostasRetiradas.size() > 0) {
 				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
 				WebElement btnExcluir = MyUtils.encontrarElemento(wait5, By.id("btnExcluir"));
 				btnExcluir.click();
@@ -394,7 +411,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 				MyUtils.encontrarElemento(wait5, By.id("btnFechar"));
 
 				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
-				for (SolicitacaoResposta respostaRetirada : respostasRetirada) {
+				for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
 					atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
 				}
 			}
@@ -422,25 +439,39 @@ public class ImpressaoDespacho extends JInternalFrame {
 		} while (true);
 	}
 
-	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) {
+	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) throws Exception {
 		File arquivo = new File(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf");
+		int vezes = 0;
+		do {
+			if (arquivo.exists()) {
+				arquivo.delete();
+			} else {
+				break;
+			}
+		} while (vezes++ < 30);
+		
 		if (arquivo.exists()) {
-			arquivo.delete();
+			throw new Exception("Ocorreu um erro ao tentar excluir um arquivo já existente do processo " + numeroProcessoSEI);
 		}
 	}
 
 	private void renomearArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI, String arquivoRenomeado) throws Exception {
 		int vezes = 0;
-		while (vezes++ < 15) {
+		while (vezes++ < 30) {
 			TimeUnit.SECONDS.sleep(1);
 			File arquivo = new File(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf");
 			if (arquivo.exists() && arquivo.length() > 0) {
 				File novoArquivo = new File(arquivoRenomeado);
 				if (novoArquivo.exists()) novoArquivo.delete();
 				arquivo.renameTo(novoArquivo);
-				break;
+				TimeUnit.MILLISECONDS.sleep(200);
+				if (!novoArquivo.exists()) {
+					throw new Exception("Ocorreu um erro ao renomear o arquivo para o número do processo " + numeroProcessoSEI);
+				} else {
+					break;
+				}
 			}
-		};
+		}
 	}
 
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {
@@ -481,7 +512,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			respostaNoBlocoAssinatura = true;
 			pendentesRetiraBloco = true;
 		}
-		
+
 		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAImprimir(respostaImpressa, respostaNoBlocoAssinatura, assinante, true, pendentesImpressao, pendentesRetiraBloco);
 
 		for (SolicitacaoResposta resposta : respostas) {
