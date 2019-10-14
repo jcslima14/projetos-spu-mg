@@ -222,9 +222,10 @@ public class RespostaProcesso extends JInternalFrame {
             js.executeScript("arguments[0].click();", abaOficios);
 
         	for (Object[] objArquivo : listaArquivos) {
+	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+
         		String chaveBusca = objArquivo[0].toString();
         		File arquivo = (File) objArquivo[1];
-	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
 
 	        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
 
@@ -269,8 +270,8 @@ public class RespostaProcesso extends JInternalFrame {
 				WebElement colNumeroProcessoJudicial = linhasRetornadas.iterator().next().findElement(By.xpath("./td[3]/div"));
 				String nup = colNUP.getText().trim().replaceAll("\\D+", "");
 				String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
-				
-				if (!nup.startsWith(chaveBusca)) {
+
+				if (tipoFiltro.equalsIgnoreCase("nup") && (!nup.startsWith(chaveBusca) || !colNUP.getAttribute("href").trim().toLowerCase().contains("nup=" + chaveBusca))) {
 					MyUtils.appendLogArea(logArea, "O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
 					continue;
 				}
@@ -280,8 +281,7 @@ public class RespostaProcesso extends JInternalFrame {
 					continue;
 				}
 
-				passarMouse.moveToElement(colID).perform();
-				passarMouse.contextClick(colID).perform();
+				passarMouse.moveToElement(colID).contextClick(colID).perform();
 
 	        	TimeUnit.SECONDS.sleep(1);
 
