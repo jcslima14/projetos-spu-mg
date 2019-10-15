@@ -1,7 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -440,38 +439,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 	}
 
 	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) throws Exception {
-		File arquivo = new File(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf");
-		int vezes = 0;
-		do {
-			if (arquivo.exists()) {
-				arquivo.delete();
-			} else {
-				break;
-			}
-		} while (vezes++ < 30);
-		
-		if (arquivo.exists()) {
-			throw new Exception("Ocorreu um erro ao tentar excluir um arquivo já existente do processo " + numeroProcessoSEI);
-		}
+		MyUtils.apagarArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
 	}
 
 	private void renomearArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI, String arquivoRenomeado) throws Exception {
-		int vezes = 0;
-		while (vezes++ < 30) {
-			TimeUnit.SECONDS.sleep(1);
-			File arquivo = new File(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf");
-			if (arquivo.exists() && arquivo.length() > 0) {
-				File novoArquivo = new File(arquivoRenomeado);
-				if (novoArquivo.exists()) novoArquivo.delete();
-				arquivo.renameTo(novoArquivo);
-				TimeUnit.MILLISECONDS.sleep(200);
-				if (!novoArquivo.exists()) {
-					throw new Exception("Ocorreu um erro ao renomear o arquivo para o número do processo " + numeroProcessoSEI);
-				} else {
-					break;
-				}
-			}
-		}
+		MyUtils.renomearArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 30);
 	}
 
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {
@@ -483,6 +455,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 					 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 	
 			MyUtils.execute(conexao, sql.toString());
+		} else {
+			throw new Exception("O arquivo " + nomeArquivo + " não foi gerado corretamente.");
 		}
 	}
 

@@ -51,6 +51,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
+	private JTextArea logArea = new JTextArea(30, 100);
 
 	public RecepcaoProcesso(String tituloJanela, Connection conexao) {
 		super(tituloJanela);
@@ -103,7 +104,6 @@ public class RecepcaoProcesso extends JInternalFrame {
                 6, 6); //xPad, yPad
 		
 		add(painelDados, BorderLayout.WEST);
-		JTextArea logArea = new JTextArea(30, 100);
 		JScrollPane areaDeRolagem = new JScrollPane(logArea);
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
@@ -382,10 +382,18 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        		String resultadoDownload = "";
 
 		        		do {
+		        			String tituloJanelaAtual = driver.getWindowHandle();
+		        			int quantidadeJanelas = driver.getWindowHandles().size();
+
 		        			// clica no botão para gerar o PDF
 		        			WebElement btnGerar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Gerar']]"));
 		        			passarMouse.moveToElement(btnGerar).click().build().perform();
 
+		        			if (ocorreuErroDownload(driver, wait60, tituloJanelaAtual, quantidadeJanelas)) {
+		        				resultadoDownload = "Ocorreu erro ao baixar os arquivos do processo";
+		        				break;
+		        			}
+		        			
 			        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
 			        		arquivosOk = arquivosBaixadosERenomeados(logArea, 1, pastaDeDownload, numeroSemFormatacao, dataHora, isComplementacao);
 		        		} while (!arquivosOk);
@@ -421,6 +429,52 @@ public class RecepcaoProcesso extends JInternalFrame {
         }
 	}
 
+	private boolean ocorreuErroDownload(WebDriver driver, Wait<WebDriver> wait, String tituloJanelaAtual, int quantidadeJanelas) throws Exception {
+		boolean retorno = false;
+		boolean janelaAberta = false;
+		String tituloJanelaAberta = null;
+
+		// espera 1 segundo pela abertura da janela de download
+		TimeUnit.MILLISECONDS.sleep(2000);
+		
+		// se abriu uma janela, aguarda enquanto ela estiver carregando
+		if (driver.getWindowHandles().size() > quantidadeJanelas) {
+			try {
+				driver.switchTo().window(driver.getWindowHandles().toArray()[driver.getWindowHandles().size() - 1].toString());
+				janelaAberta = true;
+			} catch (Exception e) {
+			} finally {
+				if (janelaAberta) {
+					do {
+						tituloJanelaAberta = driver.getTitle();
+						if (!tituloJanelaAberta.toLowerCase().startsWith("Carregando")) {
+							break;
+						}
+
+						TimeUnit.SECONDS.sleep(1);
+					} while (true);
+				}
+			}
+		}
+
+		if (janelaAberta && tituloJanelaAberta != null && !tituloJanelaAberta.trim().equals("")) {
+			WebElement msgErro = null;
+			try {
+				msgErro = MyUtils.encontrarElemento(wait, By.xpath("//p[contains(text(), 'Não foi possível gerar o PDF')]"));
+			} catch (Exception e) {
+			}
+			
+			if (msgErro != null) {
+				retorno = true;
+				driver.close();
+			}
+		}
+
+		driver.switchTo().window(tituloJanelaAtual);
+		
+		return retorno;
+	}
+	
 	private boolean processoJaRecebido(JTextArea logArea, String numeroProcesso, String dataHoraMovimentacao) throws Exception {
 		List<SolicitacaoEnvio> processos = despachoServico.obterSolicitacaoEnvio(null, null, Origem.SAPIENS, numeroProcesso, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), null, false);
 		if (processos == null || processos.isEmpty()) {

@@ -421,4 +421,55 @@ public class MyUtils {
 
 	    alert.accept();
 	}
+
+	public static void apagarArquivo(String nomeArquivo, int numeroTentativas) throws Exception {
+		File arquivo = null;
+		int tentativa = 0;
+
+		do {
+			arquivo = new File(nomeArquivo);
+
+			if (arquivo.exists()) {
+				if (arquivo.delete()) {
+					break;
+				}
+			} else {
+				break;
+			}
+			TimeUnit.SECONDS.sleep(1);
+		} while (tentativa++ < numeroTentativas);
+		
+		// verifica se, mesmo depois de excluído, o arquivo ainda existe; se sim, retorna erro
+		if (arquivo.exists()) {
+			throw new Exception ("A exclusão do arquivo " + nomeArquivo + " falhou.");
+		}
+	}
+	
+	public static void renomearArquivo(String nomeArquivoAnterior, String nomeArquivoNovo, int numeroTentativas) throws Exception {
+		File arquivoAnterior = null;
+		File arquivoNovo = null;
+		int tentativa = 0;
+
+		do {
+			arquivoAnterior = new File(nomeArquivoAnterior);
+			arquivoNovo = new File(nomeArquivoNovo);
+
+			if (arquivoAnterior.exists() && arquivoAnterior.length() > 0) {
+				if (arquivoNovo.exists()) {
+					apagarArquivo(nomeArquivoNovo, 2);
+				}
+
+				if (arquivoAnterior.renameTo(arquivoNovo)) {
+					arquivoNovo = new File(nomeArquivoNovo);
+					break;
+				}
+			}
+			TimeUnit.SECONDS.sleep(1);
+		} while (tentativa++ < numeroTentativas);
+		
+		// verifica se, depois de renomeado, o arquivo novo existe no caminho de destino
+		if (!arquivoNovo.exists()) {
+			throw new Exception ("A movimentação do arquivo " + nomeArquivoAnterior + " para o arquivo " + nomeArquivoNovo + " falhou.");
+		}
+	}
 }

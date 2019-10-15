@@ -317,8 +317,11 @@ public class RespostaProcesso extends JInternalFrame {
 	        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
 				
 				// mover o arquivo
+	        	TimeUnit.MILLISECONDS.sleep(50);
 		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
-				arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
+		        String nomeArquivoBkp = pastaDespachosSalvos + "\\bkp\\" + arquivo.getName();
+		        
+		        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30);
 	        }
 
         	// ao terminar o tipo de filtro, dar um refresh na página para limpar os filtros e reiniciar o processo para o segundo tipo de filtro
