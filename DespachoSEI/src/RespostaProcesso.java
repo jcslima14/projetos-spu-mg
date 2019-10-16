@@ -321,7 +321,7 @@ public class RespostaProcesso extends JInternalFrame {
 		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
 		        String nomeArquivoBkp = pastaDespachosSalvos + "\\bkp\\" + arquivo.getName();
 		        
-		        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30);
+		        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
 	        }
 
         	// ao terminar o tipo de filtro, dar um refresh na página para limpar os filtros e reiniciar o processo para o segundo tipo de filtro

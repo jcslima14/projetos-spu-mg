@@ -443,7 +443,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 	}
 
 	private void renomearArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI, String arquivoRenomeado) throws Exception {
-		MyUtils.renomearArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 30);
+		MyUtils.renomearArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 30, false);
 	}
 
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {

@@ -445,18 +445,28 @@ public class MyUtils {
 		}
 	}
 	
-	public static void renomearArquivo(String nomeArquivoAnterior, String nomeArquivoNovo, int numeroTentativas) throws Exception {
+	public static void renomearArquivo(String nomeArquivoAnterior, String nomeArquivoNovo, int numeroTentativas, boolean adicionarNumeracao) throws Exception {
 		File arquivoAnterior = null;
 		File arquivoNovo = null;
 		int tentativa = 0;
 
 		do {
 			arquivoAnterior = new File(nomeArquivoAnterior);
-			arquivoNovo = new File(nomeArquivoNovo);
 
 			if (arquivoAnterior.exists() && arquivoAnterior.length() > 0) {
+				arquivoNovo = new File(nomeArquivoNovo);
+
 				if (arquivoNovo.exists()) {
-					apagarArquivo(nomeArquivoNovo, 2);
+					if (adicionarNumeracao) {
+						int cont = 1;
+
+						do {
+							String nomeArquivoNovoNumerado = nomeArquivoNovo.substring(0, nomeArquivoNovo.lastIndexOf(".")) + " (" + (cont++) + ")" + nomeArquivoNovo.substring(nomeArquivoNovo.lastIndexOf("."));
+							arquivoNovo = new File(nomeArquivoNovoNumerado);
+						} while (arquivoNovo.exists());
+					} else {
+						apagarArquivo(nomeArquivoNovo, 2);
+					}
 				}
 
 				if (arquivoAnterior.renameTo(arquivoNovo)) {
