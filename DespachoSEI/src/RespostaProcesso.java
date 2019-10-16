@@ -252,7 +252,8 @@ public class RespostaProcesso extends JInternalFrame {
 		        iptPesquisar.sendKeys(chaveBusca);
 
 	        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
-
+	        	TimeUnit.SECONDS.sleep(1);
+	        	
 		        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
 		        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
 

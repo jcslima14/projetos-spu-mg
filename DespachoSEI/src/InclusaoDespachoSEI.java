@@ -536,6 +536,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		retorno.put("<assinante_superior_cargo>", superior.getCargo());
 		retorno.put("<assinante_superior_setor>", superior.getSetor());
 		retorno.put("<observacao>", MyUtils.emptyStringIfNull(resposta.getObservacao().trim()));
+		retorno.put("<data_hoje>", MyUtils.formatarData(new Date(), "dd 'de' MMMM 'de' yyyy").toLowerCase());
 		return retorno;
 	}
 
