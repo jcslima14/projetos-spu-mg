@@ -226,12 +226,8 @@ public class SolicitacaoCadastro extends CadastroController {
 		Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null));
 		Destino destino = null;
 
-		if (origem.getOrigemId().equals(Origem.SAPIENS_ID)) {
-			if (municipio == null || municipio.getDestino() == null) {
-				destino = null;
-			} else {
-				destino = municipio.getDestino();
-			}
+		if (origem.getOrigemId().equals(Origem.SAPIENS_ID) && municipio != null && municipio.getDestino() != null) {
+			destino = municipio.getDestino();
 		} else {
 			destino = MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null, null));
 		}

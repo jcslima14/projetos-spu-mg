@@ -232,7 +232,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		}
 
 		if (!txtFiltroNumeroProcesso.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText() + "%'");
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText().replaceAll("\\D+", "") + "%'");
 		}
 
 		if (!MyUtils.idItemSelecionado(cbbFiltroMunicipio).equals(0)) {
@@ -244,7 +244,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		}
 
 		if (!txtFiltroNumeroProcessoSEI.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocessosei like '%" + txtFiltroNumeroProcessoSEI.getText() + "%'");
+			sql.append(" and replace(replace(replace(s.numeroprocessosei, '.', ''), '-', ''), '/', '') like '%" + txtFiltroNumeroProcessoSEI.getText().replaceAll("\\D+", "") + "%'");
 		}
 
 		sql.append(") as t where 1 = 1 "); 
@@ -260,7 +260,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		if (cbbFiltroAssinante.getSelectedIndex() > 0) {
 			sql.append(" and assinante = '" + cbbFiltroAssinante.getSelectedItem().toString() + "'");
 		}
-		
+
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
 		
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());

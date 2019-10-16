@@ -390,6 +390,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        			passarMouse.moveToElement(btnGerar).click().build().perform();
 
 		        			if (ocorreuErroDownload(driver, wait60, tituloJanelaAtual, quantidadeJanelas)) {
+		        				MyUtils.appendLogArea(logArea, "Não foi possível realizar o download dos arquivos do processo.");
 		        				resultadoDownload = "Ocorreu erro ao baixar os arquivos do processo";
 		        				break;
 		        			}

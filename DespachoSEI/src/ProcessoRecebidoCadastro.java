@@ -279,7 +279,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 		sql.append(" where 1 = 1 ");
 
 		if (!txtFiltroNumeroProcesso.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText().trim() + "%' ");
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText().trim().replaceAll("\\D+", "") + "%' ");
 		}
 
 		Integer filtroMunicipio = MyUtils.idItemSelecionado(cbbFiltroMunicipio);

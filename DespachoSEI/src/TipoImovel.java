@@ -8,8 +8,8 @@ public class TipoImovel implements ItemComboBox {
 	static int URBANO_ID = 1;
 	static int RURAL_ID = 2;
 
-	static TipoImovel URBANO = new TipoImovel(URBANO_ID, "Eletrônico");
-	static TipoImovel RURAL = new TipoImovel(RURAL_ID, "Físico");
+	static TipoImovel URBANO = new TipoImovel(URBANO_ID, "Urbano");
+	static TipoImovel RURAL = new TipoImovel(RURAL_ID, "Rural");
 
 	@SuppressWarnings("serial")
 	static List<TipoImovel> TIPOS_IMOVEIS = new ArrayList<TipoImovel>() {{ 

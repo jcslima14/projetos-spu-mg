@@ -301,7 +301,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		}
 		
 		if (!txtFiltroNumeroProcesso.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText() + "%'");
+			sql.append(" and s.numeroprocesso like '%" + txtFiltroNumeroProcesso.getText().replaceAll("\\D+", "") + "%'");
 		}
 		
 		if (!MyUtils.idItemSelecionado(cbbFiltroMunicipio).equals(0)) {
@@ -313,7 +313,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		}
 		
 		if (!txtFiltroNumeroProcessoSEI.getText().trim().equals("")) {
-			sql.append(" and s.numeroprocessosei like '%" + txtFiltroNumeroProcessoSEI.getText() + "%'");
+			sql.append(" and replace(replace(replace(s.numeroprocessosei, '.', ''), '-', ''), '/', '') like '%" + txtFiltroNumeroProcessoSEI.getText().replaceAll("\\D+", "") + "%'");
 		}
 		
 		if (!MyUtils.idItemSelecionado(cbbFiltroTipoResposta).equals(0)) {
@@ -325,7 +325,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		}
 
 		if (!txtFiltroNumeroDocumentoSEI.getText().trim().equals("")) {
-			sql.append(" and sr.numerodocumentosei like '%" + txtFiltroNumeroDocumentoSEI.getText() + "%'");
+			sql.append(" and sr.numerodocumentosei like '%" + txtFiltroNumeroDocumentoSEI.getText().replaceAll("\\D+", "") + "%'");
 		}
 		
 		if (MyUtils.idItemSelecionado(cbbFiltroSituacaoResposta).equals(1)) {
