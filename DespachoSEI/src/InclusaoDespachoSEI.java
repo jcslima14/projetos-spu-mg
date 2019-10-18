@@ -178,7 +178,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 				// verifica se há pendências
 				if (!respostaAGerar.getPendenciasParaGeracao().trim().equals("")) {
-					MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: " + respostaAGerar.getPendenciasParaGeracao());
+					MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: \n" + respostaAGerar.getPendenciasParaGeracao());
 					continue;
 				}
 
