@@ -57,7 +57,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
 		despachoServico = new DespachoServico(conexao);
 
-		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)", null)); }});
+		despachoServico.preencherOpcoesOrigem(cbbFiltroOrigem, new ArrayList<Origem>() {{ add(new Origem(0, "(Todas)")); }});
 		despachoServico.preencherOpcoesMunicipio(cbbFiltroMunicipio, new ArrayList<Municipio>() {{ add(new Municipio(0, "(Todos)", null, null, null)); }});
 		despachoServico.preencherOpcoesAssinante(cbbFiltroAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
 

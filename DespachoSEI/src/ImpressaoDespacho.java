@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -314,7 +315,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						String nomeArquivoPasta = respostaAImprimir.getSolicitacao().getOrigem().getPastaPDFResposta() + "\\" + nomeArquivoFinal + ".pdf";
+						String nomeArquivoPasta = pastaRespostasImpressas + "\\" + respostaAImprimir.getSolicitacao().getOrigem().getDescricao() + "\\" + nomeArquivoFinal + ".pdf";
 						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, nomeArquivoPasta);
 	
 						// atualiza o indicativo de que o documento foi impresso
@@ -506,15 +507,16 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 		if (pastaDownload.equals("") || !MyUtils.arquivoExiste(pastaDownload)) {
 			retorno += "A pasta de download dos arquivos não está configurada ou não existe: " + pastaDownload + "\n";
-			retorno += "Altere o parâmetro " + Parametro.PASTA_DESPACHOS_SALVOS + " com o caminho para a pasta onde os arquivos devem ser gerados antes de serem transferidos para a pasta final.\n\n";
+			retorno += "Altere o parâmetro " + Parametro.PASTA_DESPACHOS_SALVOS + " com o caminho para a pasta onde os arquivos devem ser gerados antes de serem transferidos para a pasta final.";
+			return retorno;
 		}
 
+		// cria as pastas das origens, caso elas não existam
 		for (Origem origem : despachoServico.obterOrigem(null, null)) {
-			String pastaOrigem = MyUtils.emptyStringIfNull(origem.getPastaPDFResposta());
+			String pastaOrigem = pastaDownload + "\\" + origem.getDescricao();
 
-			if (pastaOrigem.equals("") || !MyUtils.arquivoExiste(pastaOrigem)) {
-				retorno += "A pasta onde serão gravados os PDFs da origem " + origem.getDescricao() + " não está configurada ou não existe: " + pastaOrigem + "\n";
-				retorno += "Configure a origem indicando a pasta onde os arquivos devem ser armazenados após terem sido gerados.\n\n";
+			if (!MyUtils.arquivoExiste(pastaOrigem)) {
+				(new File(pastaOrigem)).mkdir();
 			}
 		}
 

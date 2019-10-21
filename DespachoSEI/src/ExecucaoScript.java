@@ -87,7 +87,9 @@ public class ExecucaoScript extends JInternalFrame {
 
 	private void executarScript(JTextArea logArea) throws Exception {
 		for (String sql : logArea.getText().split(";")) {
-			MyUtils.execute(conexao, sql);
+			if (!sql.trim().equals("")) {
+				MyUtils.execute(conexao, sql);
+			}
 		}
 	}
 }

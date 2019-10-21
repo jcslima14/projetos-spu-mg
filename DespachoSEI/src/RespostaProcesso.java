@@ -140,7 +140,7 @@ public class RespostaProcesso extends JInternalFrame {
 
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(sapiens.getPastaPDFResposta());
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + "\\" + sapiens.getDescricao());
         int tempoEsperaUpload = Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_ESPERA));
         
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {

@@ -510,7 +510,7 @@ public class DespachoSEI extends JFrame {
 			preencherTabelaParametro(conexao);
 		}
 	}
-	
+
 	private void preencherTabelaParametro(Connection conexao) throws Exception {
 		for (Entry<Integer, String[]> parametro : Parametro.DESCRICOES.entrySet()) {
 			MyUtils.execute(conexao, "insert into parametro (parametroid, descricao, conteudo, ativo) values (" + parametro.getKey() + ", '" + parametro.getValue()[0] + "', '" + parametro.getValue()[1] + "', true)");
@@ -522,8 +522,7 @@ public class DespachoSEI extends JFrame {
 			String sql = "CREATE TABLE origem " + 
 						 "(" + 
 						 "  origemid integer primary key not null," + 
-						 "  descricao varchar NOT NULL," + 
-						 "  pastapdfresposta varchar" + 
+						 "  descricao varchar NOT NULL" + 
 						 ")"; 
 
 			MyUtils.execute(conexao, sql);

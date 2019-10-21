@@ -137,7 +137,7 @@ public class RespostaSPUNet extends JInternalFrame {
 
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(spunet.getPastaPDFResposta());
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + "\\" + spunet.getDescricao());
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
         	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem SPUNet (" + Origem.SPUNET_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
         	return;

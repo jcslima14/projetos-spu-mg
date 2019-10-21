@@ -232,7 +232,7 @@ public class DespachoServico {
 		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
 
 		while (rs.next()) {
-			retorno.add(new Origem(rs.getInt("origemid"), rs.getString("descricao"), rs.getString("pastapdfresposta")));
+			retorno.add(new Origem(rs.getInt("origemid"), rs.getString("descricao")));
 		}
 		
 		return retorno;

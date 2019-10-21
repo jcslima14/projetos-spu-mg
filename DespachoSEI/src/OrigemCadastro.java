@@ -24,9 +24,7 @@ public class OrigemCadastro extends CadastroTemplate {
 	private MyLabel lblOrigemId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyTextField txtPastaPDFResposta = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyLabel lblPastaPDFResposta = new MyLabel("Pasta para download dos PDFs de resposta") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(3, 2));
+	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(2, 2));
 	private List<MyTableColumn> colunas;
 
 	public OrigemCadastro(String tituloJanela, Connection conexao) {
@@ -37,8 +35,6 @@ public class OrigemCadastro extends CadastroTemplate {
 		pnlCamposEditaveis.add(txtOrigemId);
 		pnlCamposEditaveis.add(lblDescricao);
 		pnlCamposEditaveis.add(txtDescricao);
-		pnlCamposEditaveis.add(lblPastaPDFResposta);
-		pnlCamposEditaveis.add(txtPastaPDFResposta);
 		
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
@@ -47,15 +43,14 @@ public class OrigemCadastro extends CadastroTemplate {
 	public void limparCamposEditaveis() {
 		txtOrigemId.setText("");
 		txtDescricao.setText("");
-		txtPastaPDFResposta.setText("");
 	}
 
 	public void salvarRegistro() throws Exception {
 		String sql = "";
 		if (txtOrigemId.getText() != null && !txtOrigemId.getText().trim().equals("")) {
-			sql += "update origem set descricao = '" + txtDescricao.getText().trim() + "', pastapdfresposta = '" + txtPastaPDFResposta.getText() + "' where origemid = " + txtOrigemId.getText();
+			sql += "update origem set descricao = '" + txtDescricao.getText().trim() + "' where origemid = " + txtOrigemId.getText();
 		} else {
-			sql += "insert into origem (descricao, pastapdfresposta) values ('" + txtDescricao.getText().trim() + "', '" + txtPastaPDFResposta.getText() + "')";
+			sql += "insert into origem (descricao) values ('" + txtDescricao.getText().trim() + "')";
 		}
 		MyUtils.execute(conexao, sql);
 	}
@@ -69,7 +64,6 @@ public class OrigemCadastro extends CadastroTemplate {
 	public void prepararParaEdicao() {
 		txtOrigemId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		txtDescricao.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 2).toString());
-		txtPastaPDFResposta.setText(MyUtils.emptyStringIfNull((String) this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 3)));
 	}
 
 	public TableModel obterDados() throws Exception {
@@ -85,7 +79,6 @@ public class OrigemCadastro extends CadastroTemplate {
 			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Descrição", 200, true));
-			colunas.add(new MyTableColumn("Pasta para download dos PDFs de resposta", 400, true));
 		}
 		return this.colunas;
 	}
