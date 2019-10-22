@@ -21,7 +21,7 @@ public class Parametro {
 		put(PASTA_DESTINO_PROCESSOS_SAPIENS, new String[] { "Pasta de destino dos processos do Sapiens (após identificação dos municípios)", "" });
 		put(ENDERECO_SEI, new String[] { "Endereço do SEI", "https://sei.fazenda.gov.br/sei/inicializar.php" });
 		put(ENDERECO_SAPIENS, new String[] { "Endereço do Sapiens", "https://sapiens.agu.gov.br/login" });
-		put(PASTA_DESPACHOS_SALVOS, new String[] { "Pasta de respostas impressas em PDF para resposta ao Sapiens", "" });
+		put(PASTA_DESPACHOS_SALVOS, new String[] { "Pasta de respostas impressas em PDF", "" });
 		put(PASTA_PLANILHA_IMPORTACAO, new String[] { "Pasta da planilha de importação", "" });
 		put(DEFAULT_BROWSER, new String[] { "Navegador padrão", "Chrome" });
 		put(ENDERECO_SPUNET, new String[] { "Endereço do SPUNet", "http://spunet.planejamento.gov.br" });
