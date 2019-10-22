@@ -1,15 +1,36 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "municipio")
 public class Municipio implements ItemComboBox {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer municipioId;
 	
 	private String nome;
 	
+	@ManyToOne
+	@JoinColumn(name = "municipioidcomarca")
 	private Municipio municipioComarca;
 
+	@ManyToOne
+	@JoinColumn(name = "destinoid")
 	private Destino destino;
 
+	@ManyToOne
+	@JoinColumn(name = "tiporespostaid")
 	private TipoResposta tipoResposta;
+	
+	public Municipio() {
+	}
 	
 	public Municipio(Integer municipioId) {
 		this.municipioId = municipioId;

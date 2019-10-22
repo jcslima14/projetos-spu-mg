@@ -3,8 +3,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -14,15 +14,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 
+import framework.JPAUtils;
 import framework.MyUtils;
 import framework.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class ExecucaoScript extends JInternalFrame {
 
-	private Connection conexao;
+	private EntityManager conexao;
 
-	public ExecucaoScript(String tituloJanela, Connection conexao) {
+	public ExecucaoScript(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);
@@ -88,7 +89,7 @@ public class ExecucaoScript extends JInternalFrame {
 	private void executarScript(JTextArea logArea) throws Exception {
 		for (String sql : logArea.getText().split(";")) {
 			if (!sql.trim().equals("")) {
-				MyUtils.execute(conexao, sql);
+				JPAUtils.executeUpdate(conexao, sql);
 			}
 		}
 	}

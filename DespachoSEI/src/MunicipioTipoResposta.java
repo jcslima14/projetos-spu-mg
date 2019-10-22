@@ -1,11 +1,32 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "municipiotiporesposta")
 public class MunicipioTipoResposta {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer municipioTipoRespostaId;
 	
+	@ManyToOne
+	@JoinColumn(name = "municipioid")
 	private Municipio municipio;
 	
+	@ManyToOne
+	@JoinColumn(name = "origemid")
 	private Origem origem;
 
+	@ManyToOne
+	@JoinColumn(name = "tiporespostaid")
 	private TipoResposta tipoResposta;
+
+	public MunicipioTipoResposta() {
+	}
 	
 	public MunicipioTipoResposta(Integer municipioTipoRespostaId, Municipio municipio, Origem origem, TipoResposta tipoResposta) {
 		this.municipioTipoRespostaId = municipioTipoRespostaId;

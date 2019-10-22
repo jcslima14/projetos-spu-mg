@@ -3,13 +3,12 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -18,7 +17,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
@@ -30,6 +28,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import framework.CadastroTemplate;
 import framework.DialogTemplate;
+import framework.JPAUtils;
 import framework.MyButton;
 import framework.MyComboBox;
 import framework.MyLabel;
@@ -41,7 +40,7 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class MunicipioCadastro extends CadastroTemplate {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha");
 
 	private JFileChooser filArquivo = new JFileChooser();
@@ -54,7 +53,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
 	private JButton btnIniciarImportacaoPlanillha = new JButton("Iniciar Importação da Planilha");
 	
-	private JTextField txtMunicipioId = new JTextField() {{ setEnabled(false); }};
+	private MyTextField txtMunicipioId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblMunicipioId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtNome = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNome = new MyLabel("Nome") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -69,7 +68,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public MunicipioCadastro(String tituloJanela, Connection conexao) {
+	public MunicipioCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -171,7 +170,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 		
 		// percorre a lista de municípios lidos, inserindo os que não existirem
 		for (String nome : municipiosLidos.keySet()) {
-			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, null, nome));
+			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(null, nome));
 			if (municipio == null) {
 				municipio = new Municipio(null, nome, null, null, null);
 				salvarMunicipio(municipio);
@@ -185,7 +184,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 
 		// percorre novamente a lista, atualizando comarca e destino, se tiverem sido informado
 		for (String nome : municipiosLidos.keySet()) {
-			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, null, nome));
+			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(null, nome));
 			Municipio oComarca = null;
 			Destino oDestino = null;
 			String comarca = municipiosLidos.get(nome)[0];
@@ -193,7 +192,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 			String msgErro = "";
 
 			if (!comarca.equals("")) {
-				oComarca = MyUtils.entidade(despachoServico.obterMunicipio(false, null, comarca));
+				oComarca = MyUtils.entidade(despachoServico.obterMunicipio(null, comarca));
 				if (oComarca != null) municipio.setMunicipioComarca(oComarca);
 				else msgErro += "A comarca informada (" + comarca + ") não foi encontrada";
 			}
@@ -238,43 +237,26 @@ public class MunicipioCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		Municipio municipio = new Municipio(txtMunicipioId.getText().equals("") ? null : Integer.parseInt(txtMunicipioId.getText()), txtNome.getText(), 
-				new Municipio(MyUtils.idItemSelecionado(cbbMunicipioComarca)), new Destino(MyUtils.idItemSelecionado(cbbDestino)), new TipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta)));
+		Municipio municipio = new Municipio(txtMunicipioId.getTextAsInteger(), txtNome.getText(), 
+				MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipioComarca), null)), 
+				MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null, null)),
+				MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
 
 		salvarMunicipio(municipio);
 	}
 
 	private void salvarMunicipio(Municipio entidade) throws Exception {
-		String sql = "";
-
-		if (entidade.getMunicipioId() != null) {
-			sql += "update municipio "
-				+  "   set nome = '" + entidade.getNome().replace("'", "''") + "' " 
-				+  "     , municipioidcomarca = " + (entidade.getMunicipioComarca() == null ? "null" : entidade.getMunicipioComarca().getMunicipioId())
-				+  "     , destinoid = " + (entidade.getDestino() == null ? "null" : entidade.getDestino().getDestinoId())
-				+  "     , tiporespostaid = " + (entidade.getTipoResposta() == null ? "null" : entidade.getTipoResposta().getTipoRespostaId())
-				+  " where municipioid = " + entidade.getMunicipioId();
-		} else {
-			sql += "insert into municipio (nome, municipioidcomarca, destinoid, tiporespostaid) values ("
-				+  "'" + entidade.getNome().replace("'", "''") + "', " 
-				+  (entidade.getMunicipioComarca() == null ? "null" : entidade.getMunicipioComarca().getMunicipioId()) + ", " 
-				+  (entidade.getDestino() == null ? "null" : entidade.getDestino().getDestinoId()) + ", "
-				+  (entidade.getTipoResposta() == null ? "null" : entidade.getTipoResposta().getTipoRespostaId()) + ") "; 
-		}
-
-		MyUtils.execute(conexao, sql);
+		JPAUtils.persistir(conexao, entidade);
 	}
 	
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from municipio where municipioid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from municipio where municipioid = " + id);
 	}
 
 	public void prepararParaEdicao() {
 		txtMunicipioId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		try {
-			Municipio entidade = despachoServico.obterMunicipio(true, Integer.parseInt(txtMunicipioId.getText()), null).iterator().next();
+			Municipio entidade = despachoServico.obterMunicipio(Integer.parseInt(txtMunicipioId.getText()), null).iterator().next();
 
 			txtNome.setText(entidade.getNome());
 			cbbMunicipioComarca.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbMunicipioComarca, entidade.getMunicipioComarca() == null ? 0 : entidade.getMunicipioComarca().getMunicipioId(), null));
@@ -287,17 +269,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, 
-										"select m.municipioid "
-									  + "	  , m.nome "
-									  + "	  , mc.nome as comarca "
-									  + "	  , d.abreviacao as destino "
-									  + "	  , tr.descricao as tiporesposta "
-									  + "  from municipio m "
-									  + "  left join municipio mc on mc.municipioid = m.municipioidcomarca "
-									  + "  left join destino d using (destinoid) "
-									  + "  left join tiporesposta tr using (tiporespostaid) ");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterMunicipio(null, null), "municipioId", "nome", "municipioComarca.nome", "destino.abreviacao", "tipoResposta.descricao"));
 		return tm;
 	}
 

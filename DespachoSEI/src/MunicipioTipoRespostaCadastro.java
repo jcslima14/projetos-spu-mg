@@ -1,29 +1,29 @@
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
+import framework.MyTextField;
 import framework.MyUtils;
 
 @SuppressWarnings("serial")
 public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtMunicipioTipoRespostaId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtMunicipioTipoRespostaId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblMunicipioTipoRespostaId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbMunicipio = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblMunicipio = new MyLabel("Município") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -35,7 +35,7 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public MunicipioTipoRespostaCadastro(String tituloJanela, Connection conexao) {
+	public MunicipioTipoRespostaCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -82,29 +82,16 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		MunicipioTipoResposta municipioTipoResposta = new MunicipioTipoResposta(txtMunicipioTipoRespostaId.getText().equals("") ? null : Integer.parseInt(txtMunicipioTipoRespostaId.getText()),  
-				new Municipio(MyUtils.idItemSelecionado(cbbMunicipio)), new Origem(MyUtils.idItemSelecionado(cbbOrigem)), new TipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta)));
-
-		String sql = "";
-		if (municipioTipoResposta.getMunicipioTipoRespostaId() != null) {
-			sql += "update municipiotiporesposta "
-				+  "   set municipioid = " + municipioTipoResposta.getMunicipio().getMunicipioId() 
-				+  "     , origemid = " + municipioTipoResposta.getOrigem().getOrigemId() 
-				+  "     , tiporespostaid = " + municipioTipoResposta.getTipoResposta().getTipoRespostaId()
-				+  " where municipiotiporespostaid = " + municipioTipoResposta.getMunicipioTipoRespostaId();
-		} else {
-			sql += "insert into municipiotiporesposta (municipioid, origemid, tiporespostaid) values ("
-				+  municipioTipoResposta.getMunicipio().getMunicipioId() + ", " 
-				+  municipioTipoResposta.getOrigem().getOrigemId() + ", "
-				+  municipioTipoResposta.getTipoResposta().getTipoRespostaId() + ") "; 
-		}
-		MyUtils.execute(conexao, sql);
+		MunicipioTipoResposta entidade = new MunicipioTipoResposta();
+		entidade.setMunicipioTipoRespostaId(txtMunicipioTipoRespostaId.getTextAsInteger());
+		entidade.setMunicipio(MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipio), null)));
+		entidade.setOrigem(MyUtils.entidade(despachoServico.obterOrigem(MyUtils.idItemSelecionado(cbbOrigem), null)));
+		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from municipiotiporesposta where municipiotiporespostaid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from municipiotiporesposta where municipiotiporespostaid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -122,17 +109,7 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, 
-										"select mtr.municipiotiporespostaid "
-									  + "	  , m.nome as municipio "
-									  + "	  , o.descricao as origem "
-									  + "	  , tr.descricao as tiporesposta "
-									  + "  from municipiotiporesposta mtr "
-									  + "  left join municipio m using (municipioid) "
-									  + "  left join origem o using (origemid) "
-									  + "  left join tiporesposta tr using (tiporespostaid) "
-									  + " order by municipio collate nocase, origem collate nocase ");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterMunicipioTipoResposta(null, null, null, null), "municipioTipoRespostaId", "municipio.nome", "origem.descricao", "tipoResposta.descricao"));
 		return tm;
 	}
 

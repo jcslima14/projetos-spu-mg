@@ -1,6 +1,16 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "assinante")
 public class Assinante implements ItemComboBox {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer assinanteId;
 	
 	private String nome;
@@ -13,12 +23,15 @@ public class Assinante implements ItemComboBox {
 	
 	private Boolean superior;
 
-	private String numeroProcesso;
+	private String numeroProcessoSEI;
 
 	private String blocoAssinatura;
 
 	private String pastaArquivoProcesso;
 
+	public Assinante() {
+	}
+	
 	public Assinante(Integer assinanteId) {
 		this.assinanteId = assinanteId;
 	}
@@ -35,7 +48,7 @@ public class Assinante implements ItemComboBox {
 		this.cargo = cargo;
 		this.setor = setor;
 		this.superior = superior;
-		this.numeroProcesso = numeroProcesso;
+		this.numeroProcessoSEI = numeroProcesso;
 		this.blocoAssinatura = blocoAssinatura;
 		this.pastaArquivoProcesso = pastaArquivoProcesso;
 	}
@@ -88,12 +101,12 @@ public class Assinante implements ItemComboBox {
 		this.superior = superior;
 	}
 
-	public String getNumeroProcesso() {
-		return numeroProcesso;
+	public String getNumeroProcessoSEI() {
+		return numeroProcessoSEI;
 	}
 
-	public void setNumeroProcesso(String numeroProcesso) {
-		this.numeroProcesso = numeroProcesso;
+	public void setNumeroProcessoSEI(String numeroProcessoSEI) {
+		this.numeroProcessoSEI = numeroProcessoSEI;
 	}
 
 	public String getBlocoAssinatura() {
@@ -112,6 +125,26 @@ public class Assinante implements ItemComboBox {
 		this.pastaArquivoProcesso = pastaArquivoProcesso;
 	}
 
+	public String getSuperiorAsString() {
+		if (getSuperior() == null) {
+			return "";
+		} else if (getSuperior()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
+	}
+
+	public String getAtivoAsString() {
+		if (getAtivo() == null) {
+			return "";
+		} else if (getAtivo()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
+	}
+	
 	@Override
 	public Integer getIntegerItemValue() {
 		return getAssinanteId();

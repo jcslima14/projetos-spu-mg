@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -20,10 +19,13 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import javax.persistence.EntityManager;
 import javax.sql.rowset.CachedRowSet;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
+import org.apache.commons.beanutils.NestedNullException;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -96,14 +98,34 @@ public class MyUtils {
 			Vector<Object> linha = new Vector<Object>();
 			linha.add(Boolean.FALSE);
 			for (int i = 0; i < campos.length; i++) {
-				Method metodo = dado.getClass().getMethod(campos[i]);
-				linha.add(metodo.invoke(dado));
+				Object obj = null;
+				try {
+					obj = PropertyUtils.getNestedProperty(dado, campos[i]);
+				} catch (NestedNullException e) {
+				}
+				linha.add(obj);
 			}
 			retorno.add(linha);
 		}
 
 		return retorno;
 	}
+
+//	public static <T> Vector<Vector<Object>>obterDados(List<T> dados, String... campos) throws Exception {
+//		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
+//
+//		for (T dado : dados) {
+//			Vector<Object> linha = new Vector<Object>();
+//			linha.add(Boolean.FALSE);
+//			for (int i = 0; i < campos.length; i++) {
+//				Method metodo = dado.getClass().getMethod(campos[i]);
+//				linha.add(metodo.invoke(dado));
+//			}
+//			retorno.add(linha);
+//		}
+//
+//		return retorno;
+//	}
 
 	public static Vector<Object>obterTitulosColunas(List<MyTableColumn> colunas) throws Exception {
 		Vector<Object> retorno = new Vector<Object>();
@@ -160,6 +182,21 @@ public class MyUtils {
 		try {
 			ResultSet rs = MyUtils.executeQuery(conexao, sql);
 			retorno = rs.next();
+		} catch (Exception e) {
+			System.out.println("Erro: " + e.getMessage());
+			e.printStackTrace();
+		}
+		
+		return retorno;
+	}
+
+	public static boolean tabelaExiste(EntityManager conexao, String nomeTabela) {
+		boolean retorno = false;
+		String sql = "select * from sqlite_master sm where tbl_name = '" + nomeTabela + "'";
+
+		try {
+			List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql);
+			retorno = !rs.isEmpty();
 		} catch (Exception e) {
 			System.out.println("Erro: " + e.getMessage());
 			e.printStackTrace();

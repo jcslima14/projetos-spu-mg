@@ -4,11 +4,11 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,7 +47,7 @@ public class RespostaSPUNet extends JInternalFrame {
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
 
-	public RespostaSPUNet(String tituloJanela, Connection conexao) {
+	public RespostaSPUNet(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);

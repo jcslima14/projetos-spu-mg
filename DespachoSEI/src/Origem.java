@@ -1,8 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "origem")
 public class Origem implements ItemComboBox {
 	
 	static int SAPIENS_ID = 1;
@@ -17,9 +25,14 @@ public class Origem implements ItemComboBox {
 		add(SPUNET); 
 		}};
 	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer origemId;
 	
 	private String descricao;
+
+	public Origem() {
+	}
 	
 	public Origem(Integer origemId, String descricao) {
 		this.origemId = origemId;

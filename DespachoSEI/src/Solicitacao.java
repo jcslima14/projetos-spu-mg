@@ -1,8 +1,24 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "solicitacao")
 public class Solicitacao {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer solicitacaoId;
 	
+	@ManyToOne
+	@JoinColumn(name = "origemid")
 	private Origem origem;
 	
+	@ManyToOne
+	@JoinColumn(name = "tipoprocessoid")
 	private TipoProcesso tipoProcesso;
 	
 	private String numeroProcesso;
@@ -11,12 +27,18 @@ public class Solicitacao {
 	
 	private String autor;
 	
+	@ManyToOne
+	@JoinColumn(name = "municipioid")
 	private Municipio municipio;
 	
+	@ManyToOne
+	@JoinColumn(name = "destinoid")
 	private Destino destino;
 	
 	private String cartorio;
 	
+	@ManyToOne
+	@JoinColumn(name = "tipoimovelid")
 	private TipoImovel tipoImovel;
 	
 	private String endereco;

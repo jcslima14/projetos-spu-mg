@@ -40,4 +40,16 @@ public class MyTextField extends JTextField implements PropriedadesEdicao {
 	public void setExclusao(boolean exclusao) {
 		this.exclusao = exclusao;
 	}
+
+	public Integer getTextAsInteger() {
+		return getTextAsInteger(null);
+	}
+	
+	public Integer getTextAsInteger(Integer defaultValue) {
+		if (getText().equals("")) {
+			return defaultValue;
+		} else {
+			return Integer.parseInt(getText());
+		}
+	}
 }

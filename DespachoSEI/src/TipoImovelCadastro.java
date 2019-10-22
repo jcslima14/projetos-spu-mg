@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -19,23 +18,25 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class TipoImovelCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtTipoImovelId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtTipoImovelId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblTipoImovelId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(2, 2));
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
-	public TipoImovelCadastro(String tituloJanela, Connection conexao) {
+	public TipoImovelCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		despachoServico = new DespachoServico(conexao);
 
 		pnlCamposEditaveis.add(lblTipoImovelId);
 		pnlCamposEditaveis.add(txtTipoImovelId);
 		pnlCamposEditaveis.add(lblDescricao);
 		pnlCamposEditaveis.add(txtDescricao);
-		
+
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.inicializar();
 	}
@@ -46,19 +47,16 @@ public class TipoImovelCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtTipoImovelId.getText() != null && !txtTipoImovelId.getText().trim().equals("")) {
-			sql += "update tipoimovel set descricao = '" + txtDescricao.getText().trim() + "' where tipoimovelid = " + txtTipoImovelId.getText();
-		} else {
-			sql += "insert into tipoimovel (descricao) values ('" + txtDescricao.getText().trim() + "')";
+		TipoImovel entidade = MyUtils.entidade(despachoServico.obterTipoImovel(txtTipoImovelId.getTextAsInteger(-1), null));
+		if (entidade == null) {
+			entidade = new TipoImovel();
 		}
-		MyUtils.execute(conexao, sql);
+		entidade.setDescricao(txtDescricao.getText());
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from tipoimovel where tipoimovelid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from tipoimovel where tipoimovelid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -67,8 +65,7 @@ public class TipoImovelCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select * from tipoimovel");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterTipoImovel(null, null), "tipoImovelId", "descricao"));
 		return tm;
 	}
 

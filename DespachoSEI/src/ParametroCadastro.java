@@ -1,14 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -19,7 +19,7 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class ParametroCadastro extends CadastroTemplate {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private MyTextField txtParametroId = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(false); }};
 	private MyLabel lblParametroId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -29,10 +29,12 @@ public class ParametroCadastro extends CadastroTemplate {
 	private MyCheckBox chkAtivo = new MyCheckBox("Ativo") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(4, 2));
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
-	public ParametroCadastro(String tituloJanela, Connection conexao) {
+	public ParametroCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		despachoServico = new DespachoServico(conexao);
 
 		pnlCamposEditaveis.add(lblParametroId);
 		pnlCamposEditaveis.add(txtParametroId);
@@ -55,28 +57,22 @@ public class ParametroCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		sql += "insert into parametro (parametroid, descricao, conteudo, ativo) ";
-		sql += "select " + txtParametroId.getText();
-		sql += "	 , '" + txtDescricao.getText().trim() + "'";
-		sql += "	 , '" + txtConteudo.getText() + "'";
-		sql += "	 , " + (chkAtivo.isSelected() ? "true" : "false");
-		sql += " where not exists (select 1 from parametro where parametroid = " + txtParametroId.getText() + ")";
-		MyUtils.execute(conexao, sql);
-
-		sql = "";
-		sql += "update parametro "
-			+  "   set descricao = '" + txtDescricao.getText().trim() + "' "
-			+  "     , conteudo = '" + txtConteudo.getText() + "' "
-			+  "     , ativo = " + (chkAtivo.isSelected() ? "true" : "false")
-			+  " where parametroid = " + txtParametroId.getText();
-		MyUtils.execute(conexao, sql);
+		Parametro entidade = MyUtils.entidade(despachoServico.obterParametro(txtParametroId.getTextAsInteger(), null));
+		if (entidade == null) {
+			entidade = new Parametro();
+			entidade.setParametroId(txtParametroId.getTextAsInteger());
+		}
+		entidade.setDescricao(txtDescricao.getText());
+		entidade.setConteudo(txtConteudo.getText());
+		entidade.setAtivo(chkAtivo.isSelected());
+		
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
-		sql += "delete from parametro where parametroid = " + id;
-		MyUtils.execute(conexao, sql);
+		sql += "delete from Parametro where parametroId = " + id;
+		JPAUtils.executeUpdate(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -87,8 +83,7 @@ public class ParametroCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select parametroid, descricao, conteudo, case when ativo then 'Sim' else 'Não' end as ativo from parametro");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterParametro(null, null), "parametroId", "descricao", "conteudo", "ativoAsString"));
 		return tm;
 	}
 

@@ -1,8 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "tipoprocesso")
 public class TipoProcesso implements ItemComboBox {
 	
 	static int ELETRONICO_ID = 1;
@@ -17,10 +25,15 @@ public class TipoProcesso implements ItemComboBox {
 			add(FISICO); 
 		}};
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer tipoProcessoId;
 	
 	private String descricao;
 
+	public TipoProcesso() {
+	}
+	
 	public TipoProcesso(Integer tipoProcessoId) {
 		this.tipoProcessoId = tipoProcessoId;
 	}

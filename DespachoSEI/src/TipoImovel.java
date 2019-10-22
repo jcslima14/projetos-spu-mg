@@ -1,8 +1,16 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "tipoimovel")
 public class TipoImovel implements ItemComboBox {
 	
 	static int URBANO_ID = 1;
@@ -17,10 +25,15 @@ public class TipoImovel implements ItemComboBox {
 			add(RURAL); 
 		}};
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer tipoImovelId;
 	
 	private String descricao;
 
+	public TipoImovel() {
+	}
+	
 	public TipoImovel(Integer tipoImovel, String descricao) {
 		this.tipoImovelId = tipoImovel;
 		this.descricao = descricao;

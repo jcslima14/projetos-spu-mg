@@ -1,6 +1,12 @@
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "parametro")
 public class Parametro {
 	static int PASTA_DOWNLOAD_SAPIENS = 1;
 	static int PASTA_DESTINO_PROCESSOS_SAPIENS = 2;
@@ -39,6 +45,7 @@ public class Parametro {
 		return DESCRICOES.get(parametroId)[1];
 	}
 
+	@Id
 	private Integer parametroId;
 
 	private String descricao;
@@ -46,6 +53,9 @@ public class Parametro {
 	private String conteudo;
 
 	private Boolean ativo;
+
+	public Parametro() {
+	}
 	
 	public Parametro(Integer parametroId, String descricao, String conteudo, Boolean ativo) {
 		this.parametroId = parametroId;
@@ -84,5 +94,15 @@ public class Parametro {
 
 	public void setAtivo(Boolean ativo) {
 		this.ativo = ativo;
+	}
+	
+	public String getAtivoAsString() {
+		if (getAtivo() == null) {
+			return "";
+		} else if (getAtivo()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
 	}
 }

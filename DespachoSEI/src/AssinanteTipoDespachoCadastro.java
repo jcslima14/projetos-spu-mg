@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -20,8 +19,8 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtAssinanteTipoRespostaId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtAssinanteTipoRespostaId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblAssinanteTipoRespostaId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbAssinante = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblAssinante = new MyLabel("Assinado por") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -33,7 +32,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public AssinanteTipoDespachoCadastro(String tituloJanela, Connection conexao) {
+	public AssinanteTipoDespachoCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -63,26 +62,16 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtAssinanteTipoRespostaId.getText() != null && !txtAssinanteTipoRespostaId.getText().trim().equals("")) {
-			sql += "update assinantetiporesposta "
-				+  "   set assinanteid = " + MyUtils.idItemSelecionado(cbbAssinante)
-				+  "     , tiporespostaid = " + MyUtils.idItemSelecionado(cbbTipoResposta)
-				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
-				+  " where assinantetiporespostaid = " + txtAssinanteTipoRespostaId.getText();
-		} else {
-			sql += "insert into assinantetiporesposta (assinanteid, tiporespostaid, blocoassinatura) values ("
-				+  MyUtils.idItemSelecionado(cbbAssinante) + ", "
-				+  MyUtils.idItemSelecionado(cbbTipoResposta) + ", "
-				+  "'" + txtBlocoAssinatura.getText() + "') ";
-		}
-		MyUtils.execute(conexao, sql);
+		AssinanteTipoResposta entidade = new AssinanteTipoResposta();
+		entidade.setAssinanteTipoRespostaId(txtAssinanteTipoRespostaId.getTextAsInteger());
+		entidade.setAssinante(MyUtils.entidade(despachoServico.obterAssinante(MyUtils.idItemSelecionado(cbbAssinante), null, null, null)));
+		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+		entidade.setBlocoAssinatura(txtBlocoAssinatura.getText());
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from assinantetiporesposta where assinantetiporespostaid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from assinantetiporesposta where assinantetiporespostaid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -99,18 +88,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		String sql = "";
-		sql += "select atr.assinantetiporespostaid ";
-		sql += "	 , a.nome as assinante ";
-		sql += "	 , tr.descricao as tiporesposta ";
-		sql += "	 , atr.blocoassinatura ";
-		sql += "  from assinantetiporesposta atr ";
-		sql += " inner join assinante a using (assinanteid) ";
-		sql += " inner join tiporesposta tr using (tiporespostaid) ";
-		sql += " order by a.nome, tr.descricao ";
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql);
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterAssinanteTipoResposta(null, null, null), "assinanteTipoRespostaId", "assinante.nome", "tipoResposta.descricao", "blocoAssinatura"));
 		return tm;
 	}
 

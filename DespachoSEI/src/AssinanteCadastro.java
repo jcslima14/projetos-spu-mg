@@ -1,17 +1,16 @@
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyButton;
 import framework.MyCheckBox;
 import framework.MyLabel;
@@ -23,8 +22,8 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class AssinanteCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtAssinanteId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtAssinanteId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblAssinanteId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtNome = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblNome = new MyLabel("Nome") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -45,7 +44,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public AssinanteCadastro(String tituloJanela, Connection conexao) {
+	public AssinanteCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -94,36 +93,24 @@ public class AssinanteCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtAssinanteId.getText() != null && !txtAssinanteId.getText().trim().equals("")) {
-			sql += "update assinante "
-				+ "	   set nome = '" + txtNome.getText().trim() + "' "
-				+  "     , cargo = '" + txtCargo.getText() + "' "
-				+  "     , setor = '" + txtSetor.getText() + "' "
-				+  "	 , superior = " + (chkSuperior.isSelected() ? "true" : "false") 
-				+  "	 , ativo = " + (chkAtivo.isSelected() ? "true" : "false") 
-				+  "     , numeroprocessosei = '" + txtNumeroProcesso.getText() + "' "
-				+  "     , blocoassinatura = '" + txtBlocoAssinatura.getText() + "' "
-				+  "     , pastaarquivoprocesso = '" + txtPastaArquivoProcesso.getText() + "' "
-				+  " where assinanteid = " + txtAssinanteId.getText();
-		} else {
-			sql += "insert into assinante (nome, cargo, setor, superior, ativo, numeroprocessosei, blocoassinatura, pastaarquivoprocesso) values ("
-				+  "'" + txtNome.getText().trim() + "', "
-				+  "'" + txtCargo.getText().trim() + "', "
-				+  "'" + txtSetor.getText().trim() + "', "
-				+  (chkSuperior.isSelected() ? "true" : "false") + ", "
-				+  (chkAtivo.isSelected() ? "true" : "false") + ", "
-				+  "'" + txtNumeroProcesso.getText() + "', "
-				+  "'" + txtBlocoAssinatura.getText() + "', "
-				+  "'" + txtPastaArquivoProcesso.getText() + "') ";
+		Assinante entidade = MyUtils.entidade(despachoServico.obterAssinante(txtAssinanteId.getTextAsInteger(-1), null, null, null));
+		if (entidade == null) {
+			entidade = new Assinante();
 		}
-		MyUtils.execute(conexao, sql);
+		entidade.setNome(txtNome.getText());
+		entidade.setCargo(txtCargo.getText());
+		entidade.setSetor(txtSetor.getText());
+		entidade.setSuperior(chkSuperior.isSelected());
+		entidade.setAtivo(chkAtivo.isSelected());
+		entidade.setNumeroProcessoSEI(txtNumeroProcesso.getText());
+		entidade.setBlocoAssinatura(txtBlocoAssinatura.getText());
+		entidade.setPastaArquivoProcesso(txtPastaArquivoProcesso.getText());
+
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from assinante where assinanteid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from assinante where assinanteid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -137,7 +124,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 			txtSetor.setText(entidade.getSetor());
 			chkSuperior.setSelected(entidade.getSuperior());
 			chkAtivo.setSelected(entidade.getAtivo());
-			txtNumeroProcesso.setText(entidade.getNumeroProcesso());
+			txtNumeroProcesso.setText(entidade.getNumeroProcessoSEI());
 			txtBlocoAssinatura.setText(entidade.getBlocoAssinatura());
 			txtPastaArquivoProcesso.setText(entidade.getPastaArquivoProcesso());
 		} catch (Exception e) {
@@ -147,8 +134,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select assinanteid, nome, cargo, setor, case when superior then 'Sim' else 'Não' end as superior, case when ativo then 'Sim' else 'Não' end as ativo, numeroprocessosei, blocoassinatura, pastaarquivoprocesso from assinante");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterAssinante(null, null, null, null), "assinanteId", "nome", "cargo", "setor", "superiorAsString", "ativoAsString", "numeroProcessoSEI", "blocoAssinatura", "pastaArquivoProcesso"));
 		return tm;
 	}
 

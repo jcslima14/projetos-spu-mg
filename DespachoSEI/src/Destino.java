@@ -1,6 +1,16 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "destino")
 public class Destino implements ItemComboBox {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer destinoId;
 	
 	private String artigo;
@@ -10,6 +20,9 @@ public class Destino implements ItemComboBox {
 	private String abreviacao;
 
 	private Boolean usarCartorio;
+	
+	public Destino() {
+	}
 	
 	public Destino(Integer destinoId) {
 		this.destinoId = destinoId;
@@ -76,5 +89,15 @@ public class Destino implements ItemComboBox {
 
 	public void setUsarCartorio(Boolean usarCartorio) {
 		this.usarCartorio = usarCartorio;
+	}
+
+	public String getUsarCartorioAsString() {
+		if (getUsarCartorio() == null) {
+			return "";
+		} else if (getUsarCartorio()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
 	}
 }

@@ -1,6 +1,18 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
 import framework.ItemComboBox;
 
+@Entity
+@Table(name = "tiporesposta")
 public class TipoResposta implements ItemComboBox {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer tipoRespostaId;
 	
 	private String descricao;
@@ -19,6 +31,8 @@ public class TipoResposta implements ItemComboBox {
 	
 	private Integer quantidadeAssinaturas;
 	
+	@ManyToOne
+	@JoinColumn(name = "origemid")
 	private Origem origem;
 
 	private String respostaSPUNet;
@@ -147,6 +161,26 @@ public class TipoResposta implements ItemComboBox {
 
 	public void setComplementoSPUNet(String complementoSPUNet) {
 		this.complementoSPUNet = complementoSPUNet;
+	}
+
+	public String getGerarProcessoIndividualAsString() {
+		if (getGerarProcessoIndividual() == null) {
+			return "";
+		} else if (getGerarProcessoIndividual()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
+	}
+
+	public String getImprimirRespostaAsString() {
+		if (getImprimirResposta() == null) {
+			return "";
+		} else if (getImprimirResposta()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
 	}
 
 	@Override

@@ -186,7 +186,7 @@ public class SolicitacaoCadastro extends CadastroController {
 	private void alterarSelecaoDestino() throws Exception {
 		boolean habilitado = true;
 		if (MyUtils.idItemSelecionado(cbbOrigem).equals(Origem.SAPIENS_ID)) {
-			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null));
+			Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipio), null));
 			if (municipio != null && municipio.getDestino() != null) {
 				cbbDestino.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbDestino, municipio.getDestino().getDestinoId(), null));
 				habilitado = false;
@@ -223,7 +223,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		Origem origem = MyUtils.entidade(despachoServico.obterOrigem(MyUtils.idItemSelecionado(cbbOrigem), null));
 		TipoProcesso tipoProcesso = MyUtils.entidade(despachoServico.obterTipoProcesso(MyUtils.idItemSelecionado(cbbTipoProcesso), null));
 		TipoImovel tipoImovel = MyUtils.entidade(despachoServico.obterTipoImovel(MyUtils.idItemSelecionado(cbbTipoImovel), null));
-		Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null));
+		Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipio), null));
 		Destino destino = null;
 
 		if (origem.getOrigemId().equals(Origem.SAPIENS_ID) && municipio != null && municipio.getDestino() != null) {

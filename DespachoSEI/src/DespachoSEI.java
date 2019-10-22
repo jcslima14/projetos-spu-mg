@@ -7,6 +7,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Map.Entry;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -14,6 +17,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import framework.JPAUtils;
 import framework.MyUtils;
 
 @SuppressWarnings("serial")
@@ -26,7 +30,7 @@ public class DespachoSEI extends JFrame {
 		JDesktopPane desktop = new JDesktopPane();
 		setContentPane(desktop);
 
-		Connection conexao = obterConexao();
+		EntityManager conexao = obterConexaoEM();
 
 		JMenuItem sbmProcessoRecebido = new JMenuItem("Processamento de Solicitação de Análise Recebida");
 		JMenuItem sbmSolicitacaoAnalise = new JMenuItem("Solicitação de Análise");
@@ -251,18 +255,17 @@ public class DespachoSEI extends JFrame {
 		});
     }
 
-	private Connection obterConexao() {
-		Connection conexao = null;
-
+	private EntityManager obterConexaoEM() {
+		EntityManager conexao = null;
 		try {
-			conexao = DriverManager.getConnection("jdbc:sqlite:DespachoSEI.db");
-//			conexao = DriverManager.getConnection("jdbc:sqlite:L:\\DIVERSOS\\Ferramentas SPU\\Despacho SEI\\DespachoSEI.db");
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory("DespachoSEI");
+			conexao = emf.createEntityManager();
 			criarTabelas(conexao);
 		} catch (Exception e1) {
 			JOptionPane.showMessageDialog(null, "Erro ao conectar com o banco de dados. \n \n" + e1.getMessage());
 			e1.printStackTrace();
 		}
-
+		
 		return conexao;
 	}
 
@@ -275,7 +278,7 @@ public class DespachoSEI extends JFrame {
 		app.setExtendedState(app.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	} 
 
-	private void criarTabelas(Connection conexao) throws Exception {
+	private void criarTabelas(EntityManager conexao) throws Exception {
 		criarTabelaAssinante(conexao);
 		criarTabelaAssinanteTipoResposta(conexao);
 		criarTabelaSolicitacao(conexao);
@@ -291,7 +294,7 @@ public class DespachoSEI extends JFrame {
 		criarTabelaOrigem(conexao);
 	}
 
-	private void criarTabelaAssinante(Connection conexao) throws Exception {
+	private void criarTabelaAssinante(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "assinante")) {
 			String sql = "CREATE TABLE assinante " + 
 						 "(" + 
@@ -306,11 +309,11 @@ public class DespachoSEI extends JFrame {
 						 "  pastaarquivoprocesso varchar NOT NULL" + 
 						 ")"; 
 	
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaAssinanteTipoResposta(Connection conexao) throws Exception {
+	private void criarTabelaAssinanteTipoResposta(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "assinantetiporesposta")) {
 			String sql = "CREATE TABLE assinantetiporesposta " + 
 						 "(" + 
@@ -320,11 +323,11 @@ public class DespachoSEI extends JFrame {
 						 "  blocoassinatura varchar NOT NULL" + 
 						 ")"; 
 	
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaSolicitacao(Connection conexao) throws Exception {
+	private void criarTabelaSolicitacao(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "solicitacao")) {
 			String sql = "CREATE TABLE solicitacao " + 
 						 "(" + 
@@ -345,11 +348,11 @@ public class DespachoSEI extends JFrame {
 						 "  arquivosanexados boolean" + 
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaSolicitacaoResposta(Connection conexao) throws Exception {
+	private void criarTabelaSolicitacaoResposta(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "solicitacaoresposta")) {
 			String sql = "CREATE TABLE solicitacaoresposta " + 
 						 "(" +
@@ -368,12 +371,12 @@ public class DespachoSEI extends JFrame {
 						 "  respostanoblocoassinatura boolean not null" + 
 						 ")";
 
-			MyUtils.execute(conexao, sql);
-			MyUtils.execute(conexao, "CREATE INDEX ix_solicitacaoresposta_001 ON solicitacaoresposta (solicitacaoid)");
+			JPAUtils.executeUpdate(conexao, sql);
+			JPAUtils.executeUpdate(conexao, "CREATE INDEX ix_solicitacaoresposta_001 ON solicitacaoresposta (solicitacaoid)");
 		}
 	}
 
-	private void criarTabelaDestino(Connection conexao) throws Exception {
+	private void criarTabelaDestino(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "destino")) {
 			String sql = "CREATE TABLE destino" + 
 						 "(" + 
@@ -384,11 +387,11 @@ public class DespachoSEI extends JFrame {
 						 "  usarcartorio boolean NOT NULL" + 
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaTipoResposta(Connection conexao) throws Exception {
+	private void criarTabelaTipoResposta(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "tiporesposta")) {
 			String sql = "CREATE TABLE tiporesposta" + 
 						 "(" + 
@@ -406,11 +409,11 @@ public class DespachoSEI extends JFrame {
 						 "  complementospunet varchar" + 
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaTipoImovel(Connection conexao) throws Exception {
+	private void criarTabelaTipoImovel(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "tipoimovel")) {
 			String sql = "CREATE TABLE tipoimovel" + 
 						 "(" + 
@@ -418,38 +421,44 @@ public class DespachoSEI extends JFrame {
 						 "  descricao varchar NOT NULL" + 
 						 ")"; 
 	
-			MyUtils.execute(conexao, sql);
-			
-			preencherTabelaTipoImovel(conexao);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
+		
+		preencherTabelaTipoImovel(conexao);
 	}
 
-	private void preencherTabelaTipoImovel(Connection conexao) throws Exception {
+	private void preencherTabelaTipoImovel(EntityManager conexao) throws Exception {
+		DespachoServico despachoServico = new DespachoServico(conexao);
 		for (TipoImovel tipoImovel : TipoImovel.TIPOS_IMOVEIS) {
-			MyUtils.execute(conexao, "insert into tipoimovel (tipoimovelid, descricao) values (" + tipoImovel.getTipoImovelId() + ", '" + tipoImovel.getDescricao() + "')");
+			if (despachoServico.obterTipoImovel(tipoImovel.getTipoImovelId(), null).size() == 0) {
+				JPAUtils.persistir(conexao, tipoImovel);
+			}
 		}
 	}
 
-	private void criarTabelaTipoProcesso(Connection conexao) throws Exception {
+	private void criarTabelaTipoProcesso(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "tipoprocesso")) {
 			String sql = "CREATE TABLE tipoprocesso (" + 
 						 "  tipoprocessoid integer primary key autoincrement not null," + 
 						 "  descricao varchar not null" + 
 						 ")"; 
 	
-			MyUtils.execute(conexao, sql);
-			
-			preencherTabelaTipoProcesso(conexao);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
+		
+		preencherTabelaTipoProcesso(conexao);
 	}
 
-	private void preencherTabelaTipoProcesso(Connection conexao) throws Exception {
+	private void preencherTabelaTipoProcesso(EntityManager conexao) throws Exception {
+		DespachoServico despachoServico = new DespachoServico(conexao);
 		for (TipoProcesso tipoProcesso : TipoProcesso.TIPOS_PROCESSO) {
-			MyUtils.execute(conexao, "insert into tipoprocesso (tipoprocessoid, descricao) values (" + tipoProcesso.getTipoProcessoId() + ", '" + tipoProcesso.getDescricao() + "')");
+			if (despachoServico.obterTipoProcesso(tipoProcesso.getTipoProcessoId(), null).size() == 0) {
+				JPAUtils.persistir(conexao, tipoProcesso);
+			}
 		}
 	}
 
-	private void criarTabelaMunicipio(Connection conexao) throws Exception {
+	private void criarTabelaMunicipio(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "municipio")) {
 			String sql = "CREATE TABLE municipio " + 
 						 "(" + 
@@ -460,11 +469,11 @@ public class DespachoSEI extends JFrame {
 						 "  tiporespostaid integer" +
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaMunicipioTipoResposta(Connection conexao) throws Exception {
+	private void criarTabelaMunicipioTipoResposta(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "municipiotiporesposta")) {
 			String sql = "CREATE TABLE municipiotiporesposta " + 
 						 "(" + 
@@ -474,11 +483,11 @@ public class DespachoSEI extends JFrame {
 						 "  tiporespostaid integer not null" +
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 
-	private void criarTabelaSolicitacaoEnvio(Connection conexao) throws Exception {
+	private void criarTabelaSolicitacaoEnvio(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
 			String sql = "CREATE TABLE solicitacaoenvio " + 
 						 "(" +
@@ -490,12 +499,12 @@ public class DespachoSEI extends JFrame {
 						 "  resultadoprocessamento varchar" + 
 						 ")";
 
-			MyUtils.execute(conexao, sql);
-			MyUtils.execute(conexao, "CREATE INDEX ix_solicitacaoenvio_001 ON solicitacaoenvio (solicitacaoid)");
+			JPAUtils.executeUpdate(conexao, sql);
+			JPAUtils.executeUpdate(conexao, "CREATE INDEX ix_solicitacaoenvio_001 ON solicitacaoenvio (solicitacaoid)");
 		}
 	}
 
-	private void criarTabelaParametro(Connection conexao) throws Exception {
+	private void criarTabelaParametro(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "parametro")) {
 			String sql = "CREATE TABLE parametro " + 
 						 "(" + 
@@ -505,19 +514,22 @@ public class DespachoSEI extends JFrame {
 						 "  ativo boolean NOT NULL" +
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
-			
-			preencherTabelaParametro(conexao);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
+		
+		preencherTabelaParametro(conexao);
 	}
 
-	private void preencherTabelaParametro(Connection conexao) throws Exception {
+	private void preencherTabelaParametro(EntityManager conexao) throws Exception {
+		DespachoServico despachoServico = new DespachoServico(conexao);
 		for (Entry<Integer, String[]> parametro : Parametro.DESCRICOES.entrySet()) {
-			MyUtils.execute(conexao, "insert into parametro (parametroid, descricao, conteudo, ativo) values (" + parametro.getKey() + ", '" + parametro.getValue()[0] + "', '" + parametro.getValue()[1] + "', true)");
+			if (despachoServico.obterParametro(parametro.getKey(), null).size() == 0) {
+				JPAUtils.persistir(conexao, new Parametro(parametro.getKey(), parametro.getValue()[0], parametro.getValue()[1], true));
+			}
 		}
 	}
 
-	private void criarTabelaOrigem(Connection conexao) throws Exception {
+	private void criarTabelaOrigem(EntityManager conexao) throws Exception {
 		if (!MyUtils.tabelaExiste(conexao, "origem")) {
 			String sql = "CREATE TABLE origem " + 
 						 "(" + 
@@ -525,15 +537,18 @@ public class DespachoSEI extends JFrame {
 						 "  descricao varchar NOT NULL" + 
 						 ")"; 
 
-			MyUtils.execute(conexao, sql);
-
-			preencherTabelaOrigem(conexao);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
+
+		preencherTabelaOrigem(conexao);
 	}
 
-	private void preencherTabelaOrigem(Connection conexao) throws Exception {
+	private void preencherTabelaOrigem(EntityManager conexao) throws Exception {
+		DespachoServico despachoServico = new DespachoServico(conexao);
 		for (Origem origem : Origem.ORIGENS) {
-			MyUtils.execute(conexao, "insert into origem (origemid, descricao) values (" + origem.getOrigemId() + ", '" + origem.getDescricao() + "')");
+			if (despachoServico.obterOrigem(origem.getOrigemId(), null).size() == 0) {
+				JPAUtils.persistir(conexao, origem);
+			}
 		}
 	}
 }

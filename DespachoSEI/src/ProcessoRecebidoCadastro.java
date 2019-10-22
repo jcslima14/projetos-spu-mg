@@ -226,7 +226,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		List<Municipio> municipios = despachoServico.obterMunicipio(false, MyUtils.idItemSelecionado(cbbMunicipio), null);
+		List<Municipio> municipios = despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipio), null);
 		Municipio municipio = (municipios != null && !municipios.isEmpty() ? municipios.iterator().next() : null);
 
 		entidadeEditada.getSolicitacao().setMunicipio(municipio);

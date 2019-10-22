@@ -243,7 +243,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					observacao = observacao.replaceFirst("APAF ", "");
 				}
 
-				Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(true, null, nomeMunicipio));
+				Municipio municipio = MyUtils.entidade(despachoServico.obterMunicipio(null, nomeMunicipio));
 				if (municipio == null) {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "Município não encontrado";
 				} else {

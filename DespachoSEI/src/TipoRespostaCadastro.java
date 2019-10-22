@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyCheckBox;
 import framework.MyComboBox;
 import framework.MyLabel;
@@ -21,8 +20,8 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class TipoRespostaCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtTipoRespostaId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtTipoRespostaId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblTipoRespostaId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -48,7 +47,7 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public TipoRespostaCadastro(String tituloJanela, Connection conexao) {
+	public TipoRespostaCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -99,42 +98,25 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtTipoRespostaId.getText() != null && !txtTipoRespostaId.getText().trim().equals("")) {
-			sql += "update tiporesposta "
-				+  "   set descricao = '" + txtDescricao.getText().trim() + "' "
-				+  "     , tipodocumento = '" + txtTipoDocumento.getText() + "' "
-				+  "     , numerodocumentomodelo = '" + txtNumeroDocumentoModelo.getText() + "' "
-				+  "     , gerarprocessoindividual = " + (chkGerarProcessoIndividual.isSelected() ? "true" : "false")
-				+  "     , unidadeaberturaprocesso = '" + txtUnidadeAberturaProcesso.getText() + "' "
-				+  "     , tipoprocesso = '" + txtTipoProcesso.getText() + "' "
-				+  "     , imprimirresposta = " + (chkImprimirResposta.isSelected() ? "true" : "false")
-				+  "     , quantidadeassinaturas = " + (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText())
-				+  "     , origemid = " + (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem))
-				+  "     , respostaspunet = " + (txtRespostaSPUNet.getText().equals("") ? "null" : "'" + txtRespostaSPUNet.getText() + "'")
-				+  "     , complementospunet = " + (txtComplementoSPUNet.getText().equals("") ? "null" : "'" + txtComplementoSPUNet.getText() + "'")
-				+  " where tiporespostaid = " + txtTipoRespostaId.getText();
-		} else {
-			sql += "insert into tiporesposta (descricao, tipodocumento, numerodocumentomodelo, gerarprocessoindividual, unidadeaberturaprocesso, tipoprocesso, imprimirresposta, quantidadeassinaturas, origemid, respostaspunet, complementospunet) values (";
-			sql += "'" + txtDescricao.getText().trim() + "', ";
-			sql += "'" + txtTipoDocumento.getText() + "', ";
-			sql += "'" + txtNumeroDocumentoModelo.getText() + "', ";
-			sql += (chkGerarProcessoIndividual.isSelected() ? "true" : "false") + ", ";
-			sql += "'" + txtUnidadeAberturaProcesso.getText() + "', ";
-			sql += "'" + txtTipoProcesso.getText() + "', ";
-			sql += (chkImprimirResposta.isSelected() ? "true" : "false") + ", ";
-			sql += (txtQuantidadeAssinaturas.getText().equals("") ? "null" : txtQuantidadeAssinaturas.getText()) + ", ";
-			sql += (cbbOrigem.getSelectedIndex() == 0 ? "null" : MyUtils.idItemSelecionado(cbbOrigem)) + ", ";
-			sql += (txtRespostaSPUNet.getText().equals("") ? "null" : "'" + txtRespostaSPUNet.getText() + "'") + ", ";
-			sql += (txtComplementoSPUNet.getText().equals("") ? "null" : "'" + txtComplementoSPUNet.getText() + "'") + ") ";
-		}
-		MyUtils.execute(conexao, sql);
+		TipoResposta entidade = new TipoResposta();
+		entidade.setTipoRespostaId(txtTipoRespostaId.getTextAsInteger());
+		entidade.setDescricao(txtDescricao.getText());
+		entidade.setTipoDocumento(txtTipoDocumento.getText());
+		entidade.setNumeroDocumentoModelo(txtNumeroDocumentoModelo.getText());
+		entidade.setGerarProcessoIndividual(chkGerarProcessoIndividual.isSelected());
+		entidade.setUnidadeAberturaProcesso(txtUnidadeAberturaProcesso.getText());
+		entidade.setTipoProcesso(txtTipoProcesso.getText());
+		entidade.setImprimirResposta(chkImprimirResposta.isSelected());
+		entidade.setQuantidadeAssinaturas(txtQuantidadeAssinaturas.getTextAsInteger());
+		entidade.setOrigem(MyUtils.entidade(despachoServico.obterOrigem(MyUtils.idItemSelecionado(cbbOrigem), null)));
+		entidade.setRespostaSPUNet(txtRespostaSPUNet.getText());
+		entidade.setComplementoSPUNet(txtComplementoSPUNet.getText());
+
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from tiporesposta where tiporespostaid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from tiporesposta where tiporespostaid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -159,24 +141,8 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("select tr.tiporespostaid "
-				+ "		 , tr.descricao "
-				+ "		 , tr.tipodocumento "
-				+ "		 , tr.numerodocumentomodelo "
-				+ "		 , case when tr.gerarprocessoindividual then 'Sim' else 'Não' end as gerarprocessoindividual "
-				+ "		 , coalesce(tr.unidadeaberturaprocesso, '') as unidadeaberturaprocesso "
-				+ "		 , tr.tipoprocesso "
-				+ "		 , case when tr.imprimirresposta then 'Sim' else 'Não' end as imprimirresposta "
-				+ "		 , tr.quantidadeassinaturas "
-				+ "		 , o.descricao as origem "
-				+ "		 , tr.respostaspunet "
-				+ "		 , tr.complementospunet "
-				+ "   from tiporesposta tr "
-				+ "   left join origem o using (origemid) "
-				+ " order by tr.descricao ");
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterTipoResposta(null, null), "tipoRespostaId", "descricao", "tipoDocumento", "numeroDocumentoModelo", 
+				"gerarProcessoIndividualAsString", "unidadeAberturaProcesso", "tipoProcesso", "imprimirRespostaAsString", "quantidadeAssinaturas", "origem.descricao", "respostaSPUNet", "complementoSPUNet"));
 		return tm;
 	}
 

@@ -1,20 +1,22 @@
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import javax.persistence.EntityManager;
 import javax.swing.JOptionPane;
 
+import framework.JPAUtils;
 import framework.MyComboBox;
 import framework.MyUtils;
 
 public class DespachoServico {
-	private Connection conexao;
+	private EntityManager conexao;
 	
-	public DespachoServico(Connection conexao) {
+	public DespachoServico(EntityManager conexao) {
 		this.conexao = conexao;
 	}
 
@@ -23,104 +25,96 @@ public class DespachoServico {
 	}
 
 	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor, Municipio municipio, String cartorio, String endereco) throws Exception {
-		List<Solicitacao> retorno = new ArrayList<Solicitacao>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from solicitacao where 1 = 1");
+		sql.append("select s from Solicitacao s ");
+		sql.append("  join fetch s.origem o ");
+		sql.append("  join fetch s.tipoProcesso tp ");
+		sql.append("  left join fetch s.municipio m ");
+		sql.append("  left join fetch s.municipio.municipioComarca mc ");
+		sql.append("  left join fetch s.municipio.tipoResposta mtr ");
+		sql.append("  left join fetch s.destino d ");
+		sql.append("  left join fetch s.tipoImovel ti ");
+		sql.append(" where 1 = 1");
 		if (solicitacaoId != null) {
-			sql.append(" and solicitacaoid = " + solicitacaoId);
+			sql.append(" and s.solicitacaoId = :solicitacaoId");
+			parametros.put("solicitacaoId", solicitacaoId);
 		} else {
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and origemid = " + origem.getOrigemId());
+				sql.append(" and o.origemId = :origemId");
+				parametros.put("origemId", origem.getOrigemId());
 			}
 			if (tipoProcesso != null && tipoProcesso.getTipoProcessoId() != null) {
-				sql.append(" and tipoprocessoid = " + tipoProcesso.getTipoProcessoId());
+				sql.append(" and tp.tipoProcessoId = :tipoProcessoID");
+				parametros.put("tipoProcessoId", tipoProcesso.getTipoProcessoId());
 			}
 			if (numeroProcesso != null) {
-				sql.append(" and numeroprocesso = '" + numeroProcesso + "'");
+				sql.append(" and s.numeroProcesso = :numeroProcesso");
+				parametros.put("numeroProcesso", numeroProcesso);
 			}
 			if (chaveBusca != null) {
-				sql.append(" and chaveBusca = '" + chaveBusca + "'");
+				sql.append(" and s.chaveBusca = :chaveBusca");
+				parametros.put("chaveBusca", chaveBusca);
 			}
-			if (municipio != null) {
-				sql.append(" and municipioid = " + municipio.getMunicipioId());
+			if (municipio != null && municipio.getMunicipioId() != null) {
+				sql.append(" and m.municipioId = :municipioId");
+				parametros.put("municipioId", municipio.getMunicipioId());
 			}
 			if (autor != null) {
-				sql.append(" and autor like '" + autor.replace("'", "''") + "'");
+				sql.append(" and s.autor like :autor");
+				parametros.put("autor", autor);
 			}
 			if (cartorio != null) {
-				sql.append(" and coalesce(cartorio, '') like '" + cartorio.replace("'", "''") + "'");
+				sql.append(" and coalesce(s.cartorio, '') like :cartorio");
+				parametros.put("cartorio", cartorio);
 			}
 			if (endereco != null) {
-				sql.append(" and coalesce(endereco, '') like '" + endereco.replace("'", "''") + "'");
+				sql.append(" and coalesce(s.endereco, '') like :endereco");
+				parametros.put("endereco", endereco);
 			}
 		}
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new Solicitacao(rs.getInt("solicitacaoid"), 
-					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
-					MyUtils.entidade(obterTipoProcesso(rs.getInt("tipoprocessoid"), null)),
-					rs.getString("numeroprocesso"), 
-					rs.getString("chavebusca"), 
-					rs.getString("autor"),
-					MyUtils.entidade(obterMunicipio(true, rs.getInt("municipioid"), null)),
-					MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null, null)),
-					rs.getString("cartorio"),
-					MyUtils.entidade(obterTipoImovel(rs.getInt("tipoimovelid"), null)),
-					rs.getString("endereco"),
-					rs.getString("coordenada"),
-					rs.getString("area"),
-					rs.getString("numeroprocessosei"),
-					rs.getBoolean("arquivosanexados")
-					));
-		}
-
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<SolicitacaoEnvio> obterSolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, Origem origem, String numeroProcesso, String dataHoraMovimentacao, Boolean arquivosProcessados, boolean somenteMunicipiosPreenchidos) throws Exception {
-		List<SolicitacaoEnvio> retorno = new ArrayList<SolicitacaoEnvio>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select se.* from solicitacaoenvio se inner join solicitacao s using (solicitacaoid) where 1 = 1");
+		sql.append("select se from SolicitacaoEnvio se ");
+		sql.append("  join fetch se.solicitacao s ");
+		sql.append("  join fetch se.solicitacao.origem o ");
+		sql.append("  left join fetch se.solicitacao.municipio m ");
+		sql.append(" where 1 = 1");
 		if (solicitacaoEnvioId != null) {
-			sql.append(" and se.solicitacaoenvioid = " + solicitacaoEnvioId);
+			sql.append(" and se.solicitacaoEnvioId = :solicitacaoEnvioId");
+			parametros.put("solicitaEnvioId", solicitacaoEnvioId);
 		} else {
 			if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
-				sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
+				sql.append(" and s.solicitacaoid = :solicitacaoId");
+				parametros.put("solicitaId", solicitacao.getSolicitacaoId());
 			}
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and s.origemid = " + origem.getOrigemId());
+				sql.append(" and o.origemId = :origemId");
+				parametros.put("origemId", origem.getOrigemId());
 			}
 			if (numeroProcesso != null) {
-				sql.append(" and s.numeroprocesso = '" + numeroProcesso + "'");
+				sql.append(" and s.numeroProcesso = :numeroProcesso");
+				parametros.put("numeroProcesso", numeroProcesso);
 			}
 			if (dataHoraMovimentacao != null) {
-				sql.append(" and se.datahoramovimentacao = '" + dataHoraMovimentacao + "'");
+				sql.append(" and se.datahoramovimentacao = :dataHoraMovimentacao");
+				parametros.put("dataHoraMovimentacao", dataHoraMovimentacao);
 			}
 			if (arquivosProcessados != null) {
-				sql.append(" and se.arquivosprocessados = " + (arquivosProcessados ? "true" : "false"));
+				sql.append(" and se.arquivosprocessados = :arquivosProcessados");
+				parametros.put("arquivosProcessados", arquivosProcessados);
 			}
 			if (somenteMunicipiosPreenchidos) {
-				sql.append(" and s.municipioid is not null");
+				sql.append(" and s.municipio is not null");
 			}
 		}
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new SolicitacaoEnvio(rs.getInt("solicitacaoenvioid"), 
-					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null, null)),
-					rs.getString("datahoramovimentacao"), 
-					rs.getString("resultadodownload"),
-					rs.getBoolean("arquivosprocessados"),
-					rs.getString("resultadoprocessamento")
-					));
-		}
-
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
@@ -139,125 +133,114 @@ public class DespachoServico {
 
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
 			TipoResposta tipoResposta, String numeroDocumentoSEI, boolean pendentesGeracao, boolean pendentesImpressao, boolean pendentesRetiradaBlocoAssinatura) throws Exception {
-		List<SolicitacaoResposta> retorno = new ArrayList<SolicitacaoResposta>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select sr.* from solicitacaoresposta sr ");
-		sql.append(" inner join solicitacao s using (solicitacaoid) ");
-		sql.append("  left join tiporesposta tr using (tiporespostaid) ");
+		sql.append("select sr from solicitacaoresposta sr ");
+		sql.append("  join fetch sr.solicitacao s ");
+		sql.append("  join fetch sr.solicitacao.origem o ");
+		sql.append("  join fetch sr.solicitacao.tipoProcesso tp ");
+		sql.append("  left join fetch sr.solicitacao.municipio m ");
+		sql.append("  left join fetch sr.solicitacao.municipio.municipioComarca mc ");
+		sql.append("  left join fetch sr.solicitacao.destino d ");
+		sql.append("  left join fetch sr.solicitacao.tipoImovel ti ");
+		sql.append("  left join fetch sr.tipoResposta tr ");
+		sql.append("  left join fetch sr.assinante a ");
+		sql.append("  left join fetch sr.assinanteSuperior sup ");
 		sql.append(" where 1 = 1");
 		if (solicitacaoRespostaId != null) {
-			sql.append(" and sr.solicitacaorespostaid = " + solicitacaoRespostaId);
+			sql.append(" and sr.solicitacaoRespostaId = :solicitacaoRespostaId");
+			parametros.put("solicitacaoRespostaId", solicitacaoRespostaId);
 		} else {
 			if (solicitacao != null) {
 				if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
-					sql.append(" and s.solicitacaoid = " + solicitacao.getSolicitacaoId());
+					sql.append(" and s.solicitacaoId = :solicitacaoId");
+					parametros.put("solicitacaoId", solicitacao.getSolicitacaoId());
 				} else {
-					if (solicitacao != null && solicitacao.getOrigem() != null && solicitacao.getOrigem().getOrigemId() != null) {
-						sql.append(" and s.origemid = " + solicitacao.getOrigem().getOrigemId());
+					if (solicitacao.getOrigem() != null && solicitacao.getOrigem().getOrigemId() != null) {
+						sql.append(" and o.origemId = :origemId");
+						parametros.put("origemId", solicitacao.getOrigem().getOrigemId());
 					}
-					if (solicitacao != null && solicitacao.getTipoProcesso() != null && solicitacao.getTipoProcesso().getTipoProcessoId() != null) {
-						sql.append(" and s.tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
+					if (solicitacao.getTipoProcesso() != null && solicitacao.getTipoProcesso().getTipoProcessoId() != null) {
+						sql.append(" and tp.tipoProcessoId = :tipoProcessoId");
+						parametros.put("tipoProcessoId", solicitacao.getTipoProcesso().getTipoProcessoId());
 					}
-					if (solicitacao != null && solicitacao.getNumeroProcesso() != null) {
-						sql.append(" and s.numeroprocesso = '" + solicitacao.getNumeroProcesso() + "' ");
+					if (solicitacao.getNumeroProcesso() != null) {
+						sql.append(" and s.numeroProcesso = :numeroProcesso");
+						parametros.put("numeroProcesso", solicitacao.getNumeroProcesso());
 					}
 				}
 			}
 			if (respostaImpressa != null) {
-				sql.append(" and sr.respostaimpressa = " + (respostaImpressa ? "true" : "false"));
+				sql.append(" and sr.respostaImpressa = :respostaImpressa");
+				parametros.put("respostaImpressa", respostaImpressa);
 			}
 			if (respostaNoBlocoAssinatura != null) {
-				sql.append(" and sr.respostanoblocoassinatura = " + (respostaNoBlocoAssinatura ? "true" : "false"));
+				sql.append(" and sr.respostaNoBlocoAssinatura = :respostaNoBlocoAssinatura");
+				parametros.put("respostaNoBlocoAssinatura", respostaNoBlocoAssinatura);
 			}
 			if (assinante != null && assinante.getAssinanteId() != null) {
-				sql.append(" and sr.assinanteid = " + assinante.getAssinanteId());
+				sql.append(" and a.assinanteId = :assinanteId");
+				parametros.put("assinanteId", assinante.getAssinanteId());
 			}
 			if (tipoResposta != null && tipoResposta.getImprimirResposta() != null) {
-				sql.append(" and tr.imprimirresposta = " + (tipoResposta.getImprimirResposta() ? "true" : "false"));
+				sql.append(" and tr.imprimirResposta = :imprimirResposta");
+				parametros.put("imprimirResposta", tipoResposta.getImprimirResposta());
 			}
 			if (numeroDocumentoSEI != null) {
-				sql.append(" and sr.numerodocumentosei = '" + numeroDocumentoSEI + "' ");
+				sql.append(" and sr.numeroDocumentoSEI = :numeroDocumentoSEI");
+				parametros.put("numeroDocumentoSEI", numeroDocumentoSEI);
 			}
 			if (pendentesGeracao) {
-				sql.append(" and coalesce(sr.numerodocumentosei, '') = '' ");
+				sql.append(" and coalesce(sr.numeroDocumentoSEI, '') = '' ");
 			}
 			if (pendentesImpressao) {
-				sql.append(" and coalesce(sr.numerodocumentosei, '') <> '' ");
-				sql.append(" and coalesce(sr.numeroprocessosei, '') <> '' ");
-				sql.append(" and datahoraresposta is not null ");
+				sql.append(" and coalesce(sr.numeroDocumentoSEI, '') <> '' ");
+				sql.append(" and coalesce(sr.numeroProcessoSEI, '') <> '' ");
+				sql.append(" and sr.dataHoraResposta is not null ");
 			}
 			if (pendentesRetiradaBlocoAssinatura) {
-				sql.append(" and coalesce(sr.numerodocumentosei, '') <> '' ");
-				sql.append(" and coalesce(sr.numeroprocessosei, '') <> '' ");
-				sql.append(" and datahoraimpressao is not null ");
+				sql.append(" and coalesce(sr.numeroDocumentoSEI, '') <> '' ");
+				sql.append(" and coalesce(sr.numeroProcessoSEI, '') <> '' ");
+				sql.append(" and sr.dataHoraImpressao is not null ");
 			}
 		}
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new SolicitacaoResposta(rs.getInt("solicitacaorespostaid"), 
-					MyUtils.entidade(obterSolicitacao(rs.getInt("solicitacaoid"), null, null, null, null)),
-					MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null)),
-					rs.getString("observacao"), 
-					MyUtils.entidade(obterAssinante(rs.getInt("assinanteid"), null, null, null)),
-					MyUtils.entidade(obterAssinante(rs.getInt("assinanteidsuperior"), null, null, null)),
-					rs.getString("numerodocumentosei"),
-					rs.getString("datahoraresposta"),
-					rs.getString("numeroprocessosei"),
-					rs.getBoolean("respostaimpressa"),
-					rs.getString("datahoraimpressao"),
-					rs.getString("blocoassinatura"),
-					rs.getBoolean("respostanoblocoassinatura")
-					));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<Origem> obterOrigem(Integer origemId, String descricao) throws Exception {
-		List<Origem> retorno = new ArrayList<Origem>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from origem where 1 = 1");
+		sql.append("select o from Origem o ");
+		sql.append(" where 1 = 1");
 		if (origemId != null) {
-			sql.append(" and origemid = " + origemId);
+			sql.append(" and origemId = :origemId");
+			parametros.put("origemId", origemId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 		}
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new Origem(rs.getInt("origemid"), rs.getString("descricao")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<Parametro> obterParametro(Integer parametroId, String descricao) throws Exception {
-		List<Parametro> retorno = new ArrayList<Parametro>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from parametro where 1 = 1");
+		sql.append("select p from Parametro p where 1 = 1");
 		if (parametroId != null) {
-			sql.append(" and parametroid = " + parametroId);
+			sql.append(" and parametroId = :parametroId");
+			parametros.put("parametroId", parametroId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 		}
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new Parametro(rs.getInt("parametroid"), rs.getString("descricao"), rs.getString("conteudo"), rs.getBoolean("ativo")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public String obterConteudoParametro(int parametroId) {
@@ -281,107 +264,77 @@ public class DespachoServico {
 		}
 	}
 
-	public void salvarConteudoParametro(int parametroId, String conteudo) {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("insert into parametro (parametroid, descricao, conteudo) ");
-		sql.append("select " + parametroId);
-		sql.append("	 , '" + Parametro.obterDescricao(parametroId) + "'");
-		sql.append("	 , '" + conteudo.replace("'", "''") + "'");
-		sql.append(" where not exists (select 1 from parametro where parametroid = " + parametroId + ")");
-
-		try {
-			MyUtils.execute(conexao, sql.toString());
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-
-		sql = new StringBuilder("");
-		sql.append("update parametro ");
-		sql.append("   set descricao = '" + Parametro.obterDescricao(parametroId) + "'");
-		sql.append("	 , conteudo = '" + conteudo.replace("'", "''") + "'");
-		sql.append(" where parametroid = " + parametroId);
-
-		try {
-			MyUtils.execute(conexao, sql.toString());
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+	public void salvarConteudoParametro(int parametroId, String conteudo) throws Exception {
+		Parametro parametro = MyUtils.entidade(obterParametro(parametroId, null));
+		
+		if (parametro != null) {
+			parametro.setConteudo(conteudo);
+			JPAUtils.persistir(conexao, parametro);
 		}
 	}
 
 	public List<AssinanteTipoResposta> obterAssinanteTipoResposta(Integer assinanteTipoRespostaId, Integer assinanteId, Integer tipoRespostaId) throws Exception {
-		List<AssinanteTipoResposta> retorno = new ArrayList<AssinanteTipoResposta>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from assinantetiporesposta where 1 = 1");
+		sql.append("select atr from AssinanteTipoResposta atr ");
+		sql.append(" join fetch atr.assinante a ");
+		sql.append(" join fetch atr.tipoResposta tr ");
+		sql.append(" where 1 = 1");
 		if (assinanteTipoRespostaId != null) {
-			sql.append(" and assinantetiporespostaid = " + assinanteTipoRespostaId);
-		}
-		if (assinanteId != null) {
-			sql.append(" and assinanteid = " + assinanteId);
-		}
-		if (tipoRespostaId != null) {
-			sql.append(" and tiporespostaid = " + tipoRespostaId);
-		}
-
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			Assinante assinante = MyUtils.entidade(obterAssinante(rs.getInt("assinanteid"), null, null, null));
-			TipoResposta tipoResposta = MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null));
-			retorno.add(new AssinanteTipoResposta(rs.getInt("assinantetiporespostaid"), assinante, tipoResposta, rs.getString("blocoassinatura")));
+			sql.append(" and atr.assinanteTipoRespostaId = :assinanteTipoRespostaId");
+			parametros.put("assinanteTipoRespostaId", assinanteTipoRespostaId);
+		} else {
+			if (assinanteId != null) {
+				sql.append(" and a.assinanteId = :assinanteId");
+				parametros.put("assinanteId", assinanteId);
+			}
+			if (tipoRespostaId != null) {
+				sql.append(" and tr.tipoRespostaId = :tipoRespostaId");
+				parametros.put("tipoRespostaId", tipoRespostaId);
+			}
 		}
 
-		return retorno;
+		sql.append(" order by a.nome, tr.descricao ");
+		
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<TipoProcesso> obterTipoProcesso(Integer tipoProcessoId, String descricao) throws Exception {
-		List<TipoProcesso> retorno = new ArrayList<TipoProcesso>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from tipoprocesso where 1 = 1");
+		sql.append("select tp from TipoProcesso tp where 1 = 1");
 		if (tipoProcessoId != null) {
-			sql.append(" and tipoprocessoid = " + tipoProcessoId);
+			sql.append(" and tipoProcessoId = :tipoProcessoId");
+			parametros.put("tipoProcessoId", tipoProcessoId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 		}
 
-		sql.append(" order by descricao collate nocase ");
-		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+		sql.append(" order by descricao ");
 
-		while (rs.next()) {
-			retorno.add(new TipoProcesso(rs.getInt("tipoprocessoid"), rs.getString("descricao")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<TipoImovel> obterTipoImovel(Integer tipoImovelId, String descricao) throws Exception {
-		List<TipoImovel> retorno = new ArrayList<TipoImovel>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from tipoimovel where 1= 1");
+		sql.append("select ti from TipoImovel ti where 1= 1");
 		if (tipoImovelId != null) {
-			sql.append(" and tipoimovelid = " + tipoImovelId);
+			sql.append(" and tipoImovelId = :tipoImovelId");
+			parametros.put("tipoImovelId", tipoImovelId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 		}
 
-		sql.append(" order by descricao collate nocase ");
+		sql.append(" order by descricao ");
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new TipoImovel(rs.getInt("tipoimovelid"), rs.getString("descricao")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao) throws Exception {
@@ -389,182 +342,146 @@ public class DespachoServico {
 	}
 
 	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Origem origem, boolean incluirSemOrigem) throws Exception {
-		List<TipoResposta> retorno = new ArrayList<TipoResposta>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from tiporesposta where 1 = 1");
+		sql.append("select tr from TipoResposta tr ");
+		sql.append("  left join fetch tr.origem o ");
+		sql.append(" where 1 = 1");
 		if (tipoRespostaId != null) {
-			sql.append(" and tiporespostaid = " + tipoRespostaId);
+			sql.append(" and tr.tipoRespostaId = :tipoRespostaId");
+			parametros.put("tipoRespostaId", tipoRespostaId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and tr.descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and (origemid = " + origem.getOrigemId());
-				if (incluirSemOrigem) sql.append(" or origemid is null");
+				sql.append(" and (o.origemId = :origemId");
+				parametros.put("origemId", origem.getOrigemId());
+				if (incluirSemOrigem) sql.append(" or tr.origem is null");
 				sql.append(")");
 			}
 		}
 
-		sql.append(" order by descricao collate nocase ");
+		sql.append(" order by tr.descricao ");
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new TipoResposta(rs.getInt("tiporespostaid"),
-					rs.getString("descricao"), 
-					rs.getString("tipodocumento"), 
-					rs.getString("numerodocumentomodelo"), 
-					rs.getBoolean("gerarprocessoindividual"), 
-					rs.getString("unidadeaberturaprocesso"), 
-					rs.getString("tipoprocesso"), 
-					rs.getBoolean("imprimirresposta"), 
-					rs.getInt("quantidadeassinaturas"),
-					MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
-					rs.getString("respostaspunet"),
-					rs.getString("complementospunet")));
-		}
-
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
-	public List<Municipio> obterMunicipio(boolean obterComarca, Integer municipioId, String nome) throws Exception {
-		List<Municipio> retorno = new ArrayList<Municipio>();
-
+	public List<Municipio> obterMunicipio(Integer municipioId, String nome) throws Exception {
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from municipio where 1 = 1");
+		sql.append("select m from Municipio m ");
+		sql.append("  left join fetch m.municipioComarca mc ");
+		sql.append("  left join fetch m.destino d ");
+		sql.append("  left join fetch m.tipoResposta tr ");
+		sql.append(" where 1 = 1");
 		if (municipioId != null) {
-			sql.append(" and municipioid = " + municipioId);
+			sql.append(" and m.municipioId = :municipioId");
+			parametros.put("municipioId", municipioId);
 		} else {
 			if (nome != null) {
-				sql.append(" and nome like '" + nome.replace("'", "''") + "'");
+				sql.append(" and m.nome like :nome");
+				parametros.put("nome", nome);
 			}
 		}
 
-		sql.append(" order by nome collate nocase ");
+		sql.append(" order by m.nome ");
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			Municipio comarca = null;
-			if (obterComarca) {
-				comarca = MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioidcomarca"), null));
-			}
-
-			retorno.add(new Municipio(rs.getInt("municipioid"),
-									  rs.getString("nome"),
-									  comarca,
-									  MyUtils.entidade(obterDestino(rs.getInt("destinoid"), null, null, null, null, null)),
-									  MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null))
-					));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<MunicipioTipoResposta> obterMunicipioTipoResposta(Integer municipioTipoRespostaId, Municipio municipio, Origem origem, TipoResposta tipoResposta) throws Exception {
-		List<MunicipioTipoResposta> retorno = new ArrayList<MunicipioTipoResposta>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select mtr.* from municipiotiporesposta mtr ");
-		sql.append(" inner join municipio m using (municipioid) ");
-		sql.append(" inner join origem o using (origemid) ");
-		sql.append(" inner join tiporesposta tr using (tiporespostaid) ");
+		sql.append("select mtr from MunicipioTipoResposta mtr ");
+		sql.append(" join fetch mtr.municipio m ");
+		sql.append(" join fetch mtr.origem o ");
+		sql.append(" join fetch mtr.tipoResposta tr ");
 		sql.append(" where 1 = 1 ");
 		if (municipioTipoRespostaId != null) {
-			sql.append(" and municipiotiporespostaid = " + municipioTipoRespostaId);
+			sql.append(" and mtr.municipioTipoRespostaId = :municipioTipoRespostaId");
+			parametros.put("municipioTipoRespostaId", municipioTipoRespostaId);
 		} else {
 			if (municipio != null && municipio.getMunicipioId() != null) {
-				sql.append(" and mtr.municipioid = " + municipio.getMunicipioId());
+				sql.append(" and m.municipioId = :municipioId");
+				parametros.put("municipioId", municipio.getMunicipioId());
 			}
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and mtr.origemid = " + origem.getOrigemId());
+				sql.append(" and o.origemId = origemId");
+				parametros.put("origemId", origem.getOrigemId());
 			}
 			if (tipoResposta != null && tipoResposta.getTipoRespostaId() != null) {
-				sql.append(" and mtr.tiporespostaid = " + tipoResposta.getTipoRespostaId());
+				sql.append(" and tr.tipoRespostaId = :tipoRespostaId");
+				parametros.put("tipoRespostaId", tipoResposta.getTipoRespostaId());
 			}
 		}
 
-		sql.append(" order by m.nome collate nocase, o.descricao collate nocase ");
+		sql.append(" order by m.nome, o.descricao ");
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new MunicipioTipoResposta(rs.getInt("municipiotiporespostaid"),
-										MyUtils.entidade(obterMunicipio(false, rs.getInt("municipioid"), null)),
-										MyUtils.entidade(obterOrigem(rs.getInt("origemid"), null)),
-										MyUtils.entidade(obterTipoResposta(rs.getInt("tiporespostaid"), null))
-					));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<Assinante> obterAssinante(Integer assinanteId, String nome, Boolean superior, Boolean ativo) throws Exception {
-		List<Assinante> retorno = new ArrayList<Assinante>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from assinante where 1 = 1");
+		sql.append("select a from Assinante a where 1 = 1");
 		if (assinanteId != null) {
-			sql.append(" and assinanteid = " + assinanteId);
+			sql.append(" and assinanteId = :assinanteId");
+			parametros.put("assinanteId", assinanteId);
 		} else {
 			if (nome != null) {
-				sql.append(" and nome like '" + nome + "'");
+				sql.append(" and nome like :nome");
+				parametros.put("nome", nome);
 			}
 			if (superior != null) {
-				sql.append(" and superior = " + (superior ? "true" : "false"));
+				sql.append(" and superior = :superior");
+				parametros.put("superior", superior);
 			}
 			if (ativo != null) {
-				sql.append(" and ativo = " + (ativo ? "true" : "false"));
+				sql.append(" and ativo = :ativo");
+				parametros.put("ativo", ativo);
 			}
 		}
 
 		sql.append(" order by nome");
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new Assinante(rs.getInt("assinanteid"), rs.getString("nome"), rs.getBoolean("ativo"), rs.getString("cargo"), rs.getString("setor"), rs.getBoolean("superior"), rs.getString("numeroprocessosei"), rs.getString("blocoassinatura"), rs.getString("pastaarquivoprocesso")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public List<Destino> obterDestino(Integer destinoId, String descricao, String abreviacao, Boolean usarCartorio, String municipio, String orderBy) throws Exception {
-		List<Destino> retorno = new ArrayList<Destino>();
-
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select * from destino where 1 = 1");
+		sql.append("select d from Destino d where 1 = 1");
 		if (destinoId != null) {
-			sql.append(" and destinoid = " + destinoId);
+			sql.append(" and destinoId = :destinoId");
+			parametros.put("destinoId", destinoId);
 		} else {
 			if (descricao != null) {
-				sql.append(" and descricao like '" + descricao + "'");
+				sql.append(" and descricao like :descricao");
+				parametros.put("descricao", descricao);
 			}
 
 			if (abreviacao != null) {
-				sql.append(" and abreviacao like '" + abreviacao + "'");
+				sql.append(" and abreviacao like :abreviacao");
+				parametros.put("abreviacao", abreviacao);
 			}
 
 			if (usarCartorio != null) {
-				sql.append(" and usarcartorio = " + usarCartorio);
+				sql.append(" and usarCartorio = :usarCartorio");
+				parametros.put("usarCartorio", usarCartorio);
 			}
 
 			if (municipio != null) {
-				sql.append(" and destinoid = (select destinoid from municipio where nome = '" + municipio.replace("'", "''") + "')");
+				sql.append(" and destinoId = (select destinoId from Municipio where nome = :municipio)");
+				parametros.put("municipio", municipio);
 			}
 		}
 
 		if (orderBy == null) orderBy = "descricao";
-		sql.append(" order by " + orderBy + " collate nocase ");
+		sql.append(" order by " + orderBy);
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
-
-		while (rs.next()) {
-			retorno.add(new Destino(rs.getInt("destinoid"), rs.getString("artigo"), rs.getString("descricao"), rs.getString("abreviacao"), rs.getBoolean("usarcartorio")));
-		}
-		
-		return retorno;
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
 	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais, Origem origem) {
@@ -592,7 +509,7 @@ public class DespachoServico {
 	public void preencherOpcoesMunicipio(MyComboBox cbbMunicipio, List<Municipio> opcoesIniciais) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<Municipio>();
-			opcoesIniciais.addAll(obterMunicipio(false, null, null));
+			opcoesIniciais.addAll(obterMunicipio(null, null));
 			MyUtils.insereOpcoesComboBox(cbbMunicipio, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Município: \n\n" + e.getMessage());
@@ -645,121 +562,15 @@ public class DespachoServico {
 	}
 
 	public Solicitacao salvarSolicitacao(Solicitacao solicitacao) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-
-		if (solicitacao.getSolicitacaoId() == null || solicitacao.getSolicitacaoId().equals(0)) {
-			sql.append("insert into solicitacao (origemid, tipoprocessoid, numeroprocesso, chavebusca, autor, municipioid, destinoid, cartorio, tipoimovelid, endereco, coordenada, area, numeroprocessosei, arquivosanexados) ");
-			sql.append("select " + solicitacao.getOrigem().getOrigemId());
-			sql.append("	 , " + solicitacao.getTipoProcesso().getTipoProcessoId());
-			sql.append("	 , '" + solicitacao.getNumeroProcesso() + "'");
-			sql.append("	 , '" + MyUtils.emptyStringIfNull(solicitacao.getChaveBusca()) + "'");
-			sql.append("	 , '" + solicitacao.getAutor().replace("'", "''") + "'");
-			sql.append("	 , " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
-			sql.append("	 , " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
-			sql.append("	 , " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio().replace("'", "''") + "'"));
-			sql.append("	 , " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
-			sql.append("	 , " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco().replace("'", "''") + "'"));
-			sql.append("	 , " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada().replace("'", "''") + "'"));
-			sql.append("	 , " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
-			sql.append("	 , " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
-			sql.append("	 , " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
-			sql.append(" where not exists (select 1 from solicitacao ");
-			sql.append("					where origemid = " + solicitacao.getOrigem().getOrigemId());
-			sql.append("					  and tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
-			sql.append(" 					  and numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
-			// se o número de processo não for significativo, adiciona a verificação por outros dados
-			if (solicitacao.getNumeroProcesso().trim().length() <= 1) {
-				sql.append("					  and autor like '" + solicitacao.getAutor().replace("'", "''") + "'");
-				sql.append("					  and coalesce(municipioid, 0) = " + (solicitacao.getMunicipio() == null ? 0 : solicitacao.getMunicipio().getMunicipioId()));
-				sql.append("					  and coalesce(cartorio, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getCartorio()).trim().replace("'", "''") + "'");
-				sql.append("					  and coalesce(endereco, '') like '" + MyUtils.emptyStringIfNull(solicitacao.getEndereco()).trim().replace("'", "''") + "'");
-			}
-			sql.append(")");
-		} else {
-			sql.append("update solicitacao ");
-			sql.append("   set origemid = " + solicitacao.getOrigem().getOrigemId());
-			sql.append("	 , tipoprocessoid = " + solicitacao.getTipoProcesso().getTipoProcessoId());
-			sql.append("	 , numeroprocesso = '" + solicitacao.getNumeroProcesso() + "'");
-			sql.append("	 , chavebusca = '" + solicitacao.getChaveBusca() + "'");
-			sql.append("	 , autor = '" + solicitacao.getAutor().replace("'", "''") + "'");
-			sql.append("	 , municipioid = " + (solicitacao.getMunicipio() == null ? "null" : solicitacao.getMunicipio().getMunicipioId()));
-			sql.append("	 , destinoid = " + (solicitacao.getDestino() == null ? "null" : solicitacao.getDestino().getDestinoId()));
-			sql.append("	 , cartorio = " + (solicitacao.getCartorio() == null ? "null" : "'" + solicitacao.getCartorio().replace("'", "''") + "'"));
-			sql.append("	 , tipoimovelid = " + (solicitacao.getTipoImovel() == null ? "null" : solicitacao.getTipoImovel().getTipoImovelId()));
-			sql.append("	 , endereco = " + (solicitacao.getEndereco() == null ? "null" : "'" + solicitacao.getEndereco().replace("'", "''") + "'"));
-			sql.append("	 , coordenada = " + (solicitacao.getCoordenada() == null ? "null" : "'" + solicitacao.getCoordenada().replace("'", "''") + "'"));
-			sql.append("	 , area = " + (solicitacao.getArea() == null ? "null" : "'" + solicitacao.getArea() + "'"));
-			sql.append("	 , numeroprocessosei = " + (solicitacao.getNumeroProcessoSEI() == null ? "null" : "'" + solicitacao.getNumeroProcessoSEI() + "'"));
-			sql.append("	 , arquivosanexados = " + (solicitacao.getArquivosAnexados() == null ? "null" : (solicitacao.getArquivosAnexados() ? "true" : "false")));
-			sql.append(" where solicitacaoid = " + solicitacao.getSolicitacaoId());
-		}
-
-		MyUtils.execute(conexao, sql.toString());
-
-		return MyUtils.entidade(obterSolicitacao(null, solicitacao.getOrigem(), solicitacao.getTipoProcesso(), solicitacao.getNumeroProcesso(), solicitacao.getChaveBusca(), solicitacao.getAutor(), solicitacao.getMunicipio(), solicitacao.getCartorio(), solicitacao.getEndereco()));
+		return JPAUtils.persistir(conexao, solicitacao);
 	}
 
 	public SolicitacaoEnvio salvarSolicitacaoEnvio(SolicitacaoEnvio solicitacaoEnvio) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-
-		if (solicitacaoEnvio.getSolictacaoEnvioId() == null || solicitacaoEnvio.getSolictacaoEnvioId().equals(0)) {
-			sql.append("insert into solicitacaoenvio (solicitacaoid, datahoramovimentacao, resultadodownload, arquivosprocessados, resultadoprocessamento) ");
-			sql.append("select " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId());
-			sql.append("     , '" + solicitacaoEnvio.getDataHoraMovimentacao() + "'");
-			sql.append("	 , " + (solicitacaoEnvio.getResultadoDownload() == null ? "null" : "'" + solicitacaoEnvio.getResultadoDownload().replace("'", "") + "'"));
-			sql.append("	 , " + (solicitacaoEnvio.getArquivosProcessados() == null ? "null" : (solicitacaoEnvio.getArquivosProcessados() ? "true" : "false")));
-			sql.append("	 , " + (solicitacaoEnvio.getResultadoProcessamento() == null ? "null" : "'" + solicitacaoEnvio.getResultadoProcessamento().replace("'", "") + "'"));
-			sql.append(" where not exists (select 1 from solicitacaoenvio where solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId() + " and datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "')");
-		} else {
-			sql.append("update solicitacaoenvio ");
-			sql.append("   set solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId());
-			sql.append("     , datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "'");
-			sql.append("	 , resultadodownload = " + (solicitacaoEnvio.getResultadoDownload() == null ? "null" : "'" + solicitacaoEnvio.getResultadoDownload().replace("'", "") + "'"));
-			sql.append("	 , arquivosprocessados = " + (solicitacaoEnvio.getArquivosProcessados() == null ? "null" : (solicitacaoEnvio.getArquivosProcessados() ? "true" : "false")));
-			sql.append("	 , resultadoprocessamento = " + (solicitacaoEnvio.getResultadoProcessamento() == null ? "null" : "'" + solicitacaoEnvio.getResultadoProcessamento().replace("'", "") + "'"));
-			sql.append(" where not exists (select 1 from solicitacaoenvio where solicitacaoid = " + solicitacaoEnvio.getSolicitacao().getSolicitacaoId() + " and datahoramovimentacao = '" + solicitacaoEnvio.getDataHoraMovimentacao() + "')");
-		}
-
-		MyUtils.execute(conexao, sql.toString());
-		
-		return MyUtils.entidade(obterSolicitacaoEnvio(null, solicitacaoEnvio.getSolicitacao(), null, null, solicitacaoEnvio.getDataHoraMovimentacao(), null, false));
+		return JPAUtils.persistir(conexao, solicitacaoEnvio);
 	}
 
 	public void salvarSolicitacaoResposta(SolicitacaoResposta resposta) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-
-		if (resposta.getSolicitacaoRespostaId() == null || resposta.getSolicitacaoRespostaId().equals(0)) {
-			sql.append("insert into solicitacaoresposta (solicitacaoid, tiporespostaid, observacao, assinanteid, assinanteidsuperior, numerodocumentosei, datahoraresposta, numeroprocessosei, respostaimpressa, datahoraimpressao, blocoassinatura, respostanoblocoassinatura) ");
-			sql.append("select " + resposta.getSolicitacao().getSolicitacaoId());
-			sql.append("     , " + (resposta.getTipoResposta() == null ? "null" : resposta.getTipoResposta().getTipoRespostaId()));
-			sql.append("	 , " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
-			sql.append("	 , " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
-			sql.append("	 , " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
-			sql.append("	 , " + (resposta.getNumeroDocumentoSEI() == null ? "null" : "'" + resposta.getNumeroDocumentoSEI() + "'"));
-			sql.append("	 , " + (resposta.getDataHoraResposta() == null ? "null" : "'" + resposta.getDataHoraResposta() + "'"));
-			sql.append("	 , " + (resposta.getNumeroProcessoSEI() == null ? "null" : "'" + resposta.getNumeroProcessoSEI() + "'"));
-			sql.append("	 , " + (resposta.getRespostaImpressa() == null ? "null" : (resposta.getRespostaImpressa() ? "true" : "false")));
-			sql.append("	 , " + (resposta.getDataHoraImpressao() == null ? "null" : "'" + resposta.getDataHoraImpressao() + "'"));
-			sql.append("	 , " + (resposta.getBlocoAssinatura() == null ? "null" : "'" + resposta.getBlocoAssinatura() + "'"));
-			sql.append("	 , " + (resposta.getRespostaNoBlocoAssinatura() == null ? "null" : (resposta.getRespostaNoBlocoAssinatura() ? "true" : "false")));
-		} else {
-			sql.append("update solicitacaoresposta ");
-			sql.append("   set solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
-			sql.append("     , tiporespostaid = " + (resposta.getTipoResposta() == null ? "null" : resposta.getTipoResposta().getTipoRespostaId()));
-			sql.append("	 , observacao = " + (resposta.getObservacao() == null ? "null" : "'" + resposta.getObservacao().replace("'", "") + "'"));
-			sql.append("	 , assinanteid = " + (resposta.getAssinante() == null ? "null" : resposta.getAssinante().getAssinanteId()));
-			sql.append("	 , assinanteidsuperior = " + (resposta.getAssinanteSuperior() == null ? "null" : resposta.getAssinanteSuperior().getAssinanteId()));
-			sql.append("	 , numerodocumentosei = " + (resposta.getNumeroDocumentoSEI() == null ? "null" : "'" + resposta.getNumeroDocumentoSEI() + "'"));
-			sql.append("	 , datahoraresposta = " + (resposta.getDataHoraResposta() == null ? "null" : "'" + resposta.getDataHoraResposta() + "'"));
-			sql.append("	 , numeroprocessosei = " + (resposta.getNumeroProcessoSEI() == null ? "null" : "'" + resposta.getNumeroProcessoSEI() + "'"));
-			sql.append("	 , respostaimpressa = " + (resposta.getRespostaImpressa() == null ? "null" : (resposta.getRespostaImpressa() ? "true" : "false")));
-			sql.append("	 , datahoraimpressao = " + (resposta.getDataHoraImpressao() == null ? "null" : "'" + resposta.getDataHoraImpressao() + "'"));
-			sql.append("	 , blocoassinatura = " + (resposta.getBlocoAssinatura() == null ? "null" : "'" + resposta.getBlocoAssinatura() + "'"));
-			sql.append("	 , respostanoblocoassinatura = " + (resposta.getRespostaNoBlocoAssinatura() == null ? "null" : (resposta.getRespostaNoBlocoAssinatura() ? "true" : "false")));
-			sql.append(" where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
-		}
-
-		MyUtils.execute(conexao, sql.toString());
+		JPAUtils.persistir(conexao, resposta);
 	}
 
 	public void selecionarRespostaPadraoPorMunicipio(MyComboBox cbbTipoResposta, Municipio municipio, Origem origem) throws Exception {

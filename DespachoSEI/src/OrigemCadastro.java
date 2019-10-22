@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -19,17 +18,19 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class OrigemCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtOrigemId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtOrigemId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblOrigemId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(2, 2));
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
-	public OrigemCadastro(String tituloJanela, Connection conexao) {
+	public OrigemCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		despachoServico = new DespachoServico(conexao);
 
 		pnlCamposEditaveis.add(lblOrigemId);
 		pnlCamposEditaveis.add(txtOrigemId);
@@ -46,19 +47,18 @@ public class OrigemCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtOrigemId.getText() != null && !txtOrigemId.getText().trim().equals("")) {
-			sql += "update origem set descricao = '" + txtDescricao.getText().trim() + "' where origemid = " + txtOrigemId.getText();
-		} else {
-			sql += "insert into origem (descricao) values ('" + txtDescricao.getText().trim() + "')";
+		Origem entidade = MyUtils.entidade(despachoServico.obterOrigem(txtOrigemId.getTextAsInteger(-1), null));
+		if (entidade == null) {
+			entidade = new Origem();
 		}
-		MyUtils.execute(conexao, sql);
+		entidade.setDescricao(txtDescricao.getText());
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
 		sql += "delete from origem where origemid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -67,8 +67,7 @@ public class OrigemCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select * from origem");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterOrigem(null, null), "origemId", "descricao"));
 		return tm;
 	}
 

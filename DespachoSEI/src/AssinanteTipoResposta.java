@@ -1,9 +1,24 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
+@Entity
+@Table(name = "assinantetiporesposta")
 public class AssinanteTipoResposta {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer assinanteTipoRespostaId;
 	
+	@ManyToOne
+	@JoinColumn(name = "assinanteid")
 	private Assinante assinante;
 	
+	@ManyToOne
+	@JoinColumn(name = "tiporespostaid")
 	private TipoResposta tipoResposta;
 	
 	private String blocoAssinatura;

@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyLabel;
 import framework.MyTableColumn;
 import framework.MyTableModel;
@@ -19,17 +18,19 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class TipoProcessoCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtTipoProcessoId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtTipoProcessoId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblTipoProcessoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtDescricao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblDescricao = new MyLabel("Descrição") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(2, 2));
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
-	public TipoProcessoCadastro(String tituloJanela, Connection conexao) {
+	public TipoProcessoCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		despachoServico = new DespachoServico(conexao);
 
 		pnlCamposEditaveis.add(lblTipoProcessoId);
 		pnlCamposEditaveis.add(txtTipoProcessoId);
@@ -46,19 +47,14 @@ public class TipoProcessoCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtTipoProcessoId.getText() != null && !txtTipoProcessoId.getText().trim().equals("")) {
-			sql += "update tipoprocesso set descricao = '" + txtDescricao.getText().trim() + "' where tipoprocessoid = " + txtTipoProcessoId.getText();
-		} else {
-			sql += "insert into tipoprocesso (descricao) values ('" + txtDescricao.getText().trim() + "')";
-		}
-		MyUtils.execute(conexao, sql);
+		TipoProcesso entidade = new TipoProcesso();
+		entidade.setTipoProcessoId(txtTipoProcessoId.getTextAsInteger());
+		entidade.setDescricao(txtDescricao.getText());
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from tipoprocesso where tipoprocessoid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from tipoprocesso where tipoprocessoid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -67,8 +63,7 @@ public class TipoProcessoCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select * from tipoprocesso");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterTipoProcesso(null, null), "tipoProcessoId", "descricao"));
 		return tm;
 	}
 

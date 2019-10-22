@@ -1,6 +1,20 @@
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "solicitacaoenvio")
 public class SolicitacaoEnvio {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer solictacaoEnvioId;
 	
+	@ManyToOne
+	@JoinColumn(name = "solicitacaoid")
 	private Solicitacao solicitacao;
 	
 	private String dataHoraMovimentacao;
@@ -11,6 +25,9 @@ public class SolicitacaoEnvio {
 	
 	private String resultadoProcessamento;
 
+	public SolicitacaoEnvio() {
+	}
+	
 	public SolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, String dataHoraMovimentacao, String resultadoDownload, Boolean arquivosProcessados, String resultadoProcessamento) {
 		this.solictacaoEnvioId = solicitacaoEnvioId;
 		this.solicitacao = solicitacao;

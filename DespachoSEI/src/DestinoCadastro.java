@@ -1,15 +1,14 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
+import framework.JPAUtils;
 import framework.MyCheckBox;
 import framework.MyLabel;
 import framework.MyTableColumn;
@@ -20,8 +19,8 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class DestinoCadastro extends CadastroTemplate {
 
-	private Connection conexao;
-	private JTextField txtDestinoId = new JTextField() {{ setEnabled(false); }};
+	private EntityManager conexao;
+	private MyTextField txtDestinoId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblDestinoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtAbreviacao = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblAbreviacao = new MyLabel("Abreviação") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -32,10 +31,12 @@ public class DestinoCadastro extends CadastroTemplate {
 	private MyCheckBox chkUsarCartorio = new MyCheckBox("Usar cartório como nome do destinatário") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(5, 2));
 	private List<MyTableColumn> colunas;
+	private DespachoServico despachoServico;
 
-	public DestinoCadastro(String tituloJanela, Connection conexao) {
+	public DestinoCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
+		despachoServico = new DespachoServico(conexao);
 
 		pnlCamposEditaveis.add(lblDestinoId);
 		pnlCamposEditaveis.add(txtDestinoId);
@@ -61,24 +62,19 @@ public class DestinoCadastro extends CadastroTemplate {
 	}
 
 	public void salvarRegistro() throws Exception {
-		String sql = "";
-		if (txtDestinoId.getText() != null && !txtDestinoId.getText().trim().equals("")) {
-			sql += "update destino "
-				+  "   set abreviacao = '" + txtAbreviacao.getText() + "' "
-				+  "     , artigo = '" + txtArtigo.getText() + "' "
-				+  "	 , descricao = '" + txtDescricao.getText().trim() + "' "
-				+  "	 , usarcartorio = " + (chkUsarCartorio.isSelected() ? "true" : "false")
-				+  " where destinoid = " + txtDestinoId.getText();
-		} else {
-			sql += "insert into destino (abreviacao, artigo, descricao, usarcartorio) values ('" + txtAbreviacao.getText().trim() + "', '" + txtArtigo.getText().trim() + "', '" + txtDescricao.getText().trim() + "', " + (chkUsarCartorio.isSelected() ? "true" : "false") + ")";
+		Destino entidade = MyUtils.entidade(despachoServico.obterDestino(txtDestinoId.getTextAsInteger(-1), null, null, null, null, null));
+		if (entidade == null) {
+			entidade = new Destino();
 		}
-		MyUtils.execute(conexao, sql);
+		entidade.setAbreviacao(txtAbreviacao.getText());
+		entidade.setArtigo(txtArtigo.getText());
+		entidade.setDescricao(txtDescricao.getText());
+		entidade.setUsarCartorio(chkUsarCartorio.isSelected());
+		JPAUtils.persistir(conexao, entidade);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		String sql = "";
-		sql += "delete from destino where destinoid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, "delete from destino where destinoid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -90,8 +86,7 @@ public class DestinoCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select destinoid, abreviacao, artigo, descricao, case when usarcartorio then 'Sim' else 'Não' end as usarcartorio from destino");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterDestino(null, null, null, null, null, null), "destinoId", "abreviacao", "artigo", "descricao", "usarCartorioAsString"));
 		return tm;
 	}
 
