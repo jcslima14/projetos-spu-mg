@@ -4,13 +4,14 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -23,6 +24,7 @@ import javax.swing.table.TableModel;
 
 import framework.CadastroController;
 import framework.DialogTemplate;
+import framework.JPAUtils;
 import framework.MyButton;
 import framework.MyCheckBox;
 import framework.MyComboBox;
@@ -37,7 +39,7 @@ public class SolicitacaoCadastro extends CadastroController {
 
 	private SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta;
 
-	private JTextField txtSolicitacaoId = new JTextField() {{ setEnabled(false); }};
+	private MyTextField txtSolicitacaoId = new MyTextField() {{ setEnabled(false); }};
 	private MyLabel lblSolicitacaoId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyComboBox cbbOrigem = new MyComboBox() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblOrigem = new MyLabel("Origem") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -82,7 +84,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		return solicitacaoEnvioCadastro;
 	}
 
-	public SolicitacaoCadastro(Connection conexao, DespachoServico despachoServico, Solicitacao entidade, SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta, JInternalFrame janela) {
+	public SolicitacaoCadastro(EntityManager conexao, DespachoServico despachoServico, Solicitacao entidade, SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta, JInternalFrame janela) {
 		this.setExibirBotoesCadastro(false);
 		this.setExibirTabelaDados(false);
 		this.setExibirBotaoCancelarEdicao(false);
@@ -354,10 +356,10 @@ public class SolicitacaoCadastro extends CadastroController {
 		private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(7, 5));
 		private List<MyTableColumn> colunas;
 
-		private Connection conexao;
+		private EntityManager conexao;
 		private DespachoServico despachoServico;
 
-		public SolicitacaoRespostaCadastro(Connection conexao, DespachoServico despachoServico) {
+		public SolicitacaoRespostaCadastro(EntityManager conexao, DespachoServico despachoServico) {
 			this.despachoServico = despachoServico;
 			this.conexao = conexao;
 
@@ -449,7 +451,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 
 		public void excluirRegistro(Integer id) throws Exception {
-			MyUtils.execute(conexao, "delete from solicitacaoresposta where solicitacaorespostaid = " + id);
+			JPAUtils.executeUpdate(conexao, "delete from solicitacaoresposta where solicitacaorespostaid = " + id);
 		}
 
 		public void prepararParaEdicao() {
@@ -478,26 +480,19 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 
 		public TableModel obterDados() throws Exception {
-			ResultSet rs = MyUtils.executeQuery(conexao, 
-					"select sr.solicitacaorespostaid "
-				  + "	  , tr.descricao as tiporesposta "
-				  + "	  , sr.observacao "
-				  + "     , a.nome as assinante "
-				  + "	  , asp.nome as assinantesuperior "
-				  + "	  , sr.numeroprocessosei "
-				  + "	  , sr.numerodocumentosei "
-				  + "     , sr.datahoraresposta "
-				  + "	  , case when sr.respostaimpressa then 'Sim' else 'Não' end as respostaimpressa "
-				  + "	  , sr.datahoraimpressao "
-				  + "	  , case when sr.respostanoblocoassinatura then 'Sim' else 'Não' end as respostanoblocoassinatura "
-				  + "	  , sr.blocoassinatura "
-				  + "  from solicitacaoresposta sr "
-				  + "  left join tiporesposta tr using (tiporespostaid) "
-				  + "  left join assinante a using (assinanteid) "
-				  + "  left join assinante asp on sr.assinanteidsuperior = asp.assinanteid "
-				  + " where sr.solicitacaoid = " + SolicitacaoCadastro.this.entidade.getSolicitacaoId()
-				  + " order by coalesce(sr.datahoraresposta, '9999-12-31 23:59:59') desc ");
-			TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+			List<SolicitacaoResposta> solicitacoes = despachoServico.obterSolicitacaoResposta(SolicitacaoCadastro.this.entidade);
+			Collections.sort(solicitacoes, new Comparator<SolicitacaoResposta>() {
+				@Override
+				public int compare(SolicitacaoResposta o1, SolicitacaoResposta o2) {
+					String d1 = MyUtils.emptyStringIfNull(o1.getDataHoraResposta()).equals("") ? "9999-12-31 23:59:59" : o1.getDataHoraResposta();
+					String d2 = MyUtils.emptyStringIfNull(o2.getDataHoraResposta()).equals("") ? "9999-12-31 23:59:59" : o2.getDataHoraResposta();
+					return d2.compareTo(d1);
+				}
+			});
+
+			TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(solicitacoes, "solicitacaoRespostaId", "tipoResposta.descricao", 
+					"observacao", "assinante.nome", "assinanteSuperior.nome", "numeroProcessoSEI", "numeroDocumentoSEI", "dataHoraResposta", "respostaImpressaAsString", "dataHoraImpressao", "respostaNoBlocoAssinaturaAsString", "blocoAssinatura"));
+
 			return tm;
 		}
 
@@ -551,12 +546,12 @@ public class SolicitacaoCadastro extends CadastroController {
 		private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(3, 2));
 		private List<MyTableColumn> colunas;
 
-		private Connection conexao;
+		private EntityManager conexao;
 		private DespachoServico despachoServico;
 		private String resultadoDownload;
 		private String resultadoProcessamento;
 
-		public SolicitacaoEnvioCadastro(Connection conexao, DespachoServico despachoServico) {
+		public SolicitacaoEnvioCadastro(EntityManager conexao, DespachoServico despachoServico) {
 			this.setExibirBotaoIncluir(false);
 			this.despachoServico = despachoServico;
 			this.conexao = conexao;
@@ -620,7 +615,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 
 		public void excluirRegistro(Integer id) throws Exception {
-			MyUtils.execute(conexao, "delete from solicitacaoenvio where solicitacaoenvioid = " + id);
+			JPAUtils.executeUpdate(conexao, "delete from solicitacaoenvio where solicitacaoenvioid = " + id);
 		}
 
 		public void prepararParaEdicao() {
@@ -639,16 +634,17 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 
 		public TableModel obterDados() throws Exception {
-			ResultSet rs = MyUtils.executeQuery(conexao, 
-					"select se.solicitacaoenvioid "
-				  + "	  , se.datahoramovimentacao "
-				  + "	  , se.resultadodownload "
-				  + "	  , case when se.arquivosprocessados then 'Sim' else 'Não' end as arquivosprocessados "
-				  + "	  , se.resultadoprocessamento "
-				  + "  from solicitacaoenvio se "
-				  + " where solicitacaoid = " + SolicitacaoCadastro.this.entidade.getSolicitacaoId()
-				  + " order by datahoramovimentacao desc ");
-			TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+			List<SolicitacaoEnvio> solicitacoes = despachoServico.obterSolicitacaoEnvio(SolicitacaoCadastro.this.entidade);
+			Collections.sort(solicitacoes, new Comparator<SolicitacaoEnvio>() {
+				@Override
+				public int compare(SolicitacaoEnvio o1, SolicitacaoEnvio o2) {
+					String d1 = MyUtils.emptyStringIfNull(o1.getDataHoraMovimentacao()).equals("") ? "9999-12-31 23:59:59" : o1.getDataHoraMovimentacao();
+					String d2 = MyUtils.emptyStringIfNull(o2.getDataHoraMovimentacao()).equals("") ? "9999-12-31 23:59:59" : o2.getDataHoraMovimentacao();
+					return d2.compareTo(d1);
+				}
+			});
+
+			TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(solicitacoes, "solicitacaoEnvioId", "dataHoraMovimentacao", "resultadoDownload", "arquivosProcessadosAsString", "resultadoProcessamento"));
 			return tm;
 		}
 

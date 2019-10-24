@@ -4,15 +4,14 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JInternalFrame;
@@ -38,9 +37,8 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.ComboBoxItem;
+import framework.JPAUtils;
 import framework.MyComboBox;
-import framework.MyComboBoxModel;
 import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
@@ -48,7 +46,7 @@ import framework.SpringUtilities;
 @SuppressWarnings("serial")
 public class ImpressaoDespacho extends JInternalFrame {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JTextField txtUsuario = new JTextField(15);
@@ -63,7 +61,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
 
-	public ImpressaoDespacho(String tituloJanela, Connection conexao) {
+	public ImpressaoDespacho(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);
@@ -77,7 +75,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 		cbbNavegador.addItem("Firefox");
 		cbbNavegador.setSelectedItem(despachoServico.obterConteudoParametro(Parametro.DEFAULT_BROWSER, "Firefox"));
 
-		opcoesAssinante();
+		despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, null);
 
 		painelDados.add(lblAssinante);
 		painelDados.add(cbbAssinante);
@@ -126,11 +124,6 @@ public class ImpressaoDespacho extends JInternalFrame {
 				}
 			}
 		});
-	}
-
-	private void opcoesAssinante() {
-		cbbAssinante.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbAssinante, "select assinanteid, nome from assinante where superior = false order by nome", Arrays.asList(new ComboBoxItem(0, null, "(Todos)")));
 	}
 
 	public void abrirJanela() {
@@ -455,7 +448,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 					 + "	 , datahoraimpressao = datetime('now', 'localtime') "
 					 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 	
-			MyUtils.execute(conexao, sql.toString());
+			JPAUtils.executeUpdate(conexao, sql.toString());
 		} else {
 			throw new Exception("O arquivo " + nomeArquivo + " não foi gerado corretamente.");
 		}
@@ -467,7 +460,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 				 + "   set respostanoblocoassinatura = false "
 				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 
-		MyUtils.execute(conexao, sql.toString());
+		JPAUtils.executeUpdate(conexao, sql.toString());
 	}
 
 	// método para obter documentos: tipos de filtro: 1 - respostas não impressas; 2 - documentos de resposta a serem retirados do bloco de assinatura

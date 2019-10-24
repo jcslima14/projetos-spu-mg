@@ -31,8 +31,8 @@ public class DespachoServico {
 		sql.append("  join fetch s.origem o ");
 		sql.append("  join fetch s.tipoProcesso tp ");
 		sql.append("  left join fetch s.municipio m ");
-		sql.append("  left join fetch s.municipio.municipioComarca mc ");
-		sql.append("  left join fetch s.municipio.tipoResposta mtr ");
+		sql.append("  left join fetch m.municipioComarca mc ");
+		sql.append("  left join fetch m.tipoResposta mtr ");
 		sql.append("  left join fetch s.destino d ");
 		sql.append("  left join fetch s.tipoImovel ti ");
 		sql.append(" where 1 = 1");
@@ -77,21 +77,26 @@ public class DespachoServico {
 		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
+
+	public List<SolicitacaoEnvio> obterSolicitacaoEnvio(Solicitacao solicitacao) throws Exception {
+		return obterSolicitacaoEnvio(null, solicitacao, null, null, null, null, false);
+	}
+
 	public List<SolicitacaoEnvio> obterSolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, Origem origem, String numeroProcesso, String dataHoraMovimentacao, Boolean arquivosProcessados, boolean somenteMunicipiosPreenchidos) throws Exception {
 		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
 		sql.append("select se from SolicitacaoEnvio se ");
 		sql.append("  join fetch se.solicitacao s ");
-		sql.append("  join fetch se.solicitacao.origem o ");
-		sql.append("  left join fetch se.solicitacao.municipio m ");
+		sql.append("  join fetch s.origem o ");
+		sql.append("  left join fetch s.municipio m ");
 		sql.append(" where 1 = 1");
 		if (solicitacaoEnvioId != null) {
 			sql.append(" and se.solicitacaoEnvioId = :solicitacaoEnvioId");
-			parametros.put("solicitaEnvioId", solicitacaoEnvioId);
+			parametros.put("solicitacaoEnvioId", solicitacaoEnvioId);
 		} else {
 			if (solicitacao != null && solicitacao.getSolicitacaoId() != null) {
-				sql.append(" and s.solicitacaoid = :solicitacaoId");
-				parametros.put("solicitaId", solicitacao.getSolicitacaoId());
+				sql.append(" and s.solicitacaoId = :solicitacaoId");
+				parametros.put("solicitacaoId", solicitacao.getSolicitacaoId());
 			}
 			if (origem != null && origem.getOrigemId() != null) {
 				sql.append(" and o.origemId = :origemId");
@@ -102,11 +107,11 @@ public class DespachoServico {
 				parametros.put("numeroProcesso", numeroProcesso);
 			}
 			if (dataHoraMovimentacao != null) {
-				sql.append(" and se.datahoramovimentacao = :dataHoraMovimentacao");
+				sql.append(" and se.dataHoraMovimentacao = :dataHoraMovimentacao");
 				parametros.put("dataHoraMovimentacao", dataHoraMovimentacao);
 			}
 			if (arquivosProcessados != null) {
-				sql.append(" and se.arquivosprocessados = :arquivosProcessados");
+				sql.append(" and se.arquivosProcessados = :arquivosProcessados");
 				parametros.put("arquivosProcessados", arquivosProcessados);
 			}
 			if (somenteMunicipiosPreenchidos) {
@@ -131,18 +136,22 @@ public class DespachoServico {
 		return obterSolicitacaoResposta(solicitacaoRespostaId, null, null, null, null, null, null, false, false, false);
 	}
 
+	public List<SolicitacaoResposta> obterSolicitacaoResposta(Solicitacao solicitacao) throws Exception {
+		return obterSolicitacaoResposta(null, solicitacao, null, null, null, null, null, false, false, false);
+	}
+
 	public List<SolicitacaoResposta> obterSolicitacaoResposta(Integer solicitacaoRespostaId, Solicitacao solicitacao, Boolean respostaImpressa, Boolean respostaNoBlocoAssinatura, Assinante assinante, 
 			TipoResposta tipoResposta, String numeroDocumentoSEI, boolean pendentesGeracao, boolean pendentesImpressao, boolean pendentesRetiradaBlocoAssinatura) throws Exception {
 		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
-		sql.append("select sr from solicitacaoresposta sr ");
+		sql.append("select sr from SolicitacaoResposta sr ");
 		sql.append("  join fetch sr.solicitacao s ");
-		sql.append("  join fetch sr.solicitacao.origem o ");
-		sql.append("  join fetch sr.solicitacao.tipoProcesso tp ");
-		sql.append("  left join fetch sr.solicitacao.municipio m ");
-		sql.append("  left join fetch sr.solicitacao.municipio.municipioComarca mc ");
-		sql.append("  left join fetch sr.solicitacao.destino d ");
-		sql.append("  left join fetch sr.solicitacao.tipoImovel ti ");
+		sql.append("  join fetch s.origem o ");
+		sql.append("  join fetch s.tipoProcesso tp ");
+		sql.append("  left join fetch s.municipio m ");
+		sql.append("  left join fetch m.municipioComarca mc ");
+		sql.append("  left join fetch s.destino d ");
+		sql.append("  left join fetch s.tipoImovel ti ");
 		sql.append("  left join fetch sr.tipoResposta tr ");
 		sql.append("  left join fetch sr.assinante a ");
 		sql.append("  left join fetch sr.assinanteSuperior sup ");
@@ -264,9 +273,15 @@ public class DespachoServico {
 		}
 	}
 
-	public void salvarConteudoParametro(int parametroId, String conteudo) throws Exception {
-		Parametro parametro = MyUtils.entidade(obterParametro(parametroId, null));
-		
+	public void salvarConteudoParametro(int parametroId, String conteudo) {
+		Parametro parametro = null;
+		try {
+			parametro = MyUtils.entidade(obterParametro(parametroId, null));
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro ao obter o parâmetro a ser gravado: \n\n" + e.getMessage());
+			return;
+		}
+
 		if (parametro != null) {
 			parametro.setConteudo(conteudo);
 			JPAUtils.persistir(conexao, parametro);

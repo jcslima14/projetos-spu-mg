@@ -11,7 +11,7 @@ import javax.persistence.Table;
 public class SolicitacaoEnvio {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer solictacaoEnvioId;
+	private Integer solicitacaoEnvioId;
 	
 	@ManyToOne
 	@JoinColumn(name = "solicitacaoid")
@@ -29,7 +29,7 @@ public class SolicitacaoEnvio {
 	}
 	
 	public SolicitacaoEnvio(Integer solicitacaoEnvioId, Solicitacao solicitacao, String dataHoraMovimentacao, String resultadoDownload, Boolean arquivosProcessados, String resultadoProcessamento) {
-		this.solictacaoEnvioId = solicitacaoEnvioId;
+		this.solicitacaoEnvioId = solicitacaoEnvioId;
 		this.solicitacao = solicitacao;
 		this.dataHoraMovimentacao = dataHoraMovimentacao;
 		this.resultadoDownload = resultadoDownload;
@@ -37,12 +37,12 @@ public class SolicitacaoEnvio {
 		this.resultadoProcessamento = resultadoProcessamento;
 	}
 
-	public Integer getSolictacaoEnvioId() {
-		return solictacaoEnvioId;
+	public Integer getSolicitacaoEnvioId() {
+		return solicitacaoEnvioId;
 	}
 
-	public void setSolictacaoEnvioId(Integer solictacaoEnvioId) {
-		this.solictacaoEnvioId = solictacaoEnvioId;
+	public void setSolicitacaoEnvioId(Integer solicitacaoEnvioId) {
+		this.solicitacaoEnvioId = solicitacaoEnvioId;
 	}
 
 	public Solicitacao getSolicitacao() {
@@ -83,5 +83,15 @@ public class SolicitacaoEnvio {
 
 	public void setResultadoProcessamento(String resultadoProcessamento) {
 		this.resultadoProcessamento = resultadoProcessamento;
+	}
+
+	public String getArquivosProcessadosAsString() {
+		if (getArquivosProcessados() == null) {
+			return "";
+		} else if (getArquivosProcessados()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
 	}
 }

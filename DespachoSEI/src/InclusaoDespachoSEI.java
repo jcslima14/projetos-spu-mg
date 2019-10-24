@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +15,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
@@ -37,13 +37,14 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
+import framework.JPAUtils;
 import framework.MyUtils;
 import framework.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class InclusaoDespachoSEI extends JInternalFrame {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private JTextField txtUsuario = new JTextField(15);
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
 	private JPasswordField txtSenha = new JPasswordField(15);
@@ -55,7 +56,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private DespachoServico despachoServico;
 	private Assinante superior;
 
-	public InclusaoDespachoSEI(String tituloJanela, Connection conexao) {
+	public InclusaoDespachoSEI(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);
@@ -547,7 +548,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				 + "	 , arquivosanexados = false "
 				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
 
-		MyUtils.execute(conexao, sql.toString());
+		JPAUtils.executeUpdate(conexao, sql.toString());
 	}
 
 	private void atualizarArquivosAnexados(SolicitacaoResposta resposta) throws Exception {
@@ -556,7 +557,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				 + "   set arquivosanexados = true "
 				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
 
-		MyUtils.execute(conexao, sql.toString());
+		JPAUtils.executeUpdate(conexao, sql.toString());
 	}
 
 	private void atualizarDocumentoGerado(SolicitacaoResposta resposta, Assinante superior) throws Exception {
@@ -571,7 +572,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 				 + "     , assinanteidsuperior = " + superior.getAssinanteId()
 				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 
-		MyUtils.execute(conexao, sql.toString());
+		JPAUtils.executeUpdate(conexao, sql.toString());
 	}
 
 	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar() throws Exception {

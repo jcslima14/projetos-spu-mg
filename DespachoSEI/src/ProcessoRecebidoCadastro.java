@@ -5,12 +5,11 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -25,6 +24,7 @@ import com.google.common.io.Files;
 import framework.CadastroTemplate;
 import framework.ComboBoxItem;
 import framework.DialogTemplate;
+import framework.JPAUtils;
 import framework.MyButton;
 import framework.MyCheckBox;
 import framework.MyComboBox;
@@ -38,7 +38,7 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
-	private Connection conexao;
+	private EntityManager conexao;
 
 	private MyButton btnProcessarArquivos = new MyButton("Processar Arquivos");
 	private MyButton btnMostrarResultadoDownload = new MyButton("Resultado do download") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
@@ -82,7 +82,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private String resultadoDownload;
 	private String resultadoProcessamento;
 
-	public ProcessoRecebidoCadastro(String tituloJanela, Connection conexao) {
+	public ProcessoRecebidoCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.conexao = conexao;
 
@@ -238,7 +238,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
 		sql += "delete from solicitacaoenvio where solicitacaoenvioid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -300,7 +300,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
 
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+		List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql.toString());
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}
@@ -428,15 +428,15 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	
 			sql += " where solicitacaoid = " + entidade.getSolicitacao().getSolicitacaoId();
 	
-			MyUtils.execute(conexao, sql);
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 
 		sql = "";
 		sql += "update solicitacaoenvio ";
 		sql += "   set arquivosprocessados = " + (entidade.getArquivosProcessados() ? "true" : "false");
 		sql += "     , resultadoprocessamento = " + (entidade.getResultadoProcessamento() == null || entidade.getResultadoProcessamento().trim().equals("") ? "null" : "'" + entidade.getResultadoProcessamento() + "'");
-		sql += " where solicitacaoenvioid = " + entidade.getSolictacaoEnvioId();
+		sql += " where solicitacaoenvioid = " + entidade.getSolicitacaoEnvioId();
 
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 	}
 }

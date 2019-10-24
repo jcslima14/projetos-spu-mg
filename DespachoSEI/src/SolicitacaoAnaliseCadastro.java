@@ -1,6 +1,6 @@
 import java.beans.PropertyVetoException;
-import java.sql.Connection;
 
+import javax.persistence.EntityManager;
 import javax.swing.JInternalFrame;
 import javax.swing.JTabbedPane;
 
@@ -11,7 +11,7 @@ public class SolicitacaoAnaliseCadastro extends JInternalFrame {
 
 	private JTabbedPane tabs = new JTabbedPane();
 	
-	public SolicitacaoAnaliseCadastro(Connection conexao, DespachoServico despachoServico, Solicitacao solicitacao, SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta) {
+	public SolicitacaoAnaliseCadastro(EntityManager conexao, DespachoServico despachoServico, Solicitacao solicitacao, SolicitacaoAnaliseConsulta solicitacaoAnaliseConsulta) {
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);

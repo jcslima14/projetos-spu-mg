@@ -191,4 +191,24 @@ public class SolicitacaoResposta {
 		}
 		return retorno;
 	}
+
+	public String getRespostaImpressaAsString() {
+		if (getRespostaImpressa() == null) {
+			return "";
+		} else if (getRespostaImpressa()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
+	}
+
+	public String getRespostaNoBlocoAssinaturaAsString() {
+		if (getRespostaNoBlocoAssinatura() == null) {
+			return "";
+		} else if (getRespostaNoBlocoAssinatura()) {
+			return "Sim";
+		} else {
+			return "Não";
+		}
+	}
 }

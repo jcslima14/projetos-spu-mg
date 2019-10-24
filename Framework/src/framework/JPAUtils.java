@@ -42,7 +42,7 @@ public class JPAUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> List<T> executeNativeQuery(EntityManager em, String sql) {
+	public static List<Object[]> executeNativeQuery(EntityManager em, String sql) {
 		em.clear();
 		Query qry = em.createNativeQuery(sql);
 		return qry.getResultList();

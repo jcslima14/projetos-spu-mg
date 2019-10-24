@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -53,7 +53,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private DespachoServico despachoServico;
 	private JTextArea logArea = new JTextArea(30, 100);
 
-	public RecepcaoProcesso(String tituloJanela, Connection conexao) {
+	public RecepcaoProcesso(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);

@@ -5,9 +5,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
 import java.util.Date;
 
+import javax.persistence.EntityManager;
 import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -36,7 +36,7 @@ import framework.SpringUtilities;
 @SuppressWarnings("serial")
 public class ImportacaoPlanilha extends JInternalFrame {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private JFileChooser filArquivo = new JFileChooser();
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
@@ -53,7 +53,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
 
-	public ImportacaoPlanilha(String tituloJanela, Connection conexao) {
+	public ImportacaoPlanilha(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		setResizable(true);
 		setMaximizable(true);

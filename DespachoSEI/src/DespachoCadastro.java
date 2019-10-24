@@ -1,9 +1,8 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -12,6 +11,7 @@ import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
 import framework.ComboBoxItem;
+import framework.JPAUtils;
 import framework.MyCheckBox;
 import framework.MyComboBox;
 import framework.MyComboBoxModel;
@@ -24,7 +24,7 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class DespachoCadastro extends CadastroTemplate {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private JTextField txtSolicitacaoRespostaId = new JTextField() {{ setEnabled(false); }};
 	private MyLabel lblSolicitacaoRespostaId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyTextField txtOrigem = new MyTextField() {{ setEnabled(false); }};
@@ -80,7 +80,7 @@ public class DespachoCadastro extends CadastroTemplate {
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
-	public DespachoCadastro(String tituloJanela, Connection conexao) {
+	public DespachoCadastro(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
 		this.setExibirBotaoIncluir(false);
 		this.conexao = conexao;
@@ -230,7 +230,7 @@ public class DespachoCadastro extends CadastroTemplate {
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
-		MyUtils.execute(conexao, "delete from solicitacaoresposta where solicitacaorespostaid = " + id);
+		JPAUtils.executeUpdate(conexao, "delete from solicitacaoresposta where solicitacaorespostaid = " + id);
 	}
 
 	public void prepararParaEdicao() {
@@ -279,13 +279,13 @@ public class DespachoCadastro extends CadastroTemplate {
 		sql.append("	  , tr.descricao as tiporesposta ");
 		sql.append("	  , a.nome as assinante ");
 		sql.append("	  , sr.observacao ");
-		sql.append("	  , s.numeroprocessosei ");
+		sql.append("	  , s.numeroprocessosei as numeroprocessoseiindividual");
 		sql.append("	  , sr.numerodocumentosei ");
-		sql.append("	  , sr.datahoraresposta ");
-		sql.append("	  , sr.numeroprocessosei ");
-		sql.append("     , case when respostaimpressa then 'Sim' else 'Não' end as respostaimpressa ");
-		sql.append("     , sr.datahoraimpressao ");
-		sql.append("     , case when sr.respostanoblocoassinatura then 'Sim' else 'Não' end as respostanoblocoassinatura ");
+		sql.append("	  , coalesce(sr.datahoraresposta, '') as datahoraresposta ");
+		sql.append("	  , sr.numeroprocessosei as numeroprocessoseiresposta ");
+		sql.append("      , case when respostaimpressa then 'Sim' else 'Não' end as respostaimpressa ");
+		sql.append("      , coalesce(sr.datahoraimpressao, '') as datahoraimpressao ");
+		sql.append("      , case when sr.respostanoblocoassinatura then 'Sim' else 'Não' end as respostanoblocoassinatura ");
 		sql.append("  from solicitacaoresposta sr ");
 		sql.append(" inner join solicitacao s using (solicitacaoid) ");
 		sql.append(" inner join origem o using (origemid) ");
@@ -338,7 +338,7 @@ public class DespachoCadastro extends CadastroTemplate {
 
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
 		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+		List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql.toString());
 
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;

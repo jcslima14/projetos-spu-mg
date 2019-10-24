@@ -1,9 +1,8 @@
 import java.awt.GridLayout;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.swing.JDesktopPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -12,6 +11,7 @@ import javax.swing.table.TableModel;
 
 import framework.CadastroTemplate;
 import framework.ComboBoxItem;
+import framework.JPAUtils;
 import framework.MyComboBox;
 import framework.MyComboBoxModel;
 import framework.MyLabel;
@@ -23,7 +23,7 @@ import framework.MyUtils;
 @SuppressWarnings("serial")
 public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
-	private Connection conexao;
+	private EntityManager conexao;
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 	private JDesktopPane desktop;
@@ -48,7 +48,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 	private MyLabel lblOrdenacao = new MyLabel("Ordenar por") {{ setExclusao(true); }};
 	private JPanel pnlFiltros = new JPanel(new GridLayout(5, 5));
 
-	public SolicitacaoAnaliseConsulta(String tituloJanela, Connection conexao, JDesktopPane desktop) {
+	public SolicitacaoAnaliseConsulta(String tituloJanela, EntityManager conexao, JDesktopPane desktop) {
 		super(tituloJanela);
 		this.conexao = conexao;
 		this.desktop = desktop;
@@ -140,13 +140,13 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "delete from solicitacaoresposta where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 
 		sql = "delete from solicitacaoenvio where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 
 		sql = "delete from solicitacao where solicitacaoid = " + id;
-		MyUtils.execute(conexao, sql);
+		JPAUtils.executeUpdate(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -172,23 +172,23 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append("	  , s.numeroprocesso ");
 		sql.append("	  , s.chavebusca ");
 		sql.append("	  , s.autor ");
-		sql.append("	  , case when datahoramovimentacao is null then 'Indeterminado' ");
+		sql.append("	  , coalesce(case when datahoramovimentacao is null then 'Indeterminado' ");
 		sql.append("         	 when datahoramovimentacao is not null and (datahoraresposta is null or datahoraresposta < datahoramovimentacao) then 'Pendente de Análise' ");
 		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta = '9999-12-31' and (select tiporespostaid from solicitacaoresposta sr2 where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) is null then 'Em Análise' ");
 		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta = '9999-12-31' and (select tiporespostaid from solicitacaoresposta sr2 where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) is not null then 'Aguardando Geração da Resposta' ");
 		sql.append("         	 when datahoramovimentacao is not null and datahoraresposta <> '9999-12-31' and datahoraresposta > datahoramovimentacao then 'Respondido' ");
-		sql.append("    	end as situacao ");
+		sql.append("    	end, '') as situacao ");
 		sql.append("	  , (select a.nome from solicitacaoresposta sr2 inner join assinante a using (assinanteid) where sr2.solicitacaoid = s.solicitacaoid and coalesce(sr2.datahoraresposta, '9999-12-31') = ur.datahoraresposta) as assinante ");
-		sql.append("	  , m.nome as municipio ");
-		sql.append("	  , coalesce((select tr.descricao from municipiotiporesposta mtr inner join tiporesposta tr using (tiporespostaid) where mtr.municipioid = s.municipioid and mtr.origemid = s.origemid limit 1), tr.descricao) as tiporespostapadrao ");
-		sql.append("	  , d.descricao as destino ");
-		sql.append("	  , s.cartorio ");
-		sql.append("	  , ti.descricao as tipoimovel ");
-		sql.append("	  , s.endereco ");
-		sql.append("	  , s.coordenada ");
-		sql.append("	  , s.area ");
-		sql.append("	  , s.numeroprocessosei ");
-		sql.append("	  , (select group_concat(pendencia, ', ') from ");
+		sql.append("	  , coalesce(m.nome, '') as municipio ");
+		sql.append("	  , coalesce((select tr.descricao from municipiotiporesposta mtr inner join tiporesposta tr using (tiporespostaid) where mtr.municipioid = s.municipioid and mtr.origemid = s.origemid limit 1), tr.descricao, '') as tiporespostapadrao ");
+		sql.append("	  , coalesce(d.descricao, '') as destino ");
+		sql.append("	  , coalesce(s.cartorio, '') as cartorio ");
+		sql.append("	  , coalesce(ti.descricao, '') as tipoimovel ");
+		sql.append("	  , coalesce(s.endereco, '') as endereco ");
+		sql.append("	  , coalesce(s.coordenada, '') as coordenada ");
+		sql.append("	  , coalesce(s.area, '') as area ");
+		sql.append("	  , coalesce(s.numeroprocessosei, '') as numeroprocessosei ");
+		sql.append("	  , coalesce((select group_concat(pendencia, ', ') from ");
 		sql.append("	    	       (select 'Autor não informado' as pendencia ");
 		sql.append("	    	          from solicitacao s2 ");
 		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
@@ -214,7 +214,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append("	    	        select 'Tipo de Imóvel não informado' as pendencia ");
 		sql.append("	    	          from solicitacao s2 ");
 		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
-		sql.append("	    	           and coalesce(tipoimovelid, 0) = 0) as pendencias) as pendencias ");
+		sql.append("	    	           and coalesce(tipoimovelid, 0) = 0) as pendencias), '') as pendencias ");
 		sql.append("	  , case when s.arquivosanexados then 'Sim' else 'Não' end as arquivosanexados ");
 		sql.append("  from solicitacao s ");
 		sql.append(" inner join origem o using (origemid) ");
@@ -262,8 +262,8 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		}
 
 		sql.append(" order by ").append(MyUtils.idStringItemSelecionado(cbbOrdenacao));
-		
-		ResultSet rs = MyUtils.executeQuery(conexao, sql.toString());
+
+		List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql.toString());
 		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
 		return tm;
 	}

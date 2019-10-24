@@ -26,7 +26,7 @@
   		<artifactId>sqlite-jdbc</artifactId>
   	</dependency>
   	<dependency>
-  		<groupId>com.zsoltfabok</groupId>
+  		<groupId>com.github.gwenn</groupId>
   		<artifactId>sqlite-dialect</artifactId>
   	</dependency>
   	<dependency>
@@ -52,12 +52,12 @@
   		<dependency>
   			<groupId>org.xerial</groupId>
   			<artifactId>sqlite-jdbc</artifactId>
-  			<version>3.23.1</version>
+  			<version>3.27.2.1</version>
   		</dependency>
   		<dependency>
-  			<groupId>com.zsoltfabok</groupId>
+  			<groupId>com.github.gwenn</groupId>
   			<artifactId>sqlite-dialect</artifactId>
-  			<version>1.0</version>
+  			<version>0.1.0</version>
   		</dependency>
   		<dependency>
   			<groupId>org.apache.poi</groupId>
@@ -72,7 +72,7 @@
   		<dependency>
   			<groupId>org.hibernate</groupId>
   			<artifactId>hibernate-core</artifactId>
-  			<version>5.2.12.Final</version>
+  			<version>5.4.7.Final</version>
   		</dependency>
   	</dependencies>
   </dependencyManagement>

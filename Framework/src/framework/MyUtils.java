@@ -42,6 +42,7 @@ import org.openqa.selenium.support.ui.Wait;
 
 import com.sun.rowset.CachedRowSetImpl;
 
+@SuppressWarnings("restriction")
 public class MyUtils {
 
 	public static boolean arquivoExiste(String arquivo) {
@@ -84,6 +85,21 @@ public class MyUtils {
 			linha.add(Boolean.FALSE);
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
 				linha.add(rs.getObject(i));
+			}
+			retorno.add(linha);
+		}
+
+		return retorno;
+	}
+
+	public static Vector<Vector<Object>>obterDados(List<Object[]> dados) throws Exception {
+		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
+
+		for (Object[] dado : dados) {
+			Vector<Object> linha = new Vector<Object>();
+			linha.add(Boolean.FALSE);
+			for (int i = 0; i < dado.length; i++) {
+				linha.add(dado[i]);
 			}
 			retorno.add(linha);
 		}
