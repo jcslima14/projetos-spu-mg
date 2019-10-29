@@ -502,13 +502,13 @@ public class SolicitacaoCadastro extends CadastroController {
 				colunas = new ArrayList<MyTableColumn>();
 				colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
 				colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
-				colunas.add(new MyTableColumn("Tipo Resposta", 200));
-				colunas.add(new MyTableColumn("Observação", 100));
-				colunas.add(new MyTableColumn("Assinante", 200));
+				colunas.add(new MyTableColumn("Tipo Resposta", 300));
+				colunas.add(new MyTableColumn("Observação", 150));
+				colunas.add(new MyTableColumn("Assinante", 300));
 				colunas.add(new MyTableColumn("Assinante Superior", 150));
 				colunas.add(new MyTableColumn("Nº Processo SEI", 150, JLabel.CENTER));
 				colunas.add(new MyTableColumn("Nº Documento SEI", 150, JLabel.CENTER));
-				colunas.add(new MyTableColumn("Data/Hora Resposta", 400, JLabel.CENTER));
+				colunas.add(new MyTableColumn("Data/Hora Resposta", 150, JLabel.CENTER));
 				colunas.add(new MyTableColumn("Resp. Impr.?", 80, JLabel.CENTER));
 				colunas.add(new MyTableColumn("Data/Hora Impressão", 150, JLabel.CENTER));
 				colunas.add(new MyTableColumn("Resp. Bloco?", 80, JLabel.CENTER));

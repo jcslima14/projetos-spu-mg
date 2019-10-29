@@ -254,7 +254,7 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		}
 		
 		if (cbbFiltroPendencias.getSelectedIndex() > 0) {
-			sql.append(" and pendencias is " + (MyUtils.idItemSelecionado(cbbFiltroPendencias).equals(1) ? "not" : "") + " null ");
+			sql.append(" and pendencias " + (MyUtils.idItemSelecionado(cbbFiltroPendencias).equals(1) ? "<>" : "=") + " '' ");
 		}
 
 		if (cbbFiltroAssinante.getSelectedIndex() > 0) {
