@@ -201,6 +201,7 @@ public class DespachoServico {
 			}
 			if (pendentesGeracao) {
 				sql.append(" and coalesce(sr.numeroDocumentoSEI, '') = '' ");
+				sql.append(" and sr.tipoResposta is not null ");
 			}
 			if (pendentesImpressao) {
 				sql.append(" and coalesce(sr.numeroDocumentoSEI, '') <> '' ");
