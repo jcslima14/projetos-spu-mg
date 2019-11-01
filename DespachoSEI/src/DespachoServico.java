@@ -45,7 +45,7 @@ public class DespachoServico {
 				parametros.put("origemId", origem.getOrigemId());
 			}
 			if (tipoProcesso != null && tipoProcesso.getTipoProcessoId() != null) {
-				sql.append(" and tp.tipoProcessoId = :tipoProcessoID");
+				sql.append(" and tp.tipoProcessoId = :tipoProcessoId");
 				parametros.put("tipoProcessoId", tipoProcesso.getTipoProcessoId());
 			}
 			if (numeroProcesso != null) {
@@ -423,7 +423,7 @@ public class DespachoServico {
 				parametros.put("municipioId", municipio.getMunicipioId());
 			}
 			if (origem != null && origem.getOrigemId() != null) {
-				sql.append(" and o.origemId = origemId");
+				sql.append(" and o.origemId = :origemId");
 				parametros.put("origemId", origem.getOrigemId());
 			}
 			if (tipoResposta != null && tipoResposta.getTipoRespostaId() != null) {

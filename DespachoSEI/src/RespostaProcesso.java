@@ -259,7 +259,7 @@ public class RespostaProcesso extends JInternalFrame {
 
 				if (linhasRetornadas.size() != 1) {
 					if (linhasRetornadas.size() == 0) {
-						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado.");
+						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
 					} else {
 						MyUtils.appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
 					}

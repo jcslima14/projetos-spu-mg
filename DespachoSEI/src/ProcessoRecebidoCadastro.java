@@ -422,7 +422,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 				+  "   set municipioid = " + (entidade.getSolicitacao().getMunicipio() == null ? "null" : entidade.getSolicitacao().getMunicipio().getMunicipioId());
 	
 			// se a origem for Sapiens, define o destinatário de acordo com a tabela de municípios
-			if (entidade.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SAPIENS_ID)) {
+			if (entidade.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SAPIENS_ID) && entidade.getSolicitacao().getMunicipio().getDestino() != null && entidade.getSolicitacao().getMunicipio().getDestino().getDestinoId() != null) {
 				sql += " , destinoid = " + (entidade.getSolicitacao().getMunicipio() == null ? "null" : entidade.getSolicitacao().getMunicipio().getDestino().getDestinoId());
 			}
 	
