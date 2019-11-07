@@ -21,10 +21,10 @@ public class DespachoServico {
 	}
 
 	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca) throws Exception {
-		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, chaveBusca, null, null, null, null);
+		return obterSolicitacao(solicitacaoId, origem, tipoProcesso, numeroProcesso, chaveBusca, null, null, null, null, null);
 	}
 
-	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor, Municipio municipio, String cartorio, String endereco) throws Exception {
+	public List<Solicitacao> obterSolicitacao(Integer solicitacaoId, Origem origem, TipoProcesso tipoProcesso, String numeroProcesso, String chaveBusca, String autor, Municipio municipio, String cartorio, String endereco, String area) throws Exception {
 		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
 		sql.append("select s from Solicitacao s ");
@@ -71,6 +71,10 @@ public class DespachoServico {
 			if (endereco != null) {
 				sql.append(" and coalesce(s.endereco, '') like :endereco");
 				parametros.put("endereco", endereco);
+			}
+			if (area != null) {
+				sql.append(" and coalesce(s.area, '') like :area");
+				parametros.put("area", area);
 			}
 		}
 

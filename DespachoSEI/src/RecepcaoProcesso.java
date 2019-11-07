@@ -27,6 +27,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
+import org.apache.commons.io.FileDeleteStrategy;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
@@ -396,7 +397,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        			}
 		        			
 			        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
-			        		arquivosOk = arquivosBaixadosERenomeados(logArea, 1, pastaDeDownload, numeroSemFormatacao, dataHora, isComplementacao);
+			        		arquivosOk = arquivosBaixadosERenomeados(logArea, pastaDeDownload, chaveBusca, numeroSemFormatacao, dataHora, isComplementacao);
 		        		} while (!arquivosOk);
 
 	        			// clica no botão fechar
@@ -504,7 +505,9 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private void apagaPastaDeDownloads(String caminho) {
 		File pasta = new File(caminho);
 		for (File arquivo : pasta.listFiles()) {
-			if (!arquivo.isDirectory()) arquivo.delete();
+			if (!arquivo.isDirectory()) {
+				FileDeleteStrategy.FORCE.deleteQuietly(arquivo);
+			}
 		}
 	}
 	
@@ -519,52 +522,49 @@ public class RecepcaoProcesso extends JInternalFrame {
 		}
 	}
 
-	private boolean arquivosBaixadosERenomeados(JTextArea logArea, int quantArquivos, String caminho, String numeroProcesso, String dataHora, boolean isComplementacao) throws Exception {
-		File pasta = null;
+	private boolean arquivosBaixadosERenomeados(JTextArea logArea, String caminho, String nup, String numeroProcesso, String dataHora, boolean isComplementacao) throws Exception {
+		File arquivoBaixado = null;
 		String pastaProcesso = caminho + "\\" + numeroProcesso + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")";
+		String ultimaChave = "";
+		int segundosDesdeUltimaAlteracao = 0;
 		FilenameFilter filtro = new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				File arquivo = new File(dir, name);
-				return (name != null && (name.toLowerCase().endsWith(".pdf") || name.toLowerCase().endsWith("application_pdf")) && arquivo.length() > 0);
+				return (name != null && name.toLowerCase().startsWith(nup) && name.toLowerCase().endsWith(".pdf") && arquivo.length() > 0);
 			}
 		};
 
-		int quantArquivosBaixados = 0;
-		int totalSegundos = 0;
-		MyUtils.appendLogArea(logArea, "Aguardando o download dos arquivos...");
-
-		String ultimaChave = "";
-		int segundosDesdeUltimaAlteracao = 0;
+		MyUtils.appendLogArea(logArea, "- Baixando o arquivo " + caminho + "\\" + nup + ".pdf");
 
 		do {
 			segundosDesdeUltimaAlteracao++;
-			TimeUnit.SECONDS.sleep(1);
-			pasta = new File(caminho);
-			quantArquivosBaixados = pasta.listFiles(filtro).length;
-
-			String chaveAtual = chaveArquivos(caminho);
-
-			if (!chaveAtual.equals(ultimaChave)) {
-				ultimaChave = chaveAtual;
-				segundosDesdeUltimaAlteracao = 0;
+			File[] arquivosBaixados = (new File(caminho)).listFiles(filtro);
+			if (arquivosBaixados.length > 0) {
+				arquivoBaixado = arquivosBaixados[0];
+			} else {
+				String chaveAtual = chaveArquivos(caminho);
+	
+				if (!chaveAtual.equals(ultimaChave)) {
+					ultimaChave = chaveAtual;
+					segundosDesdeUltimaAlteracao = 0;
+				}
 			}
-
-			if (totalSegundos++ % 5 == 0) MyUtils.appendLogArea(logArea, "- " + quantArquivosBaixados + "/" + quantArquivos + " já baixados...");
-		} while (quantArquivosBaixados != quantArquivos && segundosDesdeUltimaAlteracao < 150);
+			TimeUnit.SECONDS.sleep(1);
+		} while ((arquivoBaixado == null || !arquivoBaixado.exists()) && segundosDesdeUltimaAlteracao < 150);
 
 		// se atingiu o tempo limite sem ter completado o download, retorna falso para que se tente baixar novamente os arquivos
-		if (quantArquivosBaixados != quantArquivos) {
+		if (arquivoBaixado == null || !arquivoBaixado.exists()) {
 			MyUtils.appendLogArea(logArea, "Atingido o tempo limite para tentar baixar os arquivos. Será feita uma nova tentativa...");
 			apagaPastaDeDownloads(caminho);
 			return false;
 		}
 
-		MyUtils.appendLogArea(logArea, "Todos os arquivos já baixados. Renomeando-os e alocando-os às suas pastas...");
-		quantArquivosBaixados = 0;
-
-		for (File arquivoBaixado : pasta.listFiles(filtro)) {
-			arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + " (" + ++quantArquivosBaixados + ").pdf"));
+		if (arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + ".pdf"))) {
+			apagaPastaDeDownloads(caminho);
+		} else {
+			MyUtils.appendLogArea(logArea, "Ocorreu um erro ao renomear o arquivo. Será feita uma nova tentativa...");
+			return false;
 		}
 
 		return true;

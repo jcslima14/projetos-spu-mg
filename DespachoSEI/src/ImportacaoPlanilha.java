@@ -291,7 +291,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					SolicitacaoEnvio envio = null;
 
 					if (numeroProcesso.equals("-")) {
-						solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, null, autor, municipio, cartorio, endereco));
+						solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, null, null, autor, municipio, cartorio, endereco, area));
 					} else {
 						solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, origem, tipoProcesso, numeroProcesso, null));
 					}
