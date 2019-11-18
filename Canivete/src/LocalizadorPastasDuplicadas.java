@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -36,7 +37,7 @@ import framework.MyUtils;
 import framework.SpringUtilities;
 
 @SuppressWarnings("serial")
-public class LocalizadorArquivosPorTamanho extends JInternalFrame {
+public class LocalizadorPastasDuplicadas extends JInternalFrame {
 
 	private JFileChooser filSelecionarDiretorio = new JFileChooser();
 	private JButton btnAbrirJanelaSelecaoDiretorio = new JButton("Selecionar diretório");
@@ -45,13 +46,10 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 	private JTextField txtTamanhoMinimo = new JTextField(10);
 	private JLabel lblTamanhoMinimo = new JLabel("Tamanho Mínimo:");
 	private JComboBox<String> cbbUnidadeMinimo = new JComboBox<String>(new String[] { "Megabytes", "Gigabytes", "Terabytes" });
-	private JTextField txtTamanhoMaximo = new JTextField(10);
-	private JLabel lblTamanhoMaximo = new JLabel("Tamanho Máximo:");
-	private JComboBox<String> cbbUnidadeMaximo = new JComboBox<String>(new String[] { "Megabytes", "Gigabytes", "Terabytes" });
 	private JLabel lblDiretorioSendoProcessado = new JLabel();
 	private JTable tabela = new JTable();
 
-	public LocalizadorArquivosPorTamanho(String tituloJanela) {
+	public LocalizadorPastasDuplicadas(String tituloJanela) {
 		super(tituloJanela);
 		setSize(1000, 500);
 		setResizable(true);
@@ -61,7 +59,7 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 
 		JPanel pnlPrincipal = new JPanel();
 		pnlPrincipal.setLayout(new BoxLayout(pnlPrincipal, BoxLayout.Y_AXIS));
-		
+
 		JPanel painelArquivo = new JPanel() {{ add(lblSelecionarDiretorio); add(btnAbrirJanelaSelecaoDiretorio); }};
 
 		JPanel painelDados = new JPanel();
@@ -73,13 +71,11 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 		painelDados.add(lblDiretorioInicial);
 		painelDados.add(lblTamanhoMinimo);
 		painelDados.add(new JPanel() {{ setLayout(new FlowLayout()); add(txtTamanhoMinimo); add(cbbUnidadeMinimo); }});
-		painelDados.add(lblTamanhoMaximo);
-		painelDados.add(new JPanel() {{ setLayout(new FlowLayout(FlowLayout.LEFT)); add(txtTamanhoMaximo); add(cbbUnidadeMaximo); }});
 		painelDados.add(botaoProcessar);
 		painelDados.add(botaoGerarCSV);
 
 		SpringUtilities.makeGrid(painelDados,
-                4, 2, //rows, cols
+                3, 2, //rows, cols
                 6, 6, //initX, initY
                 6, 6); //xPad, yPad
 
@@ -123,7 +119,7 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 					@Override
 					public void run() {
 						try {
-							localizarArquivos(lblDiretorioInicial.getText(), obterTamanho(txtTamanhoMinimo.getText(), cbbUnidadeMinimo.getSelectedItem().toString(), " do tamanho mínimo."), obterTamanho(txtTamanhoMaximo.getText(), cbbUnidadeMaximo.getSelectedItem().toString(), " do tamanho máximo."));
+							localizarArquivos(lblDiretorioInicial.getText(), obterTamanho(txtTamanhoMinimo.getText(), cbbUnidadeMinimo.getSelectedItem().toString(), " do tamanho mínimo."));
 						} catch (Exception e) {
 							e.printStackTrace();
 							JOptionPane.showMessageDialog(null, "Erro ao executar o processamento: \n \n" + e.getMessage());
@@ -138,7 +134,7 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 			public void actionPerformed(ActionEvent e) {
 				filSelecionarDiretorio.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				filSelecionarDiretorio.setAcceptAllFileFilterUsed(false);
-				int retorno = filSelecionarDiretorio.showOpenDialog(LocalizadorArquivosPorTamanho.this);
+				int retorno = filSelecionarDiretorio.showOpenDialog(LocalizadorPastasDuplicadas.this);
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filSelecionarDiretorio.getSelectedFile().exists()) {
 						lblDiretorioInicial.setText(filSelecionarDiretorio.getSelectedFile().getAbsolutePath());
@@ -147,26 +143,6 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 			}
 		});
     }
-
-	private long obterTamanho(String strTamanho, String unidade, String mensagemAdicional) {
-		long tamanho;
-
-		try {
-			tamanho = Long.parseLong(strTamanho);
-			tamanho *= 1024;
-			if (unidade.equalsIgnoreCase("megabytes")) {
-				tamanho *= 1024;
-			} else if (unidade.equalsIgnoreCase("gigabytes")) {
-				tamanho *= 1024 * 1024;
-			} else if (unidade.equalsIgnoreCase("terabytes")) {
-				tamanho *= 1024 * 1024 * 1024;
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Erro ao obter o valor" + mensagemAdicional);
-		}
-
-		return tamanho;
-	}
 
 	public void abrirJanela() {
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -179,43 +155,50 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 		this.show();
 	}
 
-	private void incluirArquivosNoMapa(Map<Long, List<String[]>> mapaArquivos, String caminhoInicial, long minimo, long maximo) {
+	private void incluirArquivosNoMapa(Map<String, List<String>> mapaArquivos, String caminhoInicial, long tamanhoMinimo) {
 		File pastaInicial = new File(caminhoInicial);
 		lblDiretorioSendoProcessado.setText("Lendo a pasta: " + caminhoInicial);
 		if (pastaInicial != null && pastaInicial.listFiles() != null) {
-			for (File arquivo : pastaInicial.listFiles()) {
+			File[] arquivos = pastaInicial.listFiles();
+			Arrays.sort(arquivos);
+			String chave = "";
+			long tamanho = 0;
+			for (File arquivo : arquivos) {
 				if (arquivo.isDirectory()) {
-					incluirArquivosNoMapa(mapaArquivos, arquivo.getAbsolutePath(), minimo, maximo);
+					incluirArquivosNoMapa(mapaArquivos, arquivo.getAbsolutePath(), tamanhoMinimo);
 				} else {
-					long tamanho = arquivo.length();
-					if (tamanho >= minimo && tamanho <= maximo) {
-						List<String[]> listaAtual = mapaArquivos.get(tamanho * -1);
-						if (listaAtual == null) listaAtual = new ArrayList<String[]>() {{ add(new String[] { arquivo.getName(), arquivo.getParent() }); }};
-						else listaAtual.add(new String[] { arquivo.getName(), arquivo.getParent() });
-						mapaArquivos.put(tamanho * -1, listaAtual);
-					}
+					if (arquivo.getName().equalsIgnoreCase("thumbs.db")) continue;
+					chave += arquivo.getName() + ";" + arquivo.length() + ";" + arquivo.lastModified() + "|";
+					tamanho += arquivo.length();
 				}
+			}
+			if (!chave.equalsIgnoreCase("") && tamanho >= tamanhoMinimo) {
+				if (mapaArquivos.get(chave) == null) mapaArquivos.put(chave, new ArrayList<String>());
+				mapaArquivos.get(chave).add(caminhoInicial);
 			}
 		}
 	}
 
-	private void atualizarTabelaArquivos(Map<Long, List<String[]>> mapaArquivos, JTable tabela) {
+	private void atualizarTabelaArquivos(Map<String, List<String>> mapaArquivos, JTable tabela) {
 		DefaultTableModel modelo = new DefaultTableModel();
-		modelo.addColumn("Bytes");
-		modelo.addColumn("Situação");
-		modelo.addColumn("Nome do Arquivo");
+		modelo.addColumn("Sequencial");
 		modelo.addColumn("Pasta");
 
-		for (Long tamanho : mapaArquivos.keySet()) {
-			List<String[]> listaArquivos = mapaArquivos.get(tamanho);
-			Collections.sort(listaArquivos, new Comparator<String[]>() {
-				@Override
-				public int compare(String[] arg0, String[] arg1) {
-					return arg0[0].compareTo(arg1[0]);
+		int sequencial = 0;
+		
+		for (String chave : mapaArquivos.keySet()) {
+			List<String> listaPastas = mapaArquivos.get(chave);
+			if (listaPastas.size() > 1) {
+				sequencial ++;
+				Collections.sort(listaPastas, new Comparator<String>() {
+					@Override
+					public int compare(String arg0, String arg1) {
+						return arg0.compareTo(arg1);
+					}
+				});
+				for (String pasta : listaPastas) {
+					modelo.addRow(new Object[] { sequencial, pasta });
 				}
-			});
-			for (String[] dadosArquivo : listaArquivos) {
-				modelo.addRow(new Object[] { tamanho * -1, listaArquivos.size() == 1 ? "" : "Mesmo tamanho", dadosArquivo[0], dadosArquivo[1] });
 			}
 		}
 
@@ -223,17 +206,11 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
 		tabela.getColumnModel().getColumn(0).setPreferredWidth(150);
 		tabela.getColumnModel().getColumn(0).setMaxWidth(150);
 		tabela.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {{ setHorizontalAlignment(JLabel.RIGHT); }});
-		tabela.getColumnModel().getColumn(1).setPreferredWidth(150);
-		tabela.getColumnModel().getColumn(1).setMaxWidth(150);
-		tabela.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {{ setHorizontalAlignment(JLabel.CENTER); }});
 	}
 
-	private void localizarArquivos(String caminhoInicial, long tamanhoMinimo, long tamanhoMaximo) throws Exception {
-		if (tamanhoMinimo > tamanhoMaximo) {
-			throw new RuntimeException("O tamanho máximo deve ser maior que o tamanho mínimo (1 gigabyte = 1024 MEGAbytes; 1 terabyte = 1024 GIGAbytes). \n Verifique os valores e as unidades informadas e faça as correções necessárias para executar o processamento.");
-		}
-		Map<Long, List<String[]>> mapaArquivos = new TreeMap<Long, List<String[]>>();
-		incluirArquivosNoMapa(mapaArquivos, caminhoInicial, tamanhoMinimo, tamanhoMaximo);
+	private void localizarArquivos(String caminhoInicial, long tamanhoMinimo) throws Exception {
+		Map<String, List<String>> mapaArquivos = new TreeMap<String, List<String>>();
+		incluirArquivosNoMapa(mapaArquivos, caminhoInicial, tamanhoMinimo);
 		lblDiretorioSendoProcessado.setText("Fim do processamento");
 		atualizarTabelaArquivos(mapaArquivos, tabela);
 	}
@@ -259,4 +236,24 @@ public class LocalizadorArquivosPorTamanho extends JInternalFrame {
         csv.close();
         lblDiretorioSendoProcessado.setText("Arquivo '" + nomeArquivo + "' gerado com sucesso...");
     }
+
+	private long obterTamanho(String strTamanho, String unidade, String mensagemAdicional) {
+		long tamanho;
+
+		try {
+			tamanho = Long.parseLong(strTamanho);
+			tamanho *= 1024;
+			if (unidade.equalsIgnoreCase("megabytes")) {
+				tamanho *= 1024;
+			} else if (unidade.equalsIgnoreCase("gigabytes")) {
+				tamanho *= 1024 * 1024;
+			} else if (unidade.equalsIgnoreCase("terabytes")) {
+				tamanho *= 1024 * 1024 * 1024;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Erro ao obter o valor" + mensagemAdicional);
+		}
+
+		return tamanho;
+	}
 }

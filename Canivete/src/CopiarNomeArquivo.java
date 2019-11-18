@@ -33,6 +33,7 @@ public class CopiarNomeArquivo extends JInternalFrame {
 
 	public CopiarNomeArquivo(String tituloJanela) {
 		super(tituloJanela);
+		setSize(1000, 500);
 		setResizable(true);
 		setMaximizable(true);
 		setIconifiable(true);

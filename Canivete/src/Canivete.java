@@ -22,7 +22,8 @@ public class Canivete extends JFrame {
 		
 		JMenuItem sbmCopiarNomeArquivo = new JMenuItem("Copiar nomes de arquivos");
 		JMenuItem sbmLocalizarArquivosTamanho = new JMenuItem("Localizar arquivos por tamanho");
-		JMenu mnuFerramentas = new JMenu("Ferramentas") {{ add(sbmCopiarNomeArquivo); add(sbmLocalizarArquivosTamanho); }};
+		JMenuItem sbmLocalizarPastasDuplicadas = new JMenuItem("Localizar pastas duplicadas");
+		JMenu mnuFerramentas = new JMenu("Ferramentas") {{ add(sbmCopiarNomeArquivo); add(sbmLocalizarArquivosTamanho); add(sbmLocalizarPastasDuplicadas); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuFerramentas); }};
 
 		sbmCopiarNomeArquivo.addActionListener(new ActionListener() {
@@ -38,6 +39,15 @@ public class Canivete extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				LocalizadorArquivosPorTamanho janela = new LocalizadorArquivosPorTamanho("Localizar arquivos por tamanho");
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmLocalizarPastasDuplicadas.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				LocalizadorPastasDuplicadas janela = new LocalizadorPastasDuplicadas("Localizar pastas duplicadas");
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
