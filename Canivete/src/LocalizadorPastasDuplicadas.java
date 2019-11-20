@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -155,28 +156,34 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 		this.show();
 	}
 
-	private void incluirArquivosNoMapa(Map<String, List<String>> mapaArquivos, String caminhoInicial, long tamanhoMinimo) {
+	private Object[] incluirArquivosNoMapa(Map<String, List<String>> mapaArquivos, String caminhoInicial, long tamanhoMinimo) {
+		Object[] retorno = new Object[] { new Long(0), new String() };
 		File pastaInicial = new File(caminhoInicial);
 		lblDiretorioSendoProcessado.setText("Lendo a pasta: " + caminhoInicial);
 		if (pastaInicial != null && pastaInicial.listFiles() != null) {
 			File[] arquivos = pastaInicial.listFiles();
 			Arrays.sort(arquivos);
 			String chave = "";
-			long tamanho = 0;
+			long tamanho = 1;
 			for (File arquivo : arquivos) {
 				if (arquivo.isDirectory()) {
-					incluirArquivosNoMapa(mapaArquivos, arquivo.getAbsolutePath(), tamanhoMinimo);
+					Object[] retornado = incluirArquivosNoMapa(mapaArquivos, arquivo.getAbsolutePath(), tamanhoMinimo);
+					chave += retornado[1].toString();
+					tamanho += (Long) retornado[0];
 				} else {
 					if (arquivo.getName().equalsIgnoreCase("thumbs.db")) continue;
 					chave += arquivo.getName() + ";" + arquivo.length() + ";" + arquivo.lastModified() + "|";
 					tamanho += arquivo.length();
 				}
 			}
+			retorno = new Object[] { new Long(tamanho), new String(chave) }; 
 			if (!chave.equalsIgnoreCase("") && tamanho >= tamanhoMinimo) {
+				chave = tamanho + ":" + chave;
 				if (mapaArquivos.get(chave) == null) mapaArquivos.put(chave, new ArrayList<String>());
 				mapaArquivos.get(chave).add(caminhoInicial);
 			}
 		}
+		return retorno;
 	}
 
 	private void atualizarTabelaArquivos(Map<String, List<String>> mapaArquivos, JTable tabela) {
@@ -184,18 +191,15 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 		modelo.addColumn("Sequencial");
 		modelo.addColumn("Pasta");
 
+		eliminarPastasInferiores(mapaArquivos);
+		
 		int sequencial = 0;
 		
 		for (String chave : mapaArquivos.keySet()) {
 			List<String> listaPastas = mapaArquivos.get(chave);
 			if (listaPastas.size() > 1) {
 				sequencial ++;
-				Collections.sort(listaPastas, new Comparator<String>() {
-					@Override
-					public int compare(String arg0, String arg1) {
-						return arg0.compareTo(arg1);
-					}
-				});
+				Collections.sort(listaPastas, new PastaComparator());
 				for (String pasta : listaPastas) {
 					modelo.addRow(new Object[] { sequencial, pasta });
 				}
@@ -208,6 +212,73 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 		tabela.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer() {{ setHorizontalAlignment(JLabel.RIGHT); }});
 	}
 
+	private class PastaComparator implements Comparator<String> {
+		@Override
+		public int compare(String o1, String o2) {
+			int r = 0;
+
+			String[] oa1 = o1.split(Pattern.quote(File.separator));
+			String[] oa2 = o2.split(Pattern.quote(File.separator));
+
+			int t = (oa1.length > oa2.length ? oa1.length : oa2.length);
+
+			for (int i = 0; i < t; i++) {
+				String s1 = "";
+				String s2 = "";
+				
+				if (i < oa1.length) {
+					s1 = oa1[i];
+				}
+				
+				if (i < oa2.length) {
+					s2 = oa2[i];
+				}
+				
+				r = s1.compareTo(s2);
+				if (r != 0) {
+					break;
+				}
+			}
+			
+			return r;
+		}
+		
+	}
+	
+	private void eliminarPastasInferiores(Map<String, List<String>> mapaArquivos) {
+		List<String> chavesAExcluir = new ArrayList<String>();
+
+		for (String chave : mapaArquivos.keySet()) {
+			List<String> listaSubpastas = mapaArquivos.get(chave);
+			String caminhoSuperiores = "";
+			Collections.sort(listaSubpastas, new PastaComparator());
+			// monta a string com todos os superiores concatenados para verificar se existe em outra lista
+			for (String pasta : listaSubpastas) {
+				caminhoSuperiores += ("|" + (new File(pasta)).getParent());
+			}
+			
+			for (String outraChave : mapaArquivos.keySet()) {
+				if (chave.equals(outraChave) || mapaArquivos.get(outraChave).size() != listaSubpastas.size()) continue;
+
+				String caminhoPastas = "";
+				List<String> listaPastaSup = mapaArquivos.get(outraChave);
+				Collections.sort(listaPastaSup, new PastaComparator());
+				for (String pastaSup : listaPastaSup) {
+					caminhoPastas += ("|" + pastaSup);
+				}
+
+				if (caminhoSuperiores.equalsIgnoreCase(caminhoPastas)) {
+					chavesAExcluir.add(chave);
+					break;
+				}
+			}
+		}
+
+		for (String chaveAExcluir : chavesAExcluir) {
+			mapaArquivos.remove(chaveAExcluir);
+		}
+	}
+	
 	private void localizarArquivos(String caminhoInicial, long tamanhoMinimo) throws Exception {
 		Map<String, List<String>> mapaArquivos = new TreeMap<String, List<String>>();
 		incluirArquivosNoMapa(mapaArquivos, caminhoInicial, tamanhoMinimo);
