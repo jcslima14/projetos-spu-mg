@@ -1,5 +1,8 @@
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
@@ -16,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -28,24 +31,21 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SpringLayout;
-import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import framework.MyUtils;
-import framework.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class LocalizadorPastasDuplicadas extends JInternalFrame {
 
 	private JFileChooser filSelecionarDiretorio = new JFileChooser();
-	private JButton btnAbrirJanelaSelecaoDiretorio = new JButton("Selecionar diretório");
-	private JLabel lblDiretorioInicial = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
+	private JButton btnAbrirJanelaSelecaoDiretorio = new JButton("Selecionar pasta");
 	private JLabel lblSelecionarDiretorio = new JLabel("Diretório:", JLabel.TRAILING) {{ setLabelFor(filSelecionarDiretorio); }};
-	private JTextField txtTamanhoMinimo = new JTextField(10);
-	private JLabel lblTamanhoMinimo = new JLabel("Tamanho Mínimo:");
+	private JTextField txtPastas = new JTextField();
+	private JTextField txtTamanhoMinimo = new JTextField();
+	private JLabel lblTamanhoMinimo = new JLabel("Tamanho Mínimo:", JLabel.TRAILING);
 	private JComboBox<String> cbbUnidadeMinimo = new JComboBox<String>(new String[] { "Megabytes", "Gigabytes", "Terabytes" });
 	private JLabel lblDiretorioSendoProcessado = new JLabel();
 	private JTable tabela = new JTable();
@@ -59,32 +59,35 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 		setClosable(true);
 
 		JPanel pnlPrincipal = new JPanel();
-		pnlPrincipal.setLayout(new BoxLayout(pnlPrincipal, BoxLayout.Y_AXIS));
-
-		JPanel painelArquivo = new JPanel() {{ add(lblSelecionarDiretorio); add(btnAbrirJanelaSelecaoDiretorio); }};
+		pnlPrincipal.setLayout(new FlowLayout(FlowLayout.LEADING));
 
 		JPanel painelDados = new JPanel();
-		painelDados.setLayout(new SpringLayout());
+		painelDados.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.HORIZONTAL;
 		JButton botaoProcessar = new JButton("Processar");
 		JButton botaoGerarCSV = new JButton("Gerar CSV");
 
-		painelDados.add(painelArquivo);
-		painelDados.add(lblDiretorioInicial);
-		painelDados.add(lblTamanhoMinimo);
-		painelDados.add(new JPanel() {{ setLayout(new FlowLayout()); add(txtTamanhoMinimo); add(cbbUnidadeMinimo); }});
-		painelDados.add(botaoProcessar);
-		painelDados.add(botaoGerarCSV);
+		c.gridx = 0; c.gridy = 0; c.insets = new Insets(3, 3, 3, 3); c.ipadx = 50; c.ipady = 5;
+		painelDados.add(lblSelecionarDiretorio, c);
+		c.gridx = 1;
+		painelDados.add(btnAbrirJanelaSelecaoDiretorio, c);
+		c.gridx = 2; c.ipadx = 1400; c.gridwidth = 2;
+		painelDados.add(txtPastas, c);
+		c.gridx = 0; c.gridy = 1; c.ipadx = 50; c.gridwidth = 1;
+		painelDados.add(lblTamanhoMinimo, c);
+		c.gridx = 1;
+		painelDados.add(txtTamanhoMinimo, c);
+		c.gridx = 2;
+		painelDados.add(cbbUnidadeMinimo, c);
+		c.gridx = 0; c.gridy = 2;
+		painelDados.add(botaoProcessar, c);
+		c.gridx = 1;
+		painelDados.add(botaoGerarCSV, c);
+		c.gridx = 0; c.gridy = 3; c.gridwidth = 4; c.ipadx = 2000;
+		painelDados.add(lblDiretorioSendoProcessado, c);
 
-		SpringUtilities.makeGrid(painelDados,
-                3, 2, //rows, cols
-                6, 6, //initX, initY
-                6, 6); //xPad, yPad
-
-		JPanel pnlSecundario = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		pnlSecundario.add(painelDados);
-
-		pnlPrincipal.add(pnlSecundario, BorderLayout.NORTH);
-		pnlPrincipal.add(lblDiretorioSendoProcessado, BorderLayout.SOUTH);
+		pnlPrincipal.add(painelDados, BorderLayout.NORTH);
 		
 		add(pnlPrincipal, BorderLayout.NORTH);
 		JScrollPane areaDeRolagem = new JScrollPane(tabela);
@@ -120,7 +123,7 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 					@Override
 					public void run() {
 						try {
-							localizarArquivos(lblDiretorioInicial.getText(), obterTamanho(txtTamanhoMinimo.getText(), cbbUnidadeMinimo.getSelectedItem().toString(), " do tamanho mínimo."));
+							localizarArquivos(txtPastas.getText(), obterTamanho(txtTamanhoMinimo.getText(), cbbUnidadeMinimo.getSelectedItem().toString(), " do tamanho mínimo."));
 						} catch (Exception e) {
 							e.printStackTrace();
 							JOptionPane.showMessageDialog(null, "Erro ao executar o processamento: \n \n" + e.getMessage());
@@ -138,7 +141,9 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 				int retorno = filSelecionarDiretorio.showOpenDialog(LocalizadorPastasDuplicadas.this);
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filSelecionarDiretorio.getSelectedFile().exists()) {
-						lblDiretorioInicial.setText(filSelecionarDiretorio.getSelectedFile().getAbsolutePath());
+						if (txtPastas.getText() == null) txtPastas.setText("");
+						if (!txtPastas.getText().equalsIgnoreCase("")) txtPastas.setText(txtPastas.getText() + ";");
+						txtPastas.setText(txtPastas.getText() + filSelecionarDiretorio.getSelectedFile().getAbsolutePath());
 					}
 				}
 			}
@@ -279,9 +284,16 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 		}
 	}
 	
-	private void localizarArquivos(String caminhoInicial, long tamanhoMinimo) throws Exception {
+	private void localizarArquivos(String pastas, long tamanhoMinimo) throws Exception {
+		if (pastas == null || pastas.trim().equalsIgnoreCase("")) {
+			JOptionPane.showMessageDialog(null, "É necessário informar pelo menos uma pasta onde iniciar a busca.");
+			return;
+		}
+		List<String> listaPastas = Arrays.asList(pastas.split(";")).stream().distinct().collect(Collectors.toList());
 		Map<String, List<String>> mapaArquivos = new TreeMap<String, List<String>>();
-		incluirArquivosNoMapa(mapaArquivos, caminhoInicial, tamanhoMinimo);
+		for (String pasta : listaPastas) {
+			incluirArquivosNoMapa(mapaArquivos, pasta, tamanhoMinimo);
+		}
 		lblDiretorioSendoProcessado.setText("Fim do processamento");
 		atualizarTabelaArquivos(mapaArquivos, tabela);
 	}
