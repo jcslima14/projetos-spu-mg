@@ -255,7 +255,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				Destino destino = null;
 				// se não foi encontrado o destino no cadastro (PU ou PSUs), indica que se trata de processo extrajudicial
 				if (!origemProcesso.equalsIgnoreCase("judicial")) {
-					tipoResposta = "extra judicial " + tipoResposta;
+					tipoResposta = "extra judicial " + (tipoProcesso.getTipoProcessoId().equals(TipoProcesso.FISICO_ID) ? "físico " : "") + tipoResposta;
 					cartorio = origemProcesso;
 
 					if (origemProcesso.toLowerCase().trim().startsWith("defensoria")) {
