@@ -514,7 +514,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			numeroProcesso = numeroProcesso.substring(0, 5) + "." + numeroProcesso.substring(5, 11) + "/" + numeroProcesso.substring(11, 15) + "-" + numeroProcesso.substring(15); 
 		}
 		retorno.put("<numero_processo>", numeroProcesso);
-		retorno.put("<numero_atendimento>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getChaveBusca()));
+		retorno.put("<numero_atendimento>", resposta.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) ? MyUtils.emptyStringIfNull(resposta.getSolicitacao().getChaveBusca()) : "");
 		retorno.put("<autor>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getAutor()));
 		retorno.put("<comarca>", (resposta.getSolicitacao().getMunicipio() == null || resposta.getSolicitacao().getMunicipio().getMunicipioComarca() == null ? "" : resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase()));
 		retorno.put("<cartorio>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCartorio()));
