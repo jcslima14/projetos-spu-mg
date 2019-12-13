@@ -184,16 +184,16 @@ public class RespostaSPUNet extends JInternalFrame {
 		MyUtils.appendLogArea(logArea, "Informando credenciais...");
 
         // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.id("username"));
+        WebElement weUsuario = MyUtils.encontrarElemento(wait15, By.id("username"));
         waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
         weUsuario.sendKeys(usuario);
 
         // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.id("password"));
+        WebElement weSenha = MyUtils.encontrarElemento(wait15, By.id("password"));
         weSenha.sendKeys(senha);
 
         // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.xpath("//button[contains(text(), 'Acessar')]"));
+        WebElement botaoAcessar = MyUtils.encontrarElemento(wait15, By.xpath("//button[contains(text(), 'Acessar')]"));
         botaoAcessar.click();
 
         if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
