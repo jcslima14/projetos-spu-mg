@@ -299,7 +299,7 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 	}
 
 	private void gerarArquivoCSV(JTable tabela) throws Exception {
-		String nomeArquivo = "Arquivos_" + MyUtils.formatarData(new Date(), "yyyyMMdd_HHmmss") + ".csv";
+		String nomeArquivo = "PastasDuplicadas_" + MyUtils.formatarData(new Date(), "yyyyMMdd_HHmmss") + ".csv";
 		FileWriter csv = new FileWriter(System.getProperty("user.home") + "/Downloads/" + nomeArquivo);
 		TableModel model = tabela.getModel();
 

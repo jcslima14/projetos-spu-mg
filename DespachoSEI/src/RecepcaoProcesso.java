@@ -31,6 +31,7 @@ import org.apache.commons.io.FileDeleteStrategy;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -448,7 +449,11 @@ public class RecepcaoProcesso extends JInternalFrame {
 			} finally {
 				if (janelaAberta) {
 					do {
-						tituloJanelaAberta = driver.getTitle();
+						try {
+							tituloJanelaAberta = driver.getTitle();
+						} catch (NoSuchWindowException nswe) {
+							break;
+						}
 						if (!tituloJanelaAberta.toLowerCase().startsWith("Carregando")) {
 							break;
 						}
