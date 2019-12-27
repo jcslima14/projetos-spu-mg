@@ -30,12 +30,14 @@ public class CadastroSPUNet extends JFrame {
 		JMenuItem sbmImportacaoPlanilha = new JMenuItem("Importação de Planiliha");
 		JMenuItem sbmCatalogacaoSPUNet = new JMenuItem("Catalogação no SPUNet");
 		JMenuItem sbmBuscaIdCartografia = new JMenuItem("Busca dos IDs de Cartografia");
+		JMenuItem sbmValidacaoCadastro = new JMenuItem("Validação do Cadastro");
 		JMenuItem sbmMunicipio = new JMenuItem("Cadastro de Município");
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmMunicipio); 
 												  }};
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); 
 															   add(sbmCatalogacaoSPUNet); 
 															   add(sbmBuscaIdCartografia); 
+															   add(sbmValidacaoCadastro); 
 															}};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); }};
 
@@ -43,6 +45,15 @@ public class CadastroSPUNet extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				MunicipioCadastro janela = new MunicipioCadastro("Cadastro de Municípios", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmValidacaoCadastro.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ValidacaoDadosCadastrados janela = new ValidacaoDadosCadastrados("Validação dos Dados Cadastrados", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -163,7 +174,8 @@ public class CadastroSPUNet extends JFrame {
 						 "  metadadoinstituicao varchar NOT NULL," + 
 						 "  metadadofuncao varchar NOT NULL," + 
 						 "  infadictipoarticulacao varchar NOT NULL," + 
-						 "  infadiccamadainf varchar NOT NULL" + 
+						 "  infadiccamadainf varchar NOT NULL," + 
+						 "  status varchar NULL" + 
 						 ")";
 	
 			JPAUtils.executeUpdate(conexao, sql);
