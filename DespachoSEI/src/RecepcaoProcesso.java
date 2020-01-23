@@ -142,7 +142,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		this.setVisible(true);
 		this.show();
 	}
-
+	
 	private void recepcionarProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		String pastaDeDownload = MyUtils.entidade(despachoServico.obterParametro(Parametro.PASTA_DOWNLOAD_SAPIENS, null)).getConteudo();
 		boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
@@ -311,9 +311,10 @@ public class RecepcaoProcesso extends JInternalFrame {
 			        	do {
 			        		MyUtils.esperarCarregamento(100, wait5, "//div[text() = 'Carregando...']");
 	
-			        		TimeUnit.SECONDS.sleep(1);
-	
-				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr"));
+			        		// obter a quantidade de registros da tabela
+			        		aguardarCargaListaDocumentos(wait5);
+			        		
+				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
 				        	for (WebElement regDocumento : regDocumentos) {
 				        		// busca os dados a serem registrados
 				        		String movimento = regDocumento.findElement(By.xpath("./td[3]")).getText();
@@ -574,7 +575,22 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		return true;
 	}
-	
+
+	private void aguardarCargaListaDocumentos(Wait<WebDriver> wait) throws InterruptedException {
+		// encontra a quantidade de registros aptos a serem impressos
+		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//div[contains(@id, 'xtoolbar')]//div/*[contains(text(), 'registro(s)')]")).getText();
+		int qtRegs = Integer.parseInt(quantidadeRegistros.split(" ")[2]) - Integer.parseInt(quantidadeRegistros.split(" ")[0]) + 1;
+
+		do {
+			List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
+			if (linhasAptas != null && linhasAptas.size() == qtRegs) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
+	}
+
 	private String chaveArquivos(String caminho) {
 		String retorno = "";
 		File pasta = new File(caminho);
