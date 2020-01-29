@@ -494,8 +494,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 			TimeUnit.MILLISECONDS.sleep(1500);
 
-			// espera aparecer o botão de cancelar documento para ter certeza de que o upload terminou
-			MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Cancelar Documento']"));
+			// espera aparecer o botão de consultar/alterar documento para ter certeza de que o upload terminou
+			MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Consultar/Alterar Documento Externo']"));
 		} // fim do loop de anexação de arquivos
 		
 		driver.switchTo().defaultContent();

@@ -251,72 +251,89 @@ public class RespostaProcesso extends JInternalFrame {
 		        iptPesquisar.clear();
 		        iptPesquisar.sendKeys(chaveBusca);
 
-	        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
-	        	TimeUnit.SECONDS.sleep(1);
-	        	
-		        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
-		        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+		        boolean encontrado = false;
+		        boolean inconsistente = false;
+		        int qtOcorrencias = 0;
 
-				if (linhasRetornadas.size() != 1) {
+		        do {
+		        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
+		        	TimeUnit.SECONDS.sleep(1);
+
+			        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
+			        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+
+			        // se não encontrou nenhum registro, sai do loop
 					if (linhasRetornadas.size() == 0) {
-						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
-					} else {
-						MyUtils.appendLogArea(logArea, "Foram encontrados " + linhasRetornadas.size() + " registros para o processo " + numeroProcesso + ". A resposta a este processo deverá ser feita manualmente.");
+						break;
 					}
-					continue;
-				}
 
-				WebElement colID = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
-				WebElement colNUP = linhasRetornadas.iterator().next().findElement(By.xpath("./td[2]/div//a"));
-				WebElement colNumeroProcessoJudicial = linhasRetornadas.iterator().next().findElement(By.xpath("./td[3]/div"));
-				String nup = colNUP.getText().trim().replaceAll("\\D+", "");
-				String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
+					encontrado = true;
 
-				if (tipoFiltro.equalsIgnoreCase("nup") && (!nup.startsWith(chaveBusca) || !colNUP.getAttribute("href").trim().toLowerCase().contains("nup=" + chaveBusca))) {
-					MyUtils.appendLogArea(logArea, "O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
-					continue;
-				}
-				
-				if (!numeroProcessoJudicial.startsWith(numeroProcesso)) {
-					MyUtils.appendLogArea(logArea, "O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
-					continue;
-				}
+					WebElement colID = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
+					WebElement colNUP = linhasRetornadas.iterator().next().findElement(By.xpath("./td[2]/div//a"));
+					WebElement colNumeroProcessoJudicial = linhasRetornadas.iterator().next().findElement(By.xpath("./td[3]/div"));
+					String nup = colNUP.getText().trim().replaceAll("\\D+", "");
+					String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
 
-				passarMouse.moveToElement(colID).contextClick(colID).perform();
+					// se a linha retornada não corresponde à pesquisa, sai do loop
+					if (tipoFiltro.equalsIgnoreCase("nup") && (!nup.startsWith(chaveBusca) || !colNUP.getAttribute("href").trim().toLowerCase().contains("nup=" + chaveBusca))) {
+						MyUtils.appendLogArea(logArea, "O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
+						inconsistente = true;
+						break;
+					}
 
-	        	TimeUnit.SECONDS.sleep(1);
+					if (!numeroProcessoJudicial.startsWith(numeroProcesso)) {
+						MyUtils.appendLogArea(logArea, "O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
+						inconsistente = true;
+						break;
+					}
 
-				// clicar no botão responder
-				WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
-				passarMouse.moveToElement(divResponder).click().build().perform();
+					MyUtils.appendLogArea(logArea, "Respondendo ocorrência " + (++qtOcorrencias));
+
+					passarMouse.moveToElement(colID).contextClick(colID).perform();
 	
-	        	TimeUnit.SECONDS.sleep(1);
+		        	TimeUnit.SECONDS.sleep(1);
 	
-				// clicar no botão de upload de arquivos
-				WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
-				passarMouse.moveToElement(btnUploadArquivo).perform();
+					// clicar no botão responder
+					WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
+					passarMouse.moveToElement(divResponder).click().build().perform();
 		
-				WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
-				inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
-
-	        	TimeUnit.SECONDS.sleep(tempoEsperaUpload);
-
-				WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
-				passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
-
-				WebElement infUploadCompleto = null;
-
-				do {
-					infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
-				} while (infUploadCompleto == null);
-
-	        	TimeUnit.SECONDS.sleep(1);
+		        	TimeUnit.SECONDS.sleep(1);
+		
+					// clicar no botão de upload de arquivos
+					WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
+					passarMouse.moveToElement(btnUploadArquivo).perform();
+			
+					WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
+					inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
 	
-				WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
-				passarMouse.moveToElement(btnFechar).click().build().perform();
+		        	TimeUnit.SECONDS.sleep(tempoEsperaUpload);
 	
-	        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
-				
+					WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
+					passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
+	
+					WebElement infUploadCompleto = null;
+	
+					do {
+						infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
+					} while (infUploadCompleto == null);
+	
+		        	TimeUnit.SECONDS.sleep(1);
+		
+					WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
+					passarMouse.moveToElement(btnFechar).click().build().perform();
+		
+		        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
+		        } while (true);
+
+		        if (!encontrado || inconsistente) {
+		        	if (!encontrado) {
+						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
+		        	}
+
+		        	continue;
+		        }
+		        
 				// mover o arquivo
 	        	TimeUnit.MILLISECONDS.sleep(50);
 		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
