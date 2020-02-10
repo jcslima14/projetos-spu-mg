@@ -1,10 +1,8 @@
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.swing.JOptionPane;
@@ -623,51 +621,13 @@ public class DespachoServico {
 	}
 
 	public void selecionarAssinantePadrao(MyComboBox cbbAssinante) {
-		String arquivoPropriedades = System.getProperty("user.home");
-		// se retornou o nome do diretório, continua
-		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
-			// continua se o diretório existir
-			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
-				// adiciona o nome da pasta escondida de ferramentas SPU
-				arquivoPropriedades += "\\.ferramentasspu";
-				// continua se a pasta existe
-				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
-					// verifica se o arquivo de propriedades existe
-					arquivoPropriedades += "\\ferramentasspu.properties";
-					if (MyUtils.arquivoExiste(arquivoPropriedades)) {
-						Properties props = MyUtils.obterPropriedades(arquivoPropriedades);
-						cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, Integer.parseInt(props.getProperty("assinantepadrao", "0")),  null));
-					}
-				}
-			}
+		String assinantePadrao = MyUtils.obterConfiguracaoLocal("assinantepadrao", "0");
+		if (!assinantePadrao.equals("0")) {
+			cbbAssinante.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbAssinante, Integer.parseInt(assinantePadrao),  null));
 		}
 	}
 
 	public void salvarAssinantePadrao(Integer assinanteId) {
-		String arquivoPropriedades = System.getProperty("user.home");
-		// se retornou o nome do diretório, continua
-		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
-			// continua se o diretório existir
-			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
-				// adiciona o nome da pasta escondida de ferramentas SPU
-				arquivoPropriedades += "\\.ferramentasspu";
-				// se a pasta não existe, cria antes de continuar
-				if (!MyUtils.arquivoExiste(arquivoPropriedades)) {
-					(new File(arquivoPropriedades)).mkdir();
-				}
-
-				// verifica se o arquivo de propriedades existe
-				arquivoPropriedades += "\\ferramentasspu.properties";
-				Properties props = new Properties();
-				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
-					props = MyUtils.obterPropriedades(arquivoPropriedades);
-				}
-				props.setProperty("assinantepadrao", assinanteId.toString());
-				MyUtils.salvarPropriedades(props, arquivoPropriedades);
-				JOptionPane.showMessageDialog(null, "Assinante padrão salvo com sucesso!");
-			}
-		} else {
-			JOptionPane.showMessageDialog(null, "Não foi possível obter o nome da pasta do usuário desta estação de trabalho");
-		}
+		MyUtils.salvarConfiguracaoLocal("assinantepadrao", assinanteId.toString(), "Assinante padrão salvo com sucesso!");
 	}
 }

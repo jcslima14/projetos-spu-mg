@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -26,6 +27,7 @@ import javax.swing.JTextArea;
 
 import org.apache.commons.beanutils.NestedNullException;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -441,12 +443,16 @@ public class MyUtils {
 	}
 
 	public static ArrayList<File> obterArquivos(String nomeDiretorio) {
+		return obterArquivos(nomeDiretorio, false, "pdf");
+	}
+
+	public static ArrayList<File> obterArquivos(String nomeDiretorio, boolean incluirPastas, String... extensoes) {
 		ArrayList<File> retorno = new ArrayList<File>();
 		File diretorio = new File(nomeDiretorio);
 		for (File arquivo : diretorio.listFiles()) {
-			if (!arquivo.isDirectory() && arquivo.getName().toLowerCase().endsWith("pdf")) {
-				retorno.add(arquivo);
-			}
+			if (!incluirPastas && arquivo.isDirectory()) continue;
+			if (!arquivo.isDirectory() && extensoes != null && extensoes.length > 0 && !Arrays.asList(extensoes).stream().anyMatch(FilenameUtils.getExtension(arquivo.getName())::equalsIgnoreCase)) continue;
+			retorno.add(arquivo);
 		}
 		return retorno;
 	}
@@ -535,5 +541,57 @@ public class MyUtils {
 		if (!arquivoNovo.exists()) {
 			throw new Exception ("A movimentação do arquivo " + nomeArquivoAnterior + " para o arquivo " + nomeArquivoNovo + " falhou.");
 		}
+	}
+
+	public static void salvarConfiguracaoLocal(String propriedade, String valor, String mensagem) {
+		String arquivoPropriedades = System.getProperty("user.home");
+		// se retornou o nome do diretório, continua
+		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
+			// continua se o diretório existir
+			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+				// adiciona o nome da pasta escondida de ferramentas SPU
+				arquivoPropriedades += "\\.ferramentasspu";
+				// se a pasta não existe, cria antes de continuar
+				if (!MyUtils.arquivoExiste(arquivoPropriedades)) {
+					(new File(arquivoPropriedades)).mkdir();
+				}
+
+				// verifica se o arquivo de propriedades existe
+				arquivoPropriedades += "\\ferramentasspu.properties";
+				Properties props = new Properties();
+				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+					props = MyUtils.obterPropriedades(arquivoPropriedades);
+				}
+				props.setProperty(propriedade, valor);
+				MyUtils.salvarPropriedades(props, arquivoPropriedades);
+				if (mensagem != null) JOptionPane.showMessageDialog(null, "Assinante padrão salvo com sucesso!");
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Não foi possível obter o nome da pasta do usuário desta estação de trabalho");
+		}
+	}
+
+	public static String obterConfiguracaoLocal(String propriedade, String valorDefault) {
+		String arquivoPropriedades = System.getProperty("user.home");
+		String retorno = null;
+		// se retornou o nome do diretório, continua
+		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
+			// continua se o diretório existir
+			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+				// adiciona o nome da pasta escondida de ferramentas SPU
+				arquivoPropriedades += "\\.ferramentasspu";
+				// continua se a pasta existe
+				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+					// verifica se o arquivo de propriedades existe
+					arquivoPropriedades += "\\ferramentasspu.properties";
+					if (MyUtils.arquivoExiste(arquivoPropriedades)) {
+						Properties props = MyUtils.obterPropriedades(arquivoPropriedades);
+						retorno = props.getProperty(propriedade);
+					}
+				}
+			}
+		}
+
+		return (retorno == null ? valorDefault : retorno);
 	}
 }
