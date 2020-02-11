@@ -33,6 +33,32 @@ public class SPUNetServico {
 		return JPAUtils.executeQuery(em, sql.toString(), parametros);
 	}
 
+	public List<Validacao> obterValidacao(Integer validacaoId, String nomeArquivo, String identTituloProduto, String status) throws Exception {
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select v from Validacao v ");
+		sql.append(" where 1 = 1 ");
+		if (validacaoId != null) {
+			sql.append(" and validacaoId = :validacaoId");
+			parametros.put("validacaoId", validacaoId);
+		} else {
+			if (nomeArquivo != null) {
+				sql.append(" and nomeArquivo = :nomeArquivo ");
+				parametros.put("nomeArquivo", nomeArquivo);
+			}
+			if (identTituloProduto != null) {
+				sql.append(" and identTituloProduto = :identTituloProduto ");
+				parametros.put("identTituloProduto", identTituloProduto);
+			}
+			if (status != null) {
+				sql.append(" and status = :status ");
+				parametros.put("status", status);
+			}
+		}
+
+		return JPAUtils.executeQuery(em, sql.toString(), parametros);
+	}
+
 	public List<Municipio> obterMunicipio(Integer municipioId, String nome) throws Exception {
 		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");

@@ -136,6 +136,7 @@ public class CadastroSPUNet extends JFrame {
 
 	private void criarTabelas(EntityManager conexao) throws Exception {
 		criarTabelaGeoinformacao(conexao);
+		criarTabelaValidacao(conexao);
 		criarTabelaMunicipio(conexao);
 	}
 
@@ -174,8 +175,21 @@ public class CadastroSPUNet extends JFrame {
 						 "  metadadoinstituicao varchar NOT NULL," + 
 						 "  metadadofuncao varchar NOT NULL," + 
 						 "  infadictipoarticulacao varchar NOT NULL," + 
-						 "  infadiccamadainf varchar NOT NULL," + 
-						 "  status varchar NULL" + 
+						 "  infadiccamadainf varchar NOT NULL" + 
+						 ")";
+	
+			JPAUtils.executeUpdate(conexao, sql);
+		}
+	}
+
+	private void criarTabelaValidacao(EntityManager conexao) throws Exception {
+		if (!tabelaExiste(conexao, "validacao")) {
+			String sql = "CREATE TABLE validacao " + 
+						 "(" + 
+						 "  validacaoid integer primary key autoincrement not null," + 
+						 "  nomearquivo varchar NOT NULL," + 
+						 "  identtituloproduto varchar NOT NULL," + 
+						 "  status varchar NOT NULL" + 
 						 ")";
 	
 			JPAUtils.executeUpdate(conexao, sql);
