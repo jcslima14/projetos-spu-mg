@@ -23,7 +23,8 @@ public class Canivete extends JFrame {
 		JMenuItem sbmCopiarNomeArquivo = new JMenuItem("Copiar nomes de arquivos");
 		JMenuItem sbmLocalizarArquivosTamanho = new JMenuItem("Localizar arquivos por tamanho");
 		JMenuItem sbmLocalizarPastasDuplicadas = new JMenuItem("Localizar pastas duplicadas");
-		JMenu mnuFerramentas = new JMenu("Ferramentas") {{ add(sbmCopiarNomeArquivo); add(sbmLocalizarArquivosTamanho); add(sbmLocalizarPastasDuplicadas); }};
+		JMenuItem sbmContadorArquivosPasta = new JMenuItem("Contar arquivos contidos em pastas");
+		JMenu mnuFerramentas = new JMenu("Ferramentas") {{ add(sbmCopiarNomeArquivo); add(sbmLocalizarArquivosTamanho); add(sbmLocalizarPastasDuplicadas); add(sbmContadorArquivosPasta); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuFerramentas); }};
 
 		sbmCopiarNomeArquivo.addActionListener(new ActionListener() {
@@ -48,6 +49,15 @@ public class Canivete extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				LocalizadorPastasDuplicadas janela = new LocalizadorPastasDuplicadas("Localizar pastas duplicadas");
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmContadorArquivosPasta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ContadorArquivosPasta janela = new ContadorArquivosPasta("Contar arquivos em pastas");
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
