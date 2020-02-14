@@ -543,7 +543,7 @@ public class MyUtils {
 		}
 	}
 
-	public static void salvarConfiguracaoLocal(String propriedade, String valor, String mensagem) {
+	public static void salvarConfiguracaoLocal(String propriedade, String valor, String mensagemSucesso) {
 		String arquivoPropriedades = System.getProperty("user.home");
 		// se retornou o nome do diretório, continua
 		if (!MyUtils.emptyStringIfNull(arquivoPropriedades).trim().equals("")) {
@@ -564,7 +564,7 @@ public class MyUtils {
 				}
 				props.setProperty(propriedade, valor);
 				MyUtils.salvarPropriedades(props, arquivoPropriedades);
-				if (mensagem != null) JOptionPane.showMessageDialog(null, "Assinante padrão salvo com sucesso!");
+				if (mensagemSucesso != null) JOptionPane.showMessageDialog(null, mensagemSucesso);
 			}
 		} else {
 			JOptionPane.showMessageDialog(null, "Não foi possível obter o nome da pasta do usuário desta estação de trabalho");

@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -40,15 +41,42 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 	private JLabel lblAplicativo = new JLabel("Aplicativo:", JLabel.TRAILING) {{ setLabelFor(filAplicativo); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
-	private JEditorPane logArea = new JEditorPane() {{ setPreferredSize(new Dimension(1500, 700)); setContentType("text/html"); }};
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ setPreferredSize(new Dimension(1500, 700)); }};
 	private SPUNetServico cadastroServico;
 	private List<File> arquivosAProcessar;
 	private int indiceArquivo = 0;
 	private MyButton btnProximo = new MyButton("Próximo");
 	private MyButton btnValidar = new MyButton("Validar");
-	private MyButton btnRevisar = new MyButton("Revisar");
+	private MyButton btnRedigitalizar = new MyButton("Redigitalizar");
 	private File arquivoSendoProcessado;
+	private Geoinformacao geoSendoProcessada;
+	private JComboBox<String> cbbFiltro = new JComboBox<String>();
+	private JLabel lblFiltro = new JLabel("Filtro:", JLabel.TRAILING) {{ setLabelFor(cbbFiltro); }};
+
+	private JPanel painelCentral = new JPanel() {{ setLayout(new SpringLayout()); }};
+	private JLabel lblNomeArquivo = new JLabel("<html><h2>Arquivo:</h2></html>");
+	private JLabel lblIdentTituloProduto = new JLabel("<html><b><u>Título do Produto:</u></b></html>");
+	private JTextField txtIdentDataCriacao = new JTextField();
+	private JLabel lblIdentDataCriacao = new JLabel("Data de Criação") {{ setLabelFor(txtIdentDataCriacao); }};
+	private JTextField txtIdentResumo = new JTextField();
+	private JLabel lblIdentResumo = new JLabel("Resumo") {{ setLabelFor(txtIdentResumo); }};
+	private JComboBox<String> cbbSisrefDatum = new JComboBox<String>();
+	private JLabel lblSisrefDatum = new JLabel("Datum") {{ setLabelFor(cbbSisrefDatum); }};
+	private JComboBox<String> cbbSisrefProjecao = new JComboBox<String>();
+	private JLabel lblSisrefProjecao = new JLabel("Projeção") {{ setLabelFor(cbbSisrefProjecao); }};
+	private JTextField txtSisrefObservacao = new JTextField();
+	private JLabel lblSisrefObservacao = new JLabel("Observação") {{ setLabelFor(txtSisrefObservacao); }};
+	private JComboBox<String> cbbIdentcdgTipoReprEspacial = new JComboBox<String>();
+	private JLabel lblIdentcdgTipoReprEspacial = new JLabel("Tipo de Representação Espacial") {{ setLabelFor(cbbIdentcdgTipoReprEspacial); }};
+	private JTextField txtIdentcdgEscala = new JTextField();
+	private JLabel lblIdentcdgEscala = new JLabel("Escala") {{ setLabelFor(txtIdentcdgEscala); }};
+	private JComboBox<String> cbbIdentcdgCategoria = new JComboBox<String>();
+	private JLabel lblIdentcdgCategoria = new JLabel("Categoria") {{ setLabelFor(cbbIdentcdgCategoria); }};
+	private JComboBox<String> cbbIdentcdgMunicipio = new JComboBox<String>();
+	private JLabel lblIdentcdgMunicipio = new JLabel("Município") {{ setLabelFor(cbbIdentcdgMunicipio); }};
+	private JTextField txtQualidadeLinhagem = new JTextField();
+	private JLabel lblQualidadeLinhagem = new JLabel("Linhagem") {{ setLabelFor(txtQualidadeLinhagem); }};
+	private JComboBox<String> cbbInfadicCamadaInf = new JComboBox<String>();
+	private JLabel lblInfadicCamadaInf = new JLabel("Camada de Informação") {{ setLabelFor(cbbInfadicCamadaInf); }};
 
 	public ValidacaoDadosCadastrados(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -57,17 +85,121 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		setIconifiable(true);
 		setClosable(true);
 
-		habilitarBotoes();
+		habilitarProximo();
+		habilitarObjetos(false);
 
+		opcoesFiltro();
+		
 		this.conexao = conexao;
 		cadastroServico = new SPUNetServico(this.conexao);
 
 		lblNomeAplicativo.setText(MyUtils.obterConfiguracaoLocal("aplicativoimagem", ""));
+		lblNomeAplicativo.setPreferredSize(new Dimension(1000, 20));
+		lblNomeAplicativo.setSize(new Dimension(1000, 20));
+		lblNomeAplicativo.setMinimumSize(new Dimension(1000, 20));
+		lblNomeAplicativo.setAlignmentX(LEFT_ALIGNMENT);
 
 		filAplicativo.setFileFilter(new FileNameExtensionFilter("Aplicações (*.exe)", "exe"));
 
 		JPanel painelArquivo = new JPanel() {{ add(lblPasta); add(btnAbrirPasta); }};
 		JPanel painelAplicativo = new JPanel() {{ add(lblAplicativo); add(btnAbrirAplicativo); }};
+
+		JPanel painelCentralPai = new JPanel();
+		painelCentral.setAlignmentX(LEFT_ALIGNMENT);
+		painelCentralPai.setLayout(new BoxLayout(painelCentralPai, BoxLayout.Y_AXIS));
+		painelCentralPai.setAlignmentX(LEFT_ALIGNMENT);
+		painelCentralPai.add(lblNomeArquivo);
+		painelCentralPai.add(painelCentral);
+		
+//		//
+//		painelCentral.add(lblNomeArquivo);
+//		painelCentral.add(new JPanel());
+//		painelCentral.add(new JPanel());
+//		painelCentral.add(new JPanel());
+//		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(new JLabel("<html><h3>Identificação</h3></html>"));
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblIdentTituloProduto);
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblIdentDataCriacao);
+		painelCentral.add(txtIdentDataCriacao);
+		painelCentral.add(new JPanel());
+		painelCentral.add(lblIdentResumo);
+		painelCentral.add(txtIdentResumo);
+		//
+		painelCentral.add(new JLabel("<html><h3>Sistema de Referência</h3></html>"));
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblSisrefDatum);
+		painelCentral.add(cbbSisrefDatum);
+		painelCentral.add(new JPanel());
+		painelCentral.add(lblSisrefProjecao);
+		painelCentral.add(cbbSisrefProjecao);
+		//
+		painelCentral.add(lblSisrefObservacao);
+		painelCentral.add(txtSisrefObservacao);
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(new JLabel("<html><h3>Indentificação CDG</h3></html>"));
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblIdentcdgTipoReprEspacial);
+		painelCentral.add(cbbIdentcdgTipoReprEspacial);
+		painelCentral.add(new JPanel());
+		painelCentral.add(lblIdentcdgEscala);
+		painelCentral.add(txtIdentcdgEscala);
+		//
+		painelCentral.add(lblIdentcdgCategoria);
+		painelCentral.add(cbbIdentcdgCategoria);
+		painelCentral.add(new JPanel());
+		painelCentral.add(lblIdentcdgMunicipio);
+		painelCentral.add(cbbIdentcdgMunicipio);
+		//
+		painelCentral.add(new JLabel("<html><h3>Qualidade</h3></html>"));
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblQualidadeLinhagem);
+		painelCentral.add(txtQualidadeLinhagem);
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(new JLabel("<html><h3>Informações Adicionais</h3></html>"));
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		//
+		painelCentral.add(lblInfadicCamadaInf);
+		painelCentral.add(cbbInfadicCamadaInf);
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+		painelCentral.add(new JPanel());
+
+		SpringUtilities.makeCompactGrid(painelCentral,
+	            13, 5, //rows, cols
+	            6, 6, //initX, initY
+	            6, 6); //xPad, yPad
 
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
 		
@@ -79,18 +211,20 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		painelDados.add(lblNomePasta);
 		painelDados.add(painelAplicativo);
 		painelDados.add(lblNomeAplicativo);
+		painelDados.add(lblFiltro);
+		painelDados.add(cbbFiltro);
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
 
-		JPanel painelAcoes = new JPanel() {{ add(btnProximo); add(btnValidar); add(btnRevisar); }};
-		
+		JPanel painelAcoes = new JPanel() {{ add(btnProximo); add(btnValidar); add(btnRedigitalizar); }};
+
 		SpringUtilities.makeCompactGrid(painelDados,
-	            espacoEmDisco == null ? 3 : 4, 2, //rows, cols
+	            espacoEmDisco == null ? 4 : 5, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
 		add(painelDados, BorderLayout.NORTH);
-		add(areaDeRolagem, BorderLayout.CENTER);
+		add(painelCentralPai, BorderLayout.CENTER);
 		add(painelAcoes, BorderLayout.SOUTH);
 
 		btnProximo.addActionListener(new ActionListener() {
@@ -104,25 +238,27 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					atualizarStatusArquivo(arquivoSendoProcessado, "Validar");
+					if (validarDados()) {
+						atualizarStatusArquivo(arquivoSendoProcessado, "Validar");
+						processarArquivo();
+					}
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(null, "Erro ao marcar como 'Validar' o arquivo " + arquivoSendoProcessado.getAbsolutePath() + ":\n" + e1.getMessage());
 					e1.printStackTrace();
 				}
-				processarArquivo();
 			}
 		});
 
-		btnRevisar.addActionListener(new ActionListener() {
+		btnRedigitalizar.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					atualizarStatusArquivo(arquivoSendoProcessado, "Revisar");
+					atualizarStatusArquivo(arquivoSendoProcessado, "Redigitalizar");
+					processarArquivo();
 				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(null, "Erro ao marcar como 'Revisar' o arquivo " + arquivoSendoProcessado.getAbsolutePath() + ":\n" + e1.getMessage());
+					JOptionPane.showMessageDialog(null, "Erro ao marcar como 'Redigitalizar' o arquivo " + arquivoSendoProcessado.getAbsolutePath() + ":\n" + e1.getMessage());
 					e1.printStackTrace();
 				}
-				processarArquivo();
 			}
 		});
 
@@ -146,18 +282,20 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 				indiceArquivo = 0;
 				arquivosAProcessar = new ArrayList<File>();
 
-				logArea.setText("Aguarde a obtenção da lista de arquivos...");
-				
+				lblNomeArquivo.setText("<html><h2>Aguarde a obtenção da lista de arquivos...</h2></html>");
+
 				try {
 					obterArquivosAProcessar(lblNomePasta.getText(), arquivosAProcessar);
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
-				
-				logArea.setText("Foram obtidos " + arquivosAProcessar.size() + " para serem processados.");
 
 				if (arquivosAProcessar.size() != 0) {
 					processarArquivo();
+				} else {
+					lblNomeArquivo.setText("<html><h2><font color='red'>A pesquisa solicitado não encontrou nenhum arquivo...</font></h2></html>");
+					habilitarProximo();
+					habilitarObjetos(false);
 				}
 			}
 		});
@@ -165,12 +303,20 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		btnAbrirPasta.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				String diretorioPadrao = MyUtils.obterConfiguracaoLocal("ultimapastavalidacao", null);
+				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
+					File dirPadrao = new File(diretorioPadrao);
+					if (dirPadrao.exists()) {
+						filPasta.setCurrentDirectory(dirPadrao);
+					}
+				}
 				filPasta.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 				filPasta.setAcceptAllFileFilterUsed(false);
 				int retorno = filPasta.showOpenDialog(ValidacaoDadosCadastrados.this);
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filPasta.getSelectedFile().exists()) {
 						lblNomePasta.setText(filPasta.getSelectedFile().getAbsolutePath());
+						MyUtils.salvarConfiguracaoLocal("ultimapastavalidacao", lblNomePasta.getText(), null);
 					}
 				}
 			}
@@ -183,43 +329,221 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filAplicativo.getSelectedFile().exists()) {
 						lblNomeAplicativo.setText(filAplicativo.getSelectedFile().getAbsolutePath());
-						MyUtils.salvarConfiguracaoLocal("aplicativoimagem", lblNomeAplicativo.getText(), "Não foi possível salvar o aplicativo de imagem");
+						MyUtils.salvarConfiguracaoLocal("aplicativoimagem", lblNomeAplicativo.getText(), null);
 					}
 				}
 			}
 		});
 	}
 
+	private void opcoesFiltro() {
+		cbbFiltro.addItem("(Somente arquivos não analisados)");
+		cbbFiltro.addItem("Não encontrado");
+		cbbFiltro.addItem("Redigitalizar");
+		cbbFiltro.setSelectedIndex(0);
+	}
+
+	private void opcoesSisrefDatum(String opcaoSelecionada) {
+		if (cbbSisrefDatum.getItemCount() == 0) {
+			cbbSisrefDatum.addItem("Córrego Alegre");
+			cbbSisrefDatum.addItem("SAD 69");
+			cbbSisrefDatum.addItem("SAD 69/96");
+			cbbSisrefDatum.addItem("Sem Datum");
+			cbbSisrefDatum.addItem("SIRGAS 2000");
+			cbbSisrefDatum.addItem("Sistema de Coordenadas Local");
+			cbbSisrefDatum.addItem("WGS 84");
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbSisrefDatum.setSelectedItem(opcaoSelecionada);
+		}
+	}
+
+	private void opcoesSisrefProjecao(String opcaoSelecionada) {
+		if (cbbSisrefProjecao.getItemCount() == 0) {
+			cbbSisrefProjecao.addItem("Coordenadas geográficas (não projetado)");
+			cbbSisrefProjecao.addItem("UTM Zona 18N");
+			cbbSisrefProjecao.addItem("UTM Zona 18S");
+			cbbSisrefProjecao.addItem("UTM Zona 19N");
+			cbbSisrefProjecao.addItem("UTM Zona 19S");
+			cbbSisrefProjecao.addItem("UTM Zona 20N");
+			cbbSisrefProjecao.addItem("UTM Zona 20S");
+			cbbSisrefProjecao.addItem("UTM Zona 21N");
+			cbbSisrefProjecao.addItem("UTM Zona 21S");
+			cbbSisrefProjecao.addItem("UTM Zona 22N");
+			cbbSisrefProjecao.addItem("UTM Zona 22S");
+			cbbSisrefProjecao.addItem("UTM Zona 23S");
+			cbbSisrefProjecao.addItem("UTM Zona 24S");
+			cbbSisrefProjecao.addItem("UTM Zona 25S");
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbSisrefProjecao.setSelectedItem(opcaoSelecionada);
+		}
+	}
+	
+	private void opcoesIdentcdgTipoReprEspacial(String opcaoSelecionada) {
+		if (cbbIdentcdgTipoReprEspacial.getItemCount() == 0) {
+			cbbIdentcdgTipoReprEspacial.addItem("Matricial");
+			cbbIdentcdgTipoReprEspacial.addItem("Modelo Estereoscópio");
+			cbbIdentcdgTipoReprEspacial.addItem("Texto/Tabela");
+			cbbIdentcdgTipoReprEspacial.addItem("TIN");
+			cbbIdentcdgTipoReprEspacial.addItem("Vetorial");
+			cbbIdentcdgTipoReprEspacial.addItem("Vídeo");
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbIdentcdgTipoReprEspacial.setSelectedItem(opcaoSelecionada);
+		}
+	}
+	
+	private void opcoesIdentcdgCategoria(String opcaoSelecionada) {
+		if (cbbIdentcdgCategoria.getItemCount() == 0) {
+			cbbIdentcdgCategoria.addItem("Agricultura");
+			cbbIdentcdgCategoria.addItem("Agricultura e Pecuária");
+			cbbIdentcdgCategoria.addItem("Águas Interiores");
+			cbbIdentcdgCategoria.addItem("Altimetria e Batimetria");
+			cbbIdentcdgCategoria.addItem("Ambiente");
+			cbbIdentcdgCategoria.addItem("Área Protegida");
+			cbbIdentcdgCategoria.addItem("Biomas");
+			cbbIdentcdgCategoria.addItem("Biótopos");
+			cbbIdentcdgCategoria.addItem("Cartografia de Base Coberturas");
+			cbbIdentcdgCategoria.addItem("Clima Meteorologia");
+			cbbIdentcdgCategoria.addItem("Climatologia Atmosfera");
+			cbbIdentcdgCategoria.addItem("Concessões e Comunicação");
+			cbbIdentcdgCategoria.addItem("Cultura");
+			cbbIdentcdgCategoria.addItem("Defesa");
+			cbbIdentcdgCategoria.addItem("Economia");
+			cbbIdentcdgCategoria.addItem("Educação");
+			cbbIdentcdgCategoria.addItem("Elevação (altimetria e batimetria)");
+			cbbIdentcdgCategoria.addItem("Energia");
+			cbbIdentcdgCategoria.addItem("Especificações e Metodologias");
+			cbbIdentcdgCategoria.addItem("Esportes e Lazer");
+			cbbIdentcdgCategoria.addItem("Fauna e Flora");
+			cbbIdentcdgCategoria.addItem("Geociências");
+			cbbIdentcdgCategoria.addItem("Geografia");
+			cbbIdentcdgCategoria.addItem("Geologia Recursos Minerais");
+			cbbIdentcdgCategoria.addItem("Geomorfologia (Relevo)");
+			cbbIdentcdgCategoria.addItem("Habitação");
+			cbbIdentcdgCategoria.addItem("Hidrografia e Hidrologia");
+			cbbIdentcdgCategoria.addItem("Imageamento Ortoimagem");
+			cbbIdentcdgCategoria.addItem("Informação Militar");
+			cbbIdentcdgCategoria.addItem("Limites Administrativos");
+			cbbIdentcdgCategoria.addItem("Limites Político Administrativos");
+			cbbIdentcdgCategoria.addItem("Localização");
+			cbbIdentcdgCategoria.addItem("Mapeamento Aeronáutico");
+			cbbIdentcdgCategoria.addItem("Mapeamento Básico Geográfico");
+			cbbIdentcdgCategoria.addItem("Mapeamento Básico Topográfico");
+			cbbIdentcdgCategoria.addItem("Mapeamento Básico Cadastral");
+			cbbIdentcdgCategoria.addItem("Mapeamento Náutico");
+			cbbIdentcdgCategoria.addItem("Mapeamento Fundiário");
+			cbbIdentcdgCategoria.addItem("Monitoramento Ambiental");
+			cbbIdentcdgCategoria.addItem("Nomes Geográficos");
+			cbbIdentcdgCategoria.addItem("Normas");
+			cbbIdentcdgCategoria.addItem("Oceanos");
+			cbbIdentcdgCategoria.addItem("Patrimônio Edificado");
+			cbbIdentcdgCategoria.addItem("Pesca e Aquicultura");
+			cbbIdentcdgCategoria.addItem("Pesca e Pecuária");
+			cbbIdentcdgCategoria.addItem("Planejamento e Cadastro");
+			cbbIdentcdgCategoria.addItem("Redes Geodésicas");
+			cbbIdentcdgCategoria.addItem("Saneamento");
+			cbbIdentcdgCategoria.addItem("Saúde");
+			cbbIdentcdgCategoria.addItem("Serviços Concessionados");
+			cbbIdentcdgCategoria.addItem("Sociedade e Cultura");
+			cbbIdentcdgCategoria.addItem("Socioeconomia");
+			cbbIdentcdgCategoria.addItem("Solos");
+			cbbIdentcdgCategoria.addItem("Transporte");
+			cbbIdentcdgCategoria.addItem("Transportes");
+			cbbIdentcdgCategoria.addItem("Vegetação");
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbIdentcdgCategoria.setSelectedItem(opcaoSelecionada);
+		}
+	}
+
+	private void opcoesIdentcdgMunicipio(String opcaoSelecionada) throws Exception {
+		if (cbbIdentcdgMunicipio.getItemCount() == 0) {
+			for (Municipio municipio : cadastroServico.obterMunicipio(null, null)) {
+				cbbIdentcdgMunicipio.addItem(municipio.getNome());
+			}
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbIdentcdgMunicipio.setSelectedItem(opcaoSelecionada);
+		}
+	}
+
+	private void opcoesInfadicCamadaInf(String opcaoSelecionada) {
+		if (cbbInfadicCamadaInf.getItemCount() == 0) {
+			cbbInfadicCamadaInf.addItem("Energia e Comunicação");
+			cbbInfadicCamadaInf.addItem("Geodésica/Topográfica");
+			cbbInfadicCamadaInf.addItem("Hidrografia");
+			cbbInfadicCamadaInf.addItem("Imóvel");
+			cbbInfadicCamadaInf.addItem("Limite Patrimônio Público Federal");
+			cbbInfadicCamadaInf.addItem("Limite Político Administrativo");
+			cbbInfadicCamadaInf.addItem("Mobiliário Urbano");
+			cbbInfadicCamadaInf.addItem("Pontos de Referência");
+			cbbInfadicCamadaInf.addItem("Relevo");
+			cbbInfadicCamadaInf.addItem("Sistema de Transporte");
+			cbbInfadicCamadaInf.addItem("Vegetação");
+		}
+
+		if (opcaoSelecionada != null && !opcaoSelecionada.equals("")) {
+			cbbInfadicCamadaInf.setSelectedItem(opcaoSelecionada);
+		}
+	}
+
 	public void abrirJanela() {
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		this.pack(); 
+		this.setSize(1500, 800);
+		// this.pack();
 		this.setVisible(true);
 		this.show();
 	}
 
 	private void obterArquivosAProcessar(String caminho, List<File> arquivosAProcessar) throws Exception {
+		String filtro = null;
+		if (cbbFiltro.getSelectedIndex() != 0) {
+			filtro = cbbFiltro.getSelectedItem().toString();
+		}
 		List<File> arquivos = MyUtils.obterArquivos(caminho, true, "tif");
 		for (File arquivo : arquivos) {
 			if (arquivo.isDirectory()) {
 				obterArquivosAProcessar(arquivo.getAbsolutePath(), arquivosAProcessar);
 			} else {
 				Validacao validacao = MyUtils.entidade(cadastroServico.obterValidacao(null, null, FilenameUtils.removeExtension(arquivo.getName()), null));
-				if (validacao == null || validacao.getStatus().equalsIgnoreCase("Não encontrado") || validacao.getStatus().equalsIgnoreCase("Revisar")) {
-					arquivosAProcessar.add(arquivo);
-				}
+				if (filtro == null && validacao != null) continue;
+				if (filtro != null && validacao != null && !validacao.getStatus().equalsIgnoreCase(filtro)) continue;
+				arquivosAProcessar.add(arquivo);
 			}
 		}
 	}
 
-	private void habilitarBotoes() {
+	private void habilitarObjetos(boolean habilitado) {
+		txtIdentDataCriacao.setEnabled(habilitado);
+		txtIdentResumo.setEnabled(habilitado);
+		cbbSisrefDatum.setEnabled(habilitado);
+		cbbSisrefProjecao.setEnabled(habilitado);
+		txtSisrefObservacao.setEnabled(habilitado);
+		cbbIdentcdgTipoReprEspacial.setEnabled(habilitado);
+		txtIdentcdgEscala.setEnabled(habilitado);
+		cbbIdentcdgCategoria.setEnabled(habilitado);
+		cbbIdentcdgMunicipio.setEnabled(habilitado);
+		txtQualidadeLinhagem.setEnabled(habilitado);
+		cbbInfadicCamadaInf.setEnabled(habilitado);
+		btnValidar.setEnabled(habilitado && arquivosAProcessar != null && arquivosAProcessar.size() > 0);
+		btnRedigitalizar.setEnabled(habilitado && arquivosAProcessar != null && arquivosAProcessar.size() > 0);
+	}
+	
+	private void habilitarProximo() {
 		btnProximo.setEnabled(arquivosAProcessar != null && arquivosAProcessar.size() > indiceArquivo);
-		btnValidar.setEnabled(arquivosAProcessar != null && arquivosAProcessar.size() > 0);
-		btnRevisar.setEnabled(arquivosAProcessar != null && arquivosAProcessar.size() > 0);
 	}
 
 	private void processarArquivo() {
 		if (indiceArquivo >= arquivosAProcessar.size()) {
 			JOptionPane.showMessageDialog(null, "Não há mais arquivos a processar!");
+			habilitarObjetos(false);
 			return;
 		}
 		arquivoSendoProcessado = arquivosAProcessar.get(indiceArquivo);
@@ -227,67 +551,53 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		if (proc != null) {
 			proc.destroy();
 		}
-		habilitarBotoes();
 		try {
 			processarArquivo(arquivoSendoProcessado);
 		} catch (Exception e) {
-			logArea.setText("Erro ao processar o arquivo '" + arquivoSendoProcessado.getAbsolutePath() + "': \n\n" + e.getMessage());
+			JOptionPane.showMessageDialog(null, "Erro ao processar o arquivo '" + arquivoSendoProcessado.getAbsolutePath() + "': \n\n" + e.getMessage());
 		}
 	}
 
 	private void processarArquivo(File fileIn) throws Exception {
-		String html = "<h1><b><u>".concat("Arquivo:</u></b>").concat(" ").concat(fileIn.getAbsolutePath()).concat("</h1>");
+		lblNomeArquivo.setText("<html><h2><b><u>".concat("Arquivo (" + indiceArquivo + "/" + arquivosAProcessar.size() + "):</u></b>").concat(" ").concat(fileIn.getAbsolutePath()).concat("</h1></html>"));
 
-		Geoinformacao geo = MyUtils.entidade(cadastroServico.obterGeoinformacao(null, true, FilenameUtils.removeExtension(fileIn.getName())));
-
-		if (geo == null) {
-			html += "<p><font color='red'>".concat("Registro não encontrado na base de dados!").concat("</font></p>");
+		geoSendoProcessada = MyUtils.entidade(cadastroServico.obterGeoinformacao(null, true, FilenameUtils.removeExtension(fileIn.getName())));
+		habilitarProximo();
+		
+		if (geoSendoProcessada == null) {
+			lblIdentTituloProduto.setText("<html><b><font color='red'>Registro não encontrado na base de dados!</font></b></html>");
 			atualizarStatusArquivo(fileIn, "Não encontrado");
-			btnValidar.setEnabled(false);
-			btnRevisar.setEnabled(false);
+			habilitarObjetos(false);
+			geoSendoProcessada = new Geoinformacao();
 		} else {
-			html += "<h2>Identificação</h2>";
-			html += "<p>";
-			html += "<tt><b>Título do Produto:</b>".concat(" ").concat(geo.getIdentTituloProduto()).concat("</tt><br>");
-			html += "<tt><b>Data de Criação..:</b>".concat(" ").concat(geo.getIdentDataCriacao()).concat("</tt><br>");
-			html += "<tt><b>Resumo...........:</b>".concat(" ").concat(geo.getIdentResumo()).concat("</tt><br>");
-			html += "</p>";
-			html += "<br>";
-			html += "<h2>Sistema de Referência</h2>";
-			html += "<p>";
-			html += "<tt><b>Datum.....:</b>".concat(" ").concat(geo.getSisrefDatum()).concat("</tt><br>");
-			html += "<tt><b>Projeção..:</b>".concat(" ").concat(geo.getSisrefProjecao()).concat("</tt><br>");
-			if (!geo.getSisrefObservacao().equals("")) html += "<tt><b>Observação:</b>".concat(" ").concat(geo.getSisrefObservacao()).concat("</tt><br>");
-			html += "</p>";
-			html += "<br>";
-			html += "<h2>Identificação do CDG</h2>";
-			html += "<p>";
-			html += "<tt><b>Tipo Repr. Espacial:</b>".concat(" ").concat(geo.getIdentcdgTipoReprEspacial()).concat("</tt><br>");
-			html += "<tt><b>Escala.............:</b>".concat(" ").concat(geo.getIdentcdgEscala().trim().equals("") ? "Não informada" : geo.getIdentcdgEscala()).concat("</tt><br>");
-			html += "<tt><b>Categoria..........:</b>".concat(" ").concat(geo.getIdentcdgCategoria()).concat("</tt><br>");
-			html += "<tt><b>Município..........:</b>".concat(" ").concat(geo.getIdentcdgMunicipio()).concat("</tt><br>");
-			html += "</p>";
-			html += "<br>";
-			if (!geo.getQualidadeLinhagem().trim().equals("")) {
-				html += "<h2>Qualidade</h2>";
-				html += "<p>";
-				html += "<tt><b>Linhagem:</b>".concat(" ").concat(geo.getQualidadeLinhagem()).concat("</tt><br>");
-				html += "</p>";
-				html += "<br>";
-			}
-			if (!geo.getInfadicCamadaInf().trim().equals("")) {
-				html += "<h2>Informação Adicional</h2>";
-				html += "<p>";
-				html += "<tt><b>Camada de Informação:</b>".concat(" ").concat(geo.getInfadicCamadaInf()).concat("</tt><br>");
-				html += "</p>";
-				html += "<br>";
-			}
+			lblIdentTituloProduto.setText("<html><b>".concat(geoSendoProcessada.getIdentTituloProduto()).concat("</b></html>"));
 			abrirImagem(fileIn.getAbsolutePath());
+			habilitarObjetos(true);
 		}
 
-		logArea.setText(html);
+		txtIdentDataCriacao.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentDataCriacao()));
+		txtIdentResumo.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentResumo()));
+		opcoesSisrefDatum(MyUtils.emptyStringIfNull(geoSendoProcessada.getSisrefDatum()));
+		opcoesSisrefProjecao(MyUtils.emptyStringIfNull(geoSendoProcessada.getSisrefProjecao()));
+		txtSisrefObservacao.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getSisrefObservacao()));
+		opcoesIdentcdgTipoReprEspacial(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentcdgTipoReprEspacial()));
+		txtIdentcdgEscala.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentcdgEscala()));
+		opcoesIdentcdgCategoria(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentcdgCategoria()));
+		opcoesIdentcdgMunicipio(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentcdgMunicipio()));
+		txtQualidadeLinhagem.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getQualidadeLinhagem()));
+		opcoesInfadicCamadaInf(MyUtils.emptyStringIfNull(geoSendoProcessada.getInfadicCamadaInf()));
 	}
 
+	private boolean validarDados() {
+		try {
+			MyUtils.obterData(txtIdentDataCriacao.getText(), "dd/MM/yyyy");
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Não foi possível validar a Data de Criação do CDG: " + txtIdentDataCriacao.getText());
+			return false;
+		}
+		return true;
+	}
+	
 	private void atualizarStatusArquivo(File arquivo, String status) throws Exception {
 		String identTituloProduto = FilenameUtils.removeExtension(arquivo.getName());
 		Validacao validacao = MyUtils.entidade(cadastroServico.obterValidacao(null, null, identTituloProduto, null));
@@ -296,6 +606,19 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 			validacao.setIdentTituloProduto(identTituloProduto);
 			validacao.setNomeArquivo(arquivo.getAbsolutePath());
 			validacao.setStatus(status);
+			if (status.equalsIgnoreCase("Validar")) {
+				validacao.setIdentDataCriacao(validacao.atribuirValor(geoSendoProcessada.getIdentDataCriacao(), txtIdentDataCriacao.getText()));
+				validacao.setIdentResumo(validacao.atribuirValor(geoSendoProcessada.getIdentResumo(), txtIdentResumo.getText()));
+				validacao.setSisrefDatum(validacao.atribuirValor(geoSendoProcessada.getSisrefDatum(), cbbSisrefDatum.getSelectedItem().toString()));
+				validacao.setSisrefProjecao(validacao.atribuirValor(geoSendoProcessada.getSisrefProjecao(), cbbSisrefProjecao.getSelectedItem().toString()));
+				validacao.setSisrefObservacao(validacao.atribuirValor(geoSendoProcessada.getSisrefObservacao(), txtSisrefObservacao.getText()));
+				validacao.setIdentcdgTipoReprEspacial(validacao.atribuirValor(geoSendoProcessada.getIdentcdgTipoReprEspacial(), cbbIdentcdgTipoReprEspacial.getSelectedItem().toString()));
+				validacao.setIdentcdgEscala(validacao.atribuirValor(geoSendoProcessada.getIdentcdgEscala(), txtIdentcdgEscala.getText()));
+				validacao.setIdentcdgCategoria(validacao.atribuirValor(geoSendoProcessada.getIdentcdgCategoria(), cbbIdentcdgCategoria.getSelectedItem().toString()));
+				validacao.setIdentcdgMunicipio(validacao.atribuirValor(geoSendoProcessada.getIdentcdgMunicipio(), cbbIdentcdgMunicipio.getSelectedItem().toString()));
+				validacao.setQualidadeLinhagem(validacao.atribuirValor(geoSendoProcessada.getQualidadeLinhagem(), txtQualidadeLinhagem.getText()));
+				validacao.setInfadicCamadaInf(validacao.atribuirValor(geoSendoProcessada.getInfadicCamadaInf(), cbbInfadicCamadaInf.getSelectedItem().toString()));
+			}
 		} else {
 			if (!validacao.getNomeArquivo().equalsIgnoreCase(arquivo.getAbsolutePath())) {
 				JOptionPane.showMessageDialog(null, "ATENÇÃO: o produto '" + identTituloProduto + "' já está na base de dados e inconsistente:\n\n- Arquivo avaliado: " + 

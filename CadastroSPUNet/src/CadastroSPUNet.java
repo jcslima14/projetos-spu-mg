@@ -189,6 +189,17 @@ public class CadastroSPUNet extends JFrame {
 						 "  validacaoid integer primary key autoincrement not null," + 
 						 "  nomearquivo varchar NOT NULL," + 
 						 "  identtituloproduto varchar NOT NULL," + 
+						 "  identdatacriacao varchar NULL," + 
+						 "  identresumo varchar NULL," + 
+						 "  sisrefdatum varchar NULL," + 
+						 "  sisrefprojecao varchar NULL," + 
+						 "  sisrefobservacao varchar NULL," + 
+						 "  identcdgtiporeprespacial varchar NULL," + 
+						 "  identcdgescala varchar NULL," + 
+						 "  identcdgcategoria varchar NULL," + 
+						 "  identcdgmunicipio varchar NULL," + 
+						 "  qualidadelinhagem varchar NULL," + 
+						 "  infadiccamadainf varchar NULL," + 
 						 "  status varchar NOT NULL" + 
 						 ")";
 	
