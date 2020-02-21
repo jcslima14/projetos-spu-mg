@@ -14,6 +14,7 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Origem;
 
 @SuppressWarnings("serial")
 public class OrigemCadastro extends CadastroTemplate {

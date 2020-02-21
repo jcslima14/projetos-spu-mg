@@ -40,6 +40,12 @@ import org.openqa.selenium.support.ui.Wait;
 import framework.JPAUtils;
 import framework.MyUtils;
 import framework.SpringUtilities;
+import model.Assinante;
+import model.AssinanteTipoResposta;
+import model.Origem;
+import model.Parametro;
+import model.SolicitacaoResposta;
+import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class InclusaoDespachoSEI extends JInternalFrame {

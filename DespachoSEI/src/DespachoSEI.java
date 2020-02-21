@@ -17,6 +17,10 @@ import javax.swing.JOptionPane;
 
 import framework.JPAUtils;
 import framework.MyUtils;
+import model.Origem;
+import model.Parametro;
+import model.TipoImovel;
+import model.TipoProcesso;
 
 @SuppressWarnings("serial")
 public class DespachoSEI extends JFrame {

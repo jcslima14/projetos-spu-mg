@@ -15,6 +15,7 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.AssinanteTipoResposta;
 
 @SuppressWarnings("serial")
 public class AssinanteTipoDespachoCadastro extends CadastroTemplate {

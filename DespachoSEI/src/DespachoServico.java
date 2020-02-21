@@ -10,6 +10,19 @@ import javax.swing.JOptionPane;
 import framework.JPAUtils;
 import framework.MyComboBox;
 import framework.MyUtils;
+import model.Assinante;
+import model.AssinanteTipoResposta;
+import model.Destino;
+import model.Municipio;
+import model.MunicipioTipoResposta;
+import model.Origem;
+import model.Parametro;
+import model.Solicitacao;
+import model.SolicitacaoEnvio;
+import model.SolicitacaoResposta;
+import model.TipoImovel;
+import model.TipoProcesso;
+import model.TipoResposta;
 
 public class DespachoServico {
 	private EntityManager conexao;

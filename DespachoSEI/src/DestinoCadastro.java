@@ -15,6 +15,7 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Destino;
 
 @SuppressWarnings("serial")
 public class DestinoCadastro extends CadastroTemplate {

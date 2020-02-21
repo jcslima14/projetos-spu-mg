@@ -19,6 +19,10 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Assinante;
+import model.Municipio;
+import model.Origem;
+import model.Solicitacao;
 
 @SuppressWarnings("serial")
 public class SolicitacaoAnaliseConsulta extends CadastroTemplate {

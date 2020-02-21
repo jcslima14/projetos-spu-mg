@@ -14,6 +14,7 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.TipoImovel;
 
 @SuppressWarnings("serial")
 public class TipoImovelCadastro extends CadastroTemplate {

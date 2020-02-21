@@ -42,6 +42,10 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.MyUtils;
 import framework.SpringUtilities;
+import model.Origem;
+import model.Parametro;
+import model.Solicitacao;
+import model.TipoProcesso;
 
 @SuppressWarnings("serial")
 public class RespostaProcesso extends JInternalFrame {

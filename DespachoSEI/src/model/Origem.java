@@ -1,3 +1,4 @@
+package model;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,14 +14,14 @@ import framework.ItemComboBox;
 @Table(name = "origem")
 public class Origem implements ItemComboBox {
 	
-	static int SAPIENS_ID = 1;
-	static int SPUNET_ID = 2;
+	public static int SAPIENS_ID = 1;
+	public static int SPUNET_ID = 2;
 
-	static Origem SAPIENS = new Origem(SAPIENS_ID, "Sapiens");
-	static Origem SPUNET = new Origem(SPUNET_ID, "SPUNet");
+	public static Origem SAPIENS = new Origem(SAPIENS_ID, "Sapiens");
+	public static Origem SPUNET = new Origem(SPUNET_ID, "SPUNet");
 
 	@SuppressWarnings("serial")
-	static List<Origem> ORIGENS = new ArrayList<Origem>() {{ 
+	public static List<Origem> ORIGENS = new ArrayList<Origem>() {{ 
 		add(SAPIENS); 
 		add(SPUNET); 
 		}};
