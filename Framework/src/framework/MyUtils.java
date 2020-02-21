@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -13,8 +14,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -211,6 +214,9 @@ public class MyUtils {
 	public static boolean tabelaExiste(EntityManager conexao, String nomeTabela) {
 		boolean retorno = false;
 		String sql = "select * from sqlite_master sm where tbl_name = '" + nomeTabela + "'";
+		if(MyUtils.isPostgreSQL(conexao)) {
+			sql = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" + nomeTabela + "'";			
+		}		
 
 		try {
 			List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql);
@@ -334,6 +340,11 @@ public class MyUtils {
 		} else {
 			return false;
 		}
+	}
+	
+	public static boolean isPostgreSQL(EntityManager conexao) {
+		String driver = (String) conexao.getEntityManagerFactory().getProperties().get("javax.persistence.jdbc.driver");
+		return driver.contains("postgresql");
 	}
 
 	public static String chromeWebDriverPath() {

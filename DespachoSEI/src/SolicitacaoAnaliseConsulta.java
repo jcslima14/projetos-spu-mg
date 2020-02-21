@@ -188,7 +188,11 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append("	  , coalesce(s.coordenada, '') as coordenada ");
 		sql.append("	  , coalesce(s.area, '') as area ");
 		sql.append("	  , coalesce(s.numeroprocessosei, '') as numeroprocessosei ");
-		sql.append("	  , coalesce((select group_concat(pendencia, ', ') from ");
+		if(MyUtils.isPostgreSQL(conexao)) {
+			sql.append("	  , coalesce((select array_to_string(array_agg(pendencia), ', ') from ");
+		} else {
+			sql.append("	  , coalesce((select group_concat(pendencia, ', ') from ");			
+		}		
 		sql.append("	    	       (select 'Autor não informado' as pendencia ");
 		sql.append("	    	          from solicitacao s2 ");
 		sql.append("	    	         where s2.solicitacaoid = s.solicitacaoid ");
@@ -221,7 +225,11 @@ public class SolicitacaoAnaliseConsulta extends CadastroTemplate {
 		sql.append(" inner join tipoprocesso tp using (tipoprocessoid) ");
 		sql.append("  left join municipio m using (municipioid) ");
 		sql.append("  left join tiporesposta tr using (tiporespostaid) ");
-		sql.append("  left join destino d using (destinoid) ");
+		if(MyUtils.isPostgreSQL(conexao)) {
+			sql.append("  left join destino d ON d.destinoid = s.destinoid ");
+		} else {
+			sql.append("  left join destino d using (destinoid) ");			
+		}
 		sql.append("  left join tipoimovel ti using (tipoimovelid) ");
 		sql.append("  left join (select solicitacaoid, max(datahoramovimentacao) as datahoramovimentacao from solicitacaoenvio se group by 1) as ue using (solicitacaoid) ");
 		sql.append("  left join (select solicitacaoid, max(coalesce(datahoraresposta, '9999-12-31')) as datahoraresposta from solicitacaoresposta sr group by 1) as ur using (solicitacaoid) ");
