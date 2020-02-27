@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -14,10 +13,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +44,6 @@ import org.openqa.selenium.support.ui.Wait;
 
 import com.sun.rowset.CachedRowSetImpl;
 
-@SuppressWarnings("restriction")
 public class MyUtils {
 
 	public static boolean arquivoExiste(String arquivo) {
@@ -604,5 +600,23 @@ public class MyUtils {
 		}
 
 		return (retorno == null ? valorDefault : retorno);
+	}
+	
+	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by) throws InterruptedException {
+		return MyUtils.aguardarAteObterWebElement(webElementSuperior, by, 999); 		
+	}
+	
+	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by, int maxTentativas) throws InterruptedException {
+		WebElement webElement = null;
+		int tentativas = 0;
+		while(webElement == null && tentativas <= maxTentativas) {
+			tentativas++;
+			try {
+				webElement = webElementSuperior.findElement(by);				        							        				
+			} catch(StaleElementReferenceException e) {
+				TimeUnit.MILLISECONDS.sleep(300);
+			}				        			
+		}
+		return webElement;
 	}
 }

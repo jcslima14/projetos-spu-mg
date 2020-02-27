@@ -449,7 +449,10 @@ public class ImpressaoDespacho extends JInternalFrame {
 			StringBuilder sql = new StringBuilder("");
 			sql.append("update solicitacaoresposta "
 					 + "   set respostaimpressa = true "
-					 + "	 , datahoraimpressao = datetime('now', 'localtime') "
+					 + (MyUtils.isPostgreSQL(conexao)
+							 ? "	 , datahoraimpressao = now() "
+							 : "	 , datahoraimpressao = datetime('now', 'localtime') "
+					)
 					 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
 	
 			JPAUtils.executeUpdate(conexao, sql.toString());
