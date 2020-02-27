@@ -54,6 +54,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
 	private JTextArea logArea = new JTextArea(30, 100);
+	private boolean receberProcessoSemArquivo = false;
 
 	public RecepcaoProcesso(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -63,7 +64,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		setClosable(true);
 
 		this.despachoServico = new DespachoServico(conexao);
-		
+
 		cbbNavegador.addItem("Chrome");
 		cbbNavegador.addItem("Firefox");
 		cbbNavegador.setSelectedItem(despachoServico.obterConteudoParametro(Parametro.DEFAULT_BROWSER, "Firefox"));
@@ -148,6 +149,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
+		receberProcessoSemArquivo = despachoServico.obterConteudoParametro(Parametro.RECEBER_PROCESSO_SEM_ARQUIVO).equalsIgnoreCase("Sim");
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
 			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
@@ -383,6 +385,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		        		boolean arquivosOk = false;
 		        		String resultadoDownload = "";
+		        		int nTentativas = 0;
 
 		        		do {
 		        			String tituloJanelaAtual = driver.getWindowHandle();
@@ -400,13 +403,22 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        			
 			        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
 			        		arquivosOk = arquivosBaixadosERenomeados(logArea, pastaDeDownload, chaveBusca, numeroSemFormatacao, dataHora, isComplementacao);
-		        		} while (!arquivosOk);
+		        		} while (!arquivosOk && ++nTentativas < 3);
 
+		        		if (!arquivosOk && nTentativas >= 3) {
+		        			resultadoDownload = "Não foi possível realizar o download dos arquivos em até 3 tentativas.";
+	        				MyUtils.appendLogArea(logArea, resultadoDownload);
+		        		}
+		        		
 	        			// clica no botão fechar
 	        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
 	        			passarMouse.moveToElement(btnFechar).click().build().perform();
 
-		        		receberProcessoSapiens(numeroSemFormatacao, chaveBusca, autor, dataHora, resultadoDownload);
+	        			if (arquivosOk || receberProcessoSemArquivo) {
+	        				receberProcessoSapiens(numeroSemFormatacao, chaveBusca, autor, dataHora, resultadoDownload);
+	        			} else {
+	        				MyUtils.appendLogArea(logArea, "O processo não foi recebido porque excedeu o número de tentativas de download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens");
+	        			}
 	        		} else {
 			        	// se não encontrou a remessa ou a complementação documentos, grava log com esta informação
 	        			mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + (!encontrouRemessaDocumentos ? " - Remessa não encontrada" : "") + (!encontrouComplementacao ? " - Complementação não encontrada" : "") + " - Data/Hora: " + dataHora + "\n");
@@ -557,7 +569,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 				}
 			}
 			TimeUnit.SECONDS.sleep(1);
-		} while ((arquivoBaixado == null || !arquivoBaixado.exists()) && segundosDesdeUltimaAlteracao < 150);
+		} while ((arquivoBaixado == null || !arquivoBaixado.exists()) && segundosDesdeUltimaAlteracao < 30);
 
 		// se atingiu o tempo limite sem ter completado o download, retorna falso para que se tente baixar novamente os arquivos
 		if (arquivoBaixado == null || !arquivoBaixado.exists()) {
