@@ -322,33 +322,11 @@ public class RecepcaoProcesso extends JInternalFrame {
 			        		aguardarCargaListaDocumentos(wait5);
 			        		
 				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
-				        	
-				        	int tentativasAcharElementos = 10;
 				        	for (WebElement regDocumento : regDocumentos) {
 				        		// busca os dados a serem registrados
-				        		
-				        		WebElement webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[3]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}
-				        		String movimento = webElement.getText();
-				        		
-				        		webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[2]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}
-				        		String dataHoraDocumento = webElement.getText();
-				        		
-				        		webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[1]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}        						        		
-				        		Integer seqDocInicial = Integer.parseInt(webElement.getText().split(" ")[0]);
-				        		
-				        		
+				        		String movimento = regDocumento.findElement(By.xpath("./td[3]")).getText();
+				        		String dataHoraDocumento = regDocumento.findElement(By.xpath("./td[2]")).getText();
+				        		Integer seqDocInicial = Integer.parseInt(regDocumento.findElement(By.xpath("./td[1]")).getText().split(" ")[0]);
 				        		Integer seqDocFinal = null;
 				        		if (seqAnterior.equals(-1)) {
 				        			seqDocFinal = seqDocInicial.intValue() + regDocumento.findElements(By.xpath("./td[4]//i[@class = 'icon-link']")).size();
