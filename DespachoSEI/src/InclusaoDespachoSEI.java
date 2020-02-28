@@ -571,7 +571,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		StringBuilder sql = new StringBuilder("");
 		sql.append("update solicitacaoresposta "
 				 + "   set numerodocumentosei = '" + resposta.getNumeroDocumentoSEI() + "'"
-				 + "	 , datahoraresposta = datetime('now', 'localtime') "
+				 + (MyUtils.isPostgreSQL(conexao) 
+					? "	 , datahoraresposta = now() "
+					: "	 , datahoraresposta = datetime('now', 'localtime') "
+				)
 				 + "	 , numeroprocessosei = '" + resposta.getNumeroProcessoSEI() + "' "
 				 + "	 , respostaimpressa = " + (resposta.getTipoResposta().getImprimirResposta() ? "false" : "true")
 				 + "	 , blocoassinatura = '" + resposta.getBlocoAssinatura() + "' "

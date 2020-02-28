@@ -610,4 +610,22 @@ public class MyUtils {
 
 		return (retorno == null ? valorDefault : retorno);
 	}
+	
+	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by) throws InterruptedException {
+		return MyUtils.aguardarAteObterWebElement(webElementSuperior, by, 999); 		
+	}
+	
+	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by, int maxTentativas) throws InterruptedException {
+		WebElement webElement = null;
+		int tentativas = 0;
+		while(webElement == null && tentativas <= maxTentativas) {
+			tentativas++;
+			try {
+				webElement = webElementSuperior.findElement(by);				        							        				
+			} catch(StaleElementReferenceException e) {
+				TimeUnit.MILLISECONDS.sleep(300);
+			}				        			
+		}
+		return webElement;
+	}
 }
