@@ -141,14 +141,15 @@ public class ExtracaoDadosCIDI extends JInternalFrame {
 			driver = new FirefoxDriver(opcoes);
 		}
 
-        // acessando o endereço
-        driver.get("https://cidi.rffsa.gov.br/iv-login.php");
+		// acessando o endereço
+//        driver.get("https://cidi.rffsa.gov.br/iv-login.php");
+        driver.get("file:///C:/Users/90768116600/Downloads/ImoveisTransferidosSPU.html");
 
         Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
         		.withTimeout(Duration.ofSeconds(60))
         		.pollingEvery(Duration.ofSeconds(3))
         		.ignoring(NoSuchElementException.class);
-
+/*
         WebDriverWait waitUntil = new WebDriverWait(driver, 10);
 
         TimeUnit.MILLISECONDS.sleep(1000);
@@ -195,7 +196,7 @@ public class ExtracaoDadosCIDI extends JInternalFrame {
 
 		WebElement btnPesquisar = MyUtils.encontrarElemento(wait15, By.xpath("//input[@type = 'submit' and @value = 'Pesquisar']"));
 		btnPesquisar.click();
-
+*/
         MyUtils.appendLogArea(logArea, "Aguarde enquanto a lista de bens é carregada...");
 
 		do {
