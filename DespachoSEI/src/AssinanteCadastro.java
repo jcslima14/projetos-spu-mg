@@ -18,6 +18,7 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Assinante;
 
 @SuppressWarnings("serial")
 public class AssinanteCadastro extends CadastroTemplate {

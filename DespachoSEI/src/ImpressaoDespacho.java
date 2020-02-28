@@ -42,6 +42,10 @@ import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
+import model.Assinante;
+import model.Origem;
+import model.Parametro;
+import model.SolicitacaoResposta;
 
 @SuppressWarnings("serial")
 public class ImpressaoDespacho extends JInternalFrame {

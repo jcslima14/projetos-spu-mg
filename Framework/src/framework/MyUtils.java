@@ -210,6 +210,9 @@ public class MyUtils {
 	public static boolean tabelaExiste(EntityManager conexao, String nomeTabela) {
 		boolean retorno = false;
 		String sql = "select * from sqlite_master sm where tbl_name = '" + nomeTabela + "'";
+		if(MyUtils.isPostgreSQL(conexao)) {
+			sql = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" + nomeTabela + "'";			
+		}		
 
 		try {
 			List<Object[]> rs = JPAUtils.executeNativeQuery(conexao, sql);
@@ -342,6 +345,11 @@ public class MyUtils {
 		} else {
 			return false;
 		}
+	}
+	
+	public static boolean isPostgreSQL(EntityManager conexao) {
+		String driver = (String) conexao.getEntityManagerFactory().getProperties().get("javax.persistence.jdbc.driver");
+		return driver.contains("postgresql");
 	}
 
 	public static String chromeWebDriverPath() {

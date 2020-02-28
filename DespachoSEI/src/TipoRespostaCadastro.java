@@ -16,6 +16,8 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Origem;
+import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class TipoRespostaCadastro extends CadastroTemplate {

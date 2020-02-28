@@ -34,6 +34,10 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Municipio;
+import model.Origem;
+import model.Parametro;
+import model.SolicitacaoEnvio;
 
 @SuppressWarnings("serial")
 public class ProcessoRecebidoCadastro extends CadastroTemplate {

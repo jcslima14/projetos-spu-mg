@@ -46,6 +46,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.MyUtils;
 import framework.SpringUtilities;
+import model.Origem;
+import model.Parametro;
+import model.Solicitacao;
+import model.SolicitacaoEnvio;
+import model.TipoProcesso;
 
 @SuppressWarnings("serial")
 public class RecepcaoProcesso extends JInternalFrame {
@@ -569,7 +574,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 				}
 			}
 			TimeUnit.SECONDS.sleep(1);
-		} while ((arquivoBaixado == null || !arquivoBaixado.exists()) && segundosDesdeUltimaAlteracao < 30);
+		} while ((arquivoBaixado == null || !arquivoBaixado.exists()) && segundosDesdeUltimaAlteracao < 150);
 
 		// se atingiu o tempo limite sem ter completado o download, retorna falso para que se tente baixar novamente os arquivos
 		if (arquivoBaixado == null || !arquivoBaixado.exists()) {

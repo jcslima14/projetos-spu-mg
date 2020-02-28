@@ -32,6 +32,17 @@ import framework.MyComboBox;
 import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
+import model.Assinante;
+import model.Destino;
+import model.Municipio;
+import model.Origem;
+import model.Parametro;
+import model.Solicitacao;
+import model.SolicitacaoEnvio;
+import model.SolicitacaoResposta;
+import model.TipoImovel;
+import model.TipoProcesso;
+import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class ImportacaoPlanilha extends JInternalFrame {

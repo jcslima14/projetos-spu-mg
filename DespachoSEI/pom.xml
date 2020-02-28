@@ -45,6 +45,10 @@
   		<groupId>commons-io</groupId>
   		<artifactId>commons-io</artifactId>
   	</dependency>
+  	<dependency>
+	    <groupId>org.postgresql</groupId>
+	    <artifactId>postgresql</artifactId>
+	</dependency>
   </dependencies>
   <dependencyManagement>
   	<dependencies>
@@ -83,6 +87,11 @@
   			<artifactId>commons-io</artifactId>
   			<version>2.4</version>
   		</dependency>
+  		<dependency>
+		    <groupId>org.postgresql</groupId>
+		    <artifactId>postgresql</artifactId>
+		    <version>42.2.10</version>
+		</dependency>
   	</dependencies>
   </dependencyManagement>
 </project>

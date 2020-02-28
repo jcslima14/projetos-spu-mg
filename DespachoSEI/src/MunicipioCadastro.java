@@ -36,6 +36,10 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Destino;
+import model.Municipio;
+import model.Origem;
+import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class MunicipioCadastro extends CadastroTemplate {

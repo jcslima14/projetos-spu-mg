@@ -33,6 +33,16 @@ import framework.MyTableColumn;
 import framework.MyTableModel;
 import framework.MyTextField;
 import framework.MyUtils;
+import model.Assinante;
+import model.Destino;
+import model.Municipio;
+import model.Origem;
+import model.Solicitacao;
+import model.SolicitacaoEnvio;
+import model.SolicitacaoResposta;
+import model.TipoImovel;
+import model.TipoProcesso;
+import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class SolicitacaoCadastro extends CadastroController {

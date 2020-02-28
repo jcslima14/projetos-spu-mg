@@ -5,6 +5,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JTabbedPane;
 
 import framework.CadastroController;
+import model.Solicitacao;
 
 @SuppressWarnings("serial")
 public class SolicitacaoAnaliseCadastro extends JInternalFrame {
