@@ -151,6 +151,10 @@ public class RecepcaoProcesso extends JInternalFrame {
 	
 	private void recepcionarProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		String pastaDeDownload = MyUtils.entidade(despachoServico.obterParametro(Parametro.PASTA_DOWNLOAD_SAPIENS, null)).getConteudo();
+		if (!MyUtils.arquivoExiste(pastaDeDownload)) {
+			JOptionPane.showMessageDialog(null, "A pasta para download dos arquivos não existe: " + pastaDeDownload);
+			return;
+		}
 		boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
@@ -314,12 +318,16 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		        	if (!baixarTodoProcessoSapiens) {
 		        		Integer seqAnterior = -1;
+		        		int registroInicialEsperado = 1;
 
 			        	do {
 			        		MyUtils.esperarCarregamento(100, wait5, "//div[text() = 'Carregando...']");
+			        		// aguardar a lista de documentos ser carregada
+			        		MyUtils.encontrarElemento(wait60, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//b[contains(text(), '" + registroInicialEsperado + " à ')]"));
 	
 			        		// obter a quantidade de registros da tabela
 			        		aguardarCargaListaDocumentos(wait5);
+			        		int contLinha = 1;
 			        		
 				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
 				        	for (WebElement regDocumento : regDocumentos) {
@@ -359,6 +367,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 					        try {
 					        	WebElement btnProximaPagina = MyUtils.encontrarElemento(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//a[@data-qtip = 'Próxima Página' and not(contains(@class, 'x-item-disabled'))]"));
 					        	passarMouse.moveToElement(btnProximaPagina).click().build().perform();
+					        	registroInicialEsperado += 25;
 					        } catch (Exception e) {
 						        break;
 					        }
