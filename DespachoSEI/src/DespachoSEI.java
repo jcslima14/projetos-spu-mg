@@ -3,7 +3,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -24,9 +27,15 @@ import model.TipoProcesso;
 
 @SuppressWarnings("serial")
 public class DespachoSEI extends JFrame {
+	
+	private Properties configuracoes = null;
 
 	public DespachoSEI() {
+		
 		super("Respostas do SEI");
+		
+		carregarConfiguracoes();
+		
 
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();
@@ -257,10 +266,28 @@ public class DespachoSEI extends JFrame {
 		});
     }
 
+	private void carregarConfiguracoes() {
+		this.configuracoes = new Properties();
+		String arquivo = "application.properties";
+		InputStream inputStream = getClass().getClassLoader().getResourceAsStream(arquivo);
+		try {
+			if (inputStream != null) {
+				this.configuracoes.load(inputStream);
+			} else {
+				throw new FileNotFoundException("Arquivo de configurações '" + arquivo + "' não encontrado no classpath");
+			}			
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erro carregar arquivo de configurações. \n \n" + e.getMessage());
+			e.printStackTrace();
+		}
+		
+	}
+
 	private EntityManager obterConexaoEM() {
 		EntityManager conexao = null;
 		try {
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory("DespachoSEI");
+			String persistenceUnit = (String) this.configuracoes.get("persistence-unit");
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnit);
 			conexao = emf.createEntityManager();
 			criarTabelas(conexao);
 		} catch (Exception e1) {
