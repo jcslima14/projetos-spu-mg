@@ -225,10 +225,19 @@ public class MyUtils {
 		return retorno;
 	}
 
-	public static void appendLogArea(JTextArea logArea, String msg) {
-		System.out.println(msg);
+	public static void appendLogArea(JTextArea logArea, String msg, boolean adicionarDataHora, boolean logarNoConsole) {
+		if (adicionarDataHora) {
+			msg = formatarData(new Date(), "dd/MM/yyyy HH:mm:ss.SSS") + " - " + msg;
+		}
+		if (logarNoConsole) {
+			System.out.println(msg);
+		}
 		logArea.append(msg + "\n");
 		logArea.setCaretPosition(logArea.getDocument().getLength());
+	}
+
+	public static void appendLogArea(JTextArea logArea, String msg) {
+		appendLogArea(logArea, msg, false, true);
 	}
 
 	public static Integer idItemSelecionado(MyComboBox comboBox) {

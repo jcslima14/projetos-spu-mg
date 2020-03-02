@@ -21,6 +21,7 @@ public class Parametro {
 	public static int UNIDADE_PADRAO_SEI = 10;
 	public static int BAIXAR_TODO_PROCESSO_SAPIENS = 11;
 	public static int TEMPO_ESPERA = 12;
+	public static int RECEBER_PROCESSO_SEM_ARQUIVO = 13;
 
 	@SuppressWarnings("serial")
 	public static Map<Integer, String[]> DESCRICOES = new LinkedHashMap<Integer, String[]>() {{ 
@@ -36,6 +37,7 @@ public class Parametro {
 		put(UNIDADE_PADRAO_SEI, new String[] { "Unidade padrão ao acessar o SEI", "SPU-MG-NUSUC" });
 		put(BAIXAR_TODO_PROCESSO_SAPIENS, new String[] { "Baixar todo o processo do Sapiens", "Não" });
 		put(TEMPO_ESPERA, new String[] { "Tempo de espera para verificação (em segundos)", "0" });
+		put(RECEBER_PROCESSO_SEM_ARQUIVO, new String[] { "Receber processo do Sapiens sem arquivo baixado por excesso de tentativas", "Não" });
 	}};
 
 	public static String obterDescricao(int parametroId) {

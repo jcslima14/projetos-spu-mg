@@ -59,6 +59,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
 	private JTextArea logArea = new JTextArea(30, 100);
+	private boolean receberProcessoSemArquivo = false;
 
 	public RecepcaoProcesso(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -68,7 +69,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 		setClosable(true);
 
 		this.despachoServico = new DespachoServico(conexao);
-		
+
 		cbbNavegador.addItem("Chrome");
 		cbbNavegador.addItem("Firefox");
 		cbbNavegador.setSelectedItem(despachoServico.obterConteudoParametro(Parametro.DEFAULT_BROWSER, "Firefox"));
@@ -150,9 +151,14 @@ public class RecepcaoProcesso extends JInternalFrame {
 	
 	private void recepcionarProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		String pastaDeDownload = MyUtils.entidade(despachoServico.obterParametro(Parametro.PASTA_DOWNLOAD_SAPIENS, null)).getConteudo();
+		if (!MyUtils.arquivoExiste(pastaDeDownload)) {
+			JOptionPane.showMessageDialog(null, "A pasta para download dos arquivos não existe: " + pastaDeDownload);
+			return;
+		}
 		boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		WebDriver driver = null;
+		receberProcessoSemArquivo = despachoServico.obterConteudoParametro(Parametro.RECEBER_PROCESSO_SEM_ARQUIVO).equalsIgnoreCase("Sim");
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
 			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
@@ -312,41 +318,23 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		        	if (!baixarTodoProcessoSapiens) {
 		        		Integer seqAnterior = -1;
+		        		int registroInicialEsperado = 1;
 
 			        	do {
 			        		MyUtils.esperarCarregamento(100, wait5, "//div[text() = 'Carregando...']");
+			        		// aguardar a lista de documentos ser carregada
+			        		MyUtils.encontrarElemento(wait60, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//b[contains(text(), '" + registroInicialEsperado + " à ')]"));
 	
 			        		// obter a quantidade de registros da tabela
 			        		aguardarCargaListaDocumentos(wait5);
+			        		int contLinha = 1;
 			        		
 				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
-				        	
-				        	int tentativasAcharElementos = 10;
 				        	for (WebElement regDocumento : regDocumentos) {
 				        		// busca os dados a serem registrados
-				        		
-				        		WebElement webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[3]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}
-				        		String movimento = webElement.getText();
-				        		
-				        		webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[2]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}
-				        		String dataHoraDocumento = webElement.getText();
-				        		
-				        		webElement = MyUtils.aguardarAteObterWebElement(regDocumento, By.xpath("./td[1]"), 
-				        				tentativasAcharElementos);
-				        		if(webElement == null) {
-				        			continue;
-				        		}        						        		
-				        		Integer seqDocInicial = Integer.parseInt(webElement.getText().split(" ")[0]);
-				        		
-				        		
+				        		String movimento = regDocumento.findElement(By.xpath("./td[3]")).getText();
+				        		String dataHoraDocumento = regDocumento.findElement(By.xpath("./td[2]")).getText();
+				        		Integer seqDocInicial = Integer.parseInt(regDocumento.findElement(By.xpath("./td[1]")).getText().split(" ")[0]);
 				        		Integer seqDocFinal = null;
 				        		if (seqAnterior.equals(-1)) {
 				        			seqDocFinal = seqDocInicial.intValue() + regDocumento.findElements(By.xpath("./td[4]//i[@class = 'icon-link']")).size();
@@ -379,6 +367,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 					        try {
 					        	WebElement btnProximaPagina = MyUtils.encontrarElemento(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//a[@data-qtip = 'Próxima Página' and not(contains(@class, 'x-item-disabled'))]"));
 					        	passarMouse.moveToElement(btnProximaPagina).click().build().perform();
+					        	registroInicialEsperado += 25;
 					        } catch (Exception e) {
 						        break;
 					        }
@@ -410,6 +399,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 		        		boolean arquivosOk = false;
 		        		String resultadoDownload = "";
+		        		int nTentativas = 0;
 
 		        		do {
 		        			String tituloJanelaAtual = driver.getWindowHandle();
@@ -427,13 +417,22 @@ public class RecepcaoProcesso extends JInternalFrame {
 		        			
 			        		// após clicar nos links, renomear os arquivos e atualizar as informações para processamento final dos arquivos
 			        		arquivosOk = arquivosBaixadosERenomeados(logArea, pastaDeDownload, chaveBusca, numeroSemFormatacao, dataHora, isComplementacao);
-		        		} while (!arquivosOk);
+		        		} while (!arquivosOk && ++nTentativas < 3);
 
+		        		if (!arquivosOk && nTentativas >= 3) {
+		        			resultadoDownload = "Não foi possível realizar o download dos arquivos em até 3 tentativas.";
+	        				MyUtils.appendLogArea(logArea, resultadoDownload);
+		        		}
+		        		
 	        			// clica no botão fechar
 	        			WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[./span/span/span[text() = 'Fechar']]"));
 	        			passarMouse.moveToElement(btnFechar).click().build().perform();
 
-		        		receberProcessoSapiens(numeroSemFormatacao, chaveBusca, autor, dataHora, resultadoDownload);
+	        			if (arquivosOk || receberProcessoSemArquivo) {
+	        				receberProcessoSapiens(numeroSemFormatacao, chaveBusca, autor, dataHora, resultadoDownload);
+	        			} else {
+	        				MyUtils.appendLogArea(logArea, "O processo não foi recebido porque excedeu o número de tentativas de download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens");
+	        			}
 	        		} else {
 			        	// se não encontrou a remessa ou a complementação documentos, grava log com esta informação
 	        			mensagemNaoEncontrados.append("Processo: " + numeroProcessoJudicial + (!encontrouRemessaDocumentos ? " - Remessa não encontrada" : "") + (!encontrouComplementacao ? " - Complementação não encontrada" : "") + " - Data/Hora: " + dataHora + "\n");
