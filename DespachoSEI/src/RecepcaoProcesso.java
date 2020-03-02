@@ -327,7 +327,6 @@ public class RecepcaoProcesso extends JInternalFrame {
 	
 			        		// obter a quantidade de registros da tabela
 			        		aguardarCargaListaDocumentos(wait5);
-			        		int contLinha = 1;
 			        		
 				        	List<WebElement> regDocumentos = MyUtils.encontrarElementos(wait5, By.xpath("//fieldset[@id = 'dadosDocumentosFC']//table[contains(@class, 'x-grid-table')]/tbody/tr[./td[1][./div[contains(text(), ' (')]]]"));
 				        	for (WebElement regDocumento : regDocumentos) {
