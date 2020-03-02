@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd" version="2.1">
-    <!-- 
     <persistence-unit name="DespachoSEI" transaction-type="RESOURCE_LOCAL">
     	<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-    	<class>Assinante</class>
-    	<class>AssinanteTipoResposta</class>
-    	<class>Destino</class>
-    	<class>Municipio</class>
-    	<class>MunicipioTipoResposta</class>
-    	<class>Origem</class>
-    	<class>Parametro</class>
-    	<class>Solicitacao</class>
-    	<class>SolicitacaoEnvio</class>
-    	<class>SolicitacaoResposta</class>
-    	<class>TipoImovel</class>
-    	<class>TipoProcesso</class>
-    	<class>TipoResposta</class>
+    	<class>model.Assinante</class>
+    	<class>model.AssinanteTipoResposta</class>
+    	<class>model.Destino</class>
+    	<class>model.Municipio</class>
+    	<class>model.MunicipioTipoResposta</class>
+    	<class>model.Origem</class>
+    	<class>model.Parametro</class>
+    	<class>model.Solicitacao</class>
+    	<class>model.SolicitacaoEnvio</class>
+    	<class>model.SolicitacaoResposta</class>
+    	<class>model.TipoImovel</class>
+    	<class>model.TipoProcesso</class>
+    	<class>model.TipoResposta</class>
         <properties>
             <property name="hibernate.archive.autodetection" value="class" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.SQLiteDialect" />
@@ -25,25 +24,11 @@
             <property name="hibernate.connection.user" value="" />
             <property name="hibernate.connection.autocommit" value="true"/>
             <property name="hibernate.connection.url" value="jdbc:sqlite:DespachoSEI.db"/>
-		<!- <property name="hibernate.connection.url" value="jdbc:sqlite:L:\DIVERSOS\Ferramentas SPU\Despacho SEI\DespachoSEI.db"/> ->
+		<!-- <property name="hibernate.connection.url" value="jdbc:sqlite:L:\DIVERSOS\Ferramentas SPU\Despacho SEI\DespachoSEI.db"/> -->
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.flushMode" value="ALWAYS" />
             <property name="hibernate.cache.use_second_level_cache" value="false" />
             <property name="hibernate.cache.provider_class" value="org.hibernate.cache.NoCacheProvider" />
-        </properties>
-    </persistence-unit>
-    -->
-    
-	<persistence-unit name="DespachoSEI">
-    	<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-    	<properties>
-    		<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
-            <property name="hibernate.show_sql" value="true"/>
-            <property name="hibernate.flushMode" value="ALWAYS" />
-			<property name="hibernate.connection.url" value="jdbc:postgresql://localhost/usucapiao" />
-			<property name="hibernate.connection.user" value="sistemaspu" />
-			<property name="hibernate.connection.password" value="******" />
-			<property name="hibernate.connection.driver_class" value="org.postgresql.Driver" />
         </properties>
     </persistence-unit>
 </persistence>
