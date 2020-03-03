@@ -226,7 +226,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
 			btnGerarPDF.click();
 
-			aguardarCargaListaDocumentos(wait);
+			// encontra a quantidade de registros aptos a serem impressos
+			MyUtils.aguardarCargaListaDocumentos(wait, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(wait));
 
 			// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
 			WebElement btnDesmarcarTudo = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Selecionar Tudo']"));
@@ -320,7 +321,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 						MyUtils.esperarCarregamento(200, wait5, "//div[@id = 'divInfraAvisoFundo' and contains(@style, 'visibility: visible')]//span[@id = 'spnInfraAviso']");
 
-						aguardarCargaListaDocumentos(wait);
+						MyUtils.aguardarCargaListaDocumentos(wait, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(wait));
 
 						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 						chkSelecionarDocumento.click();
@@ -378,7 +379,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
 
 			// aguarda encontrar a linha que contém o sequencial igual à quantidade de registros lida acima
-			MyUtils.encontrarElemento(wait, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr/td[2][text() = '" + quantidadeRegistros + "']"));
+			MyUtils.aguardarCargaListaDocumentos(wait, "//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[./td]", Integer.parseInt(quantidadeRegistros));
 			
 			for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
 				WebElement chkSelecaoLinha = null;
@@ -420,6 +421,13 @@ public class ImpressaoDespacho extends JInternalFrame {
         driver.quit();
 	}
 
+	private int obterQuantidadeDocumentosEsperados(Wait<WebDriver> wait) {
+		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
+		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
+		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
+		return Integer.parseInt(quantidadeRegistros);
+	}
+	
 	private void aguardarCargaListaDocumentos(Wait<WebDriver> wait) throws InterruptedException {
 		// encontra a quantidade de registros aptos a serem impressos
 		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();

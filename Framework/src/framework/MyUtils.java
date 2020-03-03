@@ -628,4 +628,16 @@ public class MyUtils {
 		}
 		return webElement;
 	}
+
+	public static void aguardarCargaListaDocumentos(Wait<WebDriver> wait, String xpath, int quantRegistrosEsperados) throws InterruptedException {
+		// encontra a quantidade de registros aptos a serem impressos
+		do {
+			List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath(xpath));
+			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
+	}
 }
