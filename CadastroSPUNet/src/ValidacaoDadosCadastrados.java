@@ -1,5 +1,5 @@
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -9,6 +9,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
@@ -18,7 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -35,10 +35,6 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 	private JButton btnAbrirPasta = new JButton("Selecionar pasta");
 	private JLabel lblNomePasta = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblPasta = new JLabel("Pasta:", JLabel.TRAILING) {{ setLabelFor(filPasta); }};
-	private JFileChooser filAplicativo = new JFileChooser();
-	private JButton btnAbrirAplicativo = new JButton("Selecionar aplicativo");
-	private JLabel lblNomeAplicativo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
-	private JLabel lblAplicativo = new JLabel("Aplicativo:", JLabel.TRAILING) {{ setLabelFor(filAplicativo); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
 	private SPUNetServico cadastroServico;
@@ -51,6 +47,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 	private Geoinformacao geoSendoProcessada;
 	private JComboBox<String> cbbFiltro = new JComboBox<String>();
 	private JLabel lblFiltro = new JLabel("Filtro:", JLabel.TRAILING) {{ setLabelFor(cbbFiltro); }};
+	private Desktop dt = Desktop.getDesktop();
 
 	private JPanel painelCentral = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JLabel lblNomeArquivo = new JLabel("<html><h2>Arquivo:</h2></html>");
@@ -77,6 +74,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 	private JLabel lblQualidadeLinhagem = new JLabel("Linhagem") {{ setLabelFor(txtQualidadeLinhagem); }};
 	private JComboBox<String> cbbInfadicCamadaInf = new JComboBox<String>();
 	private JLabel lblInfadicCamadaInf = new JLabel("Camada de Informação") {{ setLabelFor(cbbInfadicCamadaInf); }};
+	private JCheckBox chkGeorreferenciavel = new JCheckBox("Georreferenciável?", false);
 
 	public ValidacaoDadosCadastrados(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -93,16 +91,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		this.conexao = conexao;
 		cadastroServico = new SPUNetServico(this.conexao);
 
-		lblNomeAplicativo.setText(MyUtils.obterConfiguracaoLocal("aplicativoimagem", ""));
-		lblNomeAplicativo.setPreferredSize(new Dimension(1000, 20));
-		lblNomeAplicativo.setSize(new Dimension(1000, 20));
-		lblNomeAplicativo.setMinimumSize(new Dimension(1000, 20));
-		lblNomeAplicativo.setAlignmentX(LEFT_ALIGNMENT);
-
-		filAplicativo.setFileFilter(new FileNameExtensionFilter("Aplicações (*.exe)", "exe"));
-
 		JPanel painelArquivo = new JPanel() {{ add(lblPasta); add(btnAbrirPasta); }};
-		JPanel painelAplicativo = new JPanel() {{ add(lblAplicativo); add(btnAbrirAplicativo); }};
 
 		JPanel painelCentralPai = new JPanel();
 		painelCentral.setAlignmentX(LEFT_ALIGNMENT);
@@ -193,7 +182,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		painelCentral.add(lblInfadicCamadaInf);
 		painelCentral.add(cbbInfadicCamadaInf);
 		painelCentral.add(new JPanel());
-		painelCentral.add(new JPanel());
+		painelCentral.add(chkGeorreferenciavel);
 		painelCentral.add(new JPanel());
 
 		SpringUtilities.makeCompactGrid(painelCentral,
@@ -209,8 +198,6 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		}
 		painelDados.add(painelArquivo);
 		painelDados.add(lblNomePasta);
-		painelDados.add(painelAplicativo);
-		painelDados.add(lblNomeAplicativo);
 		painelDados.add(lblFiltro);
 		painelDados.add(cbbFiltro);
 		painelDados.add(btnProcessar); 
@@ -219,7 +206,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		JPanel painelAcoes = new JPanel() {{ add(btnProximo); add(btnValidar); add(btnRedigitalizar); }};
 
 		SpringUtilities.makeCompactGrid(painelDados,
-	            espacoEmDisco == null ? 4 : 5, 2, //rows, cols
+	            espacoEmDisco == null ? 3 : 4, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -270,10 +257,6 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 					mensagemErro += "Para iniciar o processamento é necessário selecionar uma pasta para ser processada. \n";
 				}
 
-				if (lblNomeAplicativo.getText().equals("")) {
-					mensagemErro += "Para iniciar o processamento é necessário selecionar um aplicativo de leitura de imagens. \n";
-				}
-
 				if (!mensagemErro.equals("")) {
 					JOptionPane.showMessageDialog(null, mensagemErro);
 					return;
@@ -317,19 +300,6 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 					if (filPasta.getSelectedFile().exists()) {
 						lblNomePasta.setText(filPasta.getSelectedFile().getAbsolutePath());
 						MyUtils.salvarConfiguracaoLocal("ultimapastavalidacao", lblNomePasta.getText(), null);
-					}
-				}
-			}
-		});
-
-		btnAbrirAplicativo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				int retorno = filAplicativo.showOpenDialog(ValidacaoDadosCadastrados.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filAplicativo.getSelectedFile().exists()) {
-						lblNomeAplicativo.setText(filAplicativo.getSelectedFile().getAbsolutePath());
-						MyUtils.salvarConfiguracaoLocal("aplicativoimagem", lblNomeAplicativo.getText(), null);
 					}
 				}
 			}
@@ -507,7 +477,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		if (cbbFiltro.getSelectedIndex() != 0) {
 			filtro = cbbFiltro.getSelectedItem().toString();
 		}
-		List<File> arquivos = MyUtils.obterArquivos(caminho, true, "tif");
+		List<File> arquivos = MyUtils.obterArquivos(caminho, true, "tif", "tiff");
 		for (File arquivo : arquivos) {
 			if (arquivo.isDirectory()) {
 				obterArquivosAProcessar(arquivo.getAbsolutePath(), arquivosAProcessar);
@@ -532,6 +502,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		cbbIdentcdgMunicipio.setEnabled(habilitado);
 		txtQualidadeLinhagem.setEnabled(habilitado);
 		cbbInfadicCamadaInf.setEnabled(habilitado);
+		chkGeorreferenciavel.setEnabled(habilitado);
 		btnValidar.setEnabled(habilitado && arquivosAProcessar != null && arquivosAProcessar.size() > 0);
 		btnRedigitalizar.setEnabled(habilitado && arquivosAProcessar != null && arquivosAProcessar.size() > 0);
 	}
@@ -586,6 +557,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		opcoesIdentcdgMunicipio(MyUtils.emptyStringIfNull(geoSendoProcessada.getIdentcdgMunicipio()));
 		txtQualidadeLinhagem.setText(MyUtils.emptyStringIfNull(geoSendoProcessada.getQualidadeLinhagem()));
 		opcoesInfadicCamadaInf(MyUtils.emptyStringIfNull(geoSendoProcessada.getInfadicCamadaInf()));
+		chkGeorreferenciavel.setSelected(false);
 	}
 
 	private boolean validarDados() {
@@ -618,6 +590,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 				validacao.setIdentcdgMunicipio(validacao.atribuirValor(geoSendoProcessada.getIdentcdgMunicipio(), cbbIdentcdgMunicipio.getSelectedItem().toString()));
 				validacao.setQualidadeLinhagem(validacao.atribuirValor(geoSendoProcessada.getQualidadeLinhagem(), txtQualidadeLinhagem.getText()));
 				validacao.setInfadicCamadaInf(validacao.atribuirValor(geoSendoProcessada.getInfadicCamadaInf(), cbbInfadicCamadaInf.getSelectedItem().toString()));
+				validacao.setGeorreferenciavel(chkGeorreferenciavel.isSelected());
 			}
 		} else {
 			if (!validacao.getNomeArquivo().equalsIgnoreCase(arquivo.getAbsolutePath())) {
@@ -630,10 +603,22 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 		cadastroServico.gravarEntidade(validacao);
 	}
 	
+//	private void abrirImagem(String arquivo) throws Exception {
+//	    String [] commands = {
+//	        "cmd.exe" , "/c", "start" , "\"DummyTitle\"", "\"" + arquivo + "\""
+//	    };
+//	    proc = Runtime.getRuntime().exec(commands);
+//	}
+	
 	private void abrirImagem(String arquivo) throws Exception {
-		String cmd = lblNomeAplicativo.getText() + " \"" + arquivo + "\"";
-
-		Runtime run = Runtime.getRuntime();
-		proc = run.exec(cmd);
+		File f = new File(arquivo);
+		dt.open(f);
 	}
+	
+//	private void abrirImagem_(String arquivo) throws Exception {
+//		String cmd = lblNomeAplicativo.getText() + " \"" + arquivo + "\"";
+//
+//		Runtime run = Runtime.getRuntime();
+//		proc = run.exec(cmd);
+//	}
 }

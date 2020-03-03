@@ -37,6 +37,8 @@ public class Validacao {
 	private String qualidadeLinhagem;
 	
 	private String infadicCamadaInf; 
+
+	private Boolean georreferenciavel;
 	
 	private String status;
 
@@ -150,6 +152,14 @@ public class Validacao {
 
 	public void setInfadicCamadaInf(String infadicCamadaInf) {
 		this.infadicCamadaInf = infadicCamadaInf;
+	}
+
+	public Boolean getGeorreferenciavel() {
+		return georreferenciavel;
+	}
+
+	public void setGeorreferenciavel(Boolean georreferenciavel) {
+		this.georreferenciavel = georreferenciavel;
 	}
 
 	public String getStatus() {

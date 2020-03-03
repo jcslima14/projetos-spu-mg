@@ -200,7 +200,8 @@ public class CadastroSPUNet extends JFrame {
 						 "  identcdgmunicipio varchar NULL," + 
 						 "  qualidadelinhagem varchar NULL," + 
 						 "  infadiccamadainf varchar NULL," + 
-						 "  status varchar NOT NULL" + 
+						 "  status varchar NOT NULL," +
+						 "  georreferenciavel boolean NULL" +
 						 ")";
 	
 			JPAUtils.executeUpdate(conexao, sql);
