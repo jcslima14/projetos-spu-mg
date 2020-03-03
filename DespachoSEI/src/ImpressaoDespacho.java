@@ -428,22 +428,6 @@ public class ImpressaoDespacho extends JInternalFrame {
 		return Integer.parseInt(quantidadeRegistros);
 	}
 	
-	private void aguardarCargaListaDocumentos(Wait<WebDriver> wait) throws InterruptedException {
-		// encontra a quantidade de registros aptos a serem impressos
-		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
-		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
-		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
-
-		do {
-			List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]"));
-			if (linhasAptas != null && linhasAptas.size() == Integer.parseInt(quantidadeRegistros)) {
-				break;
-			} else {
-				TimeUnit.SECONDS.sleep(1);
-			}
-		} while (true);
-	}
-
 	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) throws Exception {
 		MyUtils.apagarArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
 	}
