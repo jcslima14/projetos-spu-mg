@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 							try {
 								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()));
 							} catch (Exception e) {
+								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
 								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
 								e.printStackTrace();
 							}
@@ -136,7 +138,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         WebDriver driver = new ChromeDriver();
 
         // obter os dados do superior assinante
-		superior = despachoServico.obterAssinante(null, null, true, true).iterator().next();
+		Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
+		
+		if(!assinanteIterator.hasNext()) {
+			throw new Exception("Nenhum assinante superior cadastrado.");
+		}
+		
+		 superior = assinanteIterator.next();
 		
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
