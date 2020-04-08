@@ -144,7 +144,7 @@ public class RespostaProcesso extends JInternalFrame {
 
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + "\\" + sapiens.getDescricao());
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + sapiens.getDescricao());
         int tempoEsperaUpload = Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_ESPERA));
         
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
@@ -326,6 +326,9 @@ public class RespostaProcesso extends JInternalFrame {
 		
 					WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
 					passarMouse.moveToElement(btnFechar).click().build().perform();
+					
+					WebElement btnNao = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(@class, 'x-btn-inner') and text() = 'Não']]"));
+					passarMouse.moveToElement(btnNao).click().build().perform();
 		
 		        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
 		        } while (true);
@@ -341,7 +344,7 @@ public class RespostaProcesso extends JInternalFrame {
 				// mover o arquivo
 	        	TimeUnit.MILLISECONDS.sleep(50);
 		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
-		        String nomeArquivoBkp = pastaDespachosSalvos + "\\bkp\\" + arquivo.getName();
+		        String nomeArquivoBkp = pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName();
 		        
 		        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
 	        }

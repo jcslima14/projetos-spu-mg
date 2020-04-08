@@ -474,7 +474,7 @@ public class MyUtils {
 	}
 
 	public static void criarDiretorioBackup(String caminho) {
-		File diretorio = new File(caminho + "\\bkp");
+		File diretorio = new File(caminho + File.separator + "bkp");
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		}
