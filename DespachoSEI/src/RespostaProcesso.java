@@ -327,8 +327,13 @@ public class RespostaProcesso extends JInternalFrame {
 					WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
 					passarMouse.moveToElement(btnFechar).click().build().perform();
 					
-					WebElement btnNao = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(@class, 'x-btn-inner') and text() = 'Não']]"));
-					passarMouse.moveToElement(btnNao).click().build().perform();
+					try {
+						WebElement btnNao = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(@class, 'x-btn-inner') and text() = 'Não']]"));
+						passarMouse.moveToElement(btnNao).click().build().perform();
+					} catch (Exception e) {
+					}
+
+		        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
 		
 					WebElement btnAtualizar = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Atualizar']"));
 					passarMouse.moveToElement(btnAtualizar).click().build().perform();
