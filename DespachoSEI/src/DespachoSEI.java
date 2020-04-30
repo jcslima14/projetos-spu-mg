@@ -3,8 +3,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
@@ -35,7 +38,7 @@ public class DespachoSEI extends JFrame {
 		super("Respostas do SEI");
 		
 		carregarConfiguracoes();
-		
+		carregarConfiguracoesAdicionais();
 
         this.setLayout(new BorderLayout());
 		JDesktopPane desktop = new JDesktopPane();
@@ -280,14 +283,26 @@ public class DespachoSEI extends JFrame {
 			JOptionPane.showMessageDialog(null, "Erro carregar arquivo de configurações. \n \n" + e.getMessage());
 			e.printStackTrace();
 		}
-		
+	}
+
+	private void carregarConfiguracoesAdicionais() {
+		String arquivo = "DespachoSEI.properties";
+		if ((new File(arquivo)).exists()) {
+			Properties propAdicionais = MyUtils.obterPropriedades(arquivo);
+			this.configuracoes.putAll(propAdicionais);
+		}
 	}
 
 	private EntityManager obterConexaoEM() {
 		EntityManager conexao = null;
 		try {
+			String hibernateConnectionUrl = this.configuracoes.getProperty("hibernate.connection.url");
+			Map<String, Object> overrides = new LinkedHashMap<String, Object>();
+			if (hibernateConnectionUrl != null) {
+				overrides.put("hibernate.connection.url", hibernateConnectionUrl);
+			}
 			String persistenceUnit = (String) this.configuracoes.get("persistence-unit");
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnit);
+			EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnit, overrides);
 			conexao = emf.createEntityManager();
 			criarTabelas(conexao);
 		} catch (Exception e1) {
