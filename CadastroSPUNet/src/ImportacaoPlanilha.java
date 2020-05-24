@@ -149,12 +149,12 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		Sheet planilha = wb.getSheetAt(Integer.parseInt(txtPlanilha.getText()));
 		DataFormatter df = new DataFormatter();
 
-		for (int l = 2; l < planilha.getLastRowNum() - 1; l++) {
+		for (int l = 2; l <= planilha.getLastRowNum(); l++) {
 			Row linha = planilha.getRow(l);
 			String msgRetorno = (l+1) + ": ";
 			String situacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 0)).trim();
 
-			if (situacao.equalsIgnoreCase("ok")) {
+			if (situacao.trim().equalsIgnoreCase("ok")) {
 				Geoinformacao geo = new Geoinformacao();
 				geo.setCadastrado(false);
 				geo.setIdentFormatoProdutoCDG(MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha, 1)).trim());
@@ -204,8 +204,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			}
 
 			// if (msgRetorno.trim().length() > 20) {
+			if (!msgRetorno.contains("já está cadastrado na base de dados para catalogação")) {
 				MyUtils.appendLogArea(logArea, msgRetorno);
-			// }
+			 }
 		}
 		MyUtils.appendLogArea(logArea, "------------------------------------------------------------------------------------");
 		MyUtils.appendLogArea(logArea, "Fim de leitura do arquivo!");

@@ -355,16 +355,20 @@ public class MyUtils {
 	public static String chromeWebDriverPath() {
 		if (isMacOS()) {
 			return "../commons/resources/chromedriver/macos/chromedriver";
-		} else {
+		} else if (isWindows()) {
 			return "../commons/resources/chromedriver/windows/chromedriver.exe";
+		} else {
+			return "../commons/resources/chromedriver/linux/chromedriver";
 		}
 	}
 
 	public static String firefoxWebDriverPath() {
 		if (isMacOS()) {
 			return "../commons/resources/firefoxdriver/macos/geckodriver";
-		} else {
+		} else if (isWindows()) {
 			return "../commons/resources/firefoxdriver/windows/geckodriver.exe";
+		} else {
+			return "../commons/resources/firefoxdriver/linux/geckodriver";
 		}
 	}
 
