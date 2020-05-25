@@ -34,11 +34,14 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
 import framework.JPAUtils;
+import framework.MyComboBox;
+import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
 import model.Assinante;
@@ -58,6 +61,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
+	private MyComboBox cbbAssinante = new MyComboBox();
+	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
@@ -72,16 +77,20 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(conexao);
+		despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, true);
+		despachoServico.selecionarAssinantePadrao(cbbAssinante);
 
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
 		painelDados.add(txtSenha);
+		painelDados.add(lblAssinante);
+		painelDados.add(cbbAssinante);
 		painelDados.add(btnProcessar); 
 		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeGrid(painelDados,
-	            3, 2, //rows, cols
+	            4, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -98,7 +107,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()));
+								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));
 							} catch (Exception e) {
 								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
 								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
@@ -126,7 +135,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarRespostaSEI(String usuario, String senha) throws Exception {
+	private void gerarRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
 		String msgVldPastaAssinante = validarPastaProcessoIndividual();
         if (!msgVldPastaAssinante.equals("")) {
         	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
@@ -135,7 +144,9 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-        WebDriver driver = new ChromeDriver();
+		ChromeOptions opcoes = new ChromeOptions();
+		opcoes.addArguments("--ignore-certificate-errors");
+        WebDriver driver = new ChromeDriver(opcoes);
 
         // obter os dados do superior assinante
 		Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
@@ -179,7 +190,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         // selecionar a unidade default
         MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
         
-		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar();
+		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
 		for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
 			List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
 
@@ -593,10 +604,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		JPAUtils.executeUpdate(conexao, sql.toString());
 	}
 
-	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar() throws Exception {
+	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar(Integer assinanteId) throws Exception {
 		Map<String, List<SolicitacaoResposta>> retorno = new TreeMap<String, List<SolicitacaoResposta>>();
+		Assinante assinante = null;
+		if (assinanteId != null && assinanteId.intValue() > 0) {
+			assinante = new Assinante(assinanteId, null);
+		}
 
-		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAGerar();
+		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAGerar(assinante);
 		
 		for (SolicitacaoResposta resposta : respostas) {
 			String unidadeAberturaProcesso = resposta.getTipoResposta().getUnidadeAberturaProcesso();
@@ -628,10 +643,13 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	}
 	
 	private String validarPastaProcessoIndividual() throws Exception {
-		List<Assinante> assinantes = despachoServico.obterAssinante(null, null, false, true);
-		for (Assinante assinante : assinantes) {
-			if (assinante.getPastaArquivoProcesso().equals("") || !MyUtils.arquivoExiste(assinante.getPastaArquivoProcesso())) {
-				return "A pasta de arquivos de processos individuais para o assinante " + assinante.getNome() + " não existe ou não está configurada: " + assinante.getPastaArquivoProcesso() + "\nConfigure a pasta para o assinante e tente novamente.";
+		List<TipoResposta> respostas = despachoServico.obterTipoResposta(null, null, Boolean.TRUE);
+		if (respostas != null && respostas.size() > 0) {
+			List<Assinante> assinantes = despachoServico.obterAssinante(null, null, false, true);
+			for (Assinante assinante : assinantes) {
+				if (assinante.getPastaArquivoProcesso().equals("") || !MyUtils.arquivoExiste(assinante.getPastaArquivoProcesso())) {
+					return "A pasta de arquivos de processos individuais para o assinante " + assinante.getNome() + " não existe ou não está configurada: " + assinante.getPastaArquivoProcesso() + "\nConfigure a pasta para o assinante e tente novamente.";
+				}
 			}
 		}
 		return "";

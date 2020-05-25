@@ -66,7 +66,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 		AssinanteTipoResposta entidade = new AssinanteTipoResposta();
 		entidade.setAssinanteTipoRespostaId(txtAssinanteTipoRespostaId.getTextAsInteger());
 		entidade.setAssinante(MyUtils.entidade(despachoServico.obterAssinante(MyUtils.idItemSelecionado(cbbAssinante), null, null, null)));
-		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null, null)));
 		entidade.setBlocoAssinatura(txtBlocoAssinatura.getText());
 		JPAUtils.persistir(conexao, entidade);
 	}

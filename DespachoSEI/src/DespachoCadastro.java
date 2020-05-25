@@ -225,7 +225,7 @@ public class DespachoCadastro extends CadastroTemplate {
 		solicitacao = despachoServico.salvarSolicitacao(solicitacao);
 
 		entidade.setSolicitacao(solicitacao);
-		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null, null)));
 		entidade.setAssinante(MyUtils.entidade(despachoServico.obterAssinante(MyUtils.idItemSelecionado(cbbAssinante), null, null, null)));
 		entidade.setRespostaImpressa(chkRespostaImpressa.isSelected());
 		entidade.setRespostaNoBlocoAssinatura(chkRespostaNoBlocoAssinatura.isSelected());

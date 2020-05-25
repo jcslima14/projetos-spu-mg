@@ -437,7 +437,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		}
 
 		public void salvarRegistro() throws Exception {
-			TipoResposta tipoResposta = MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null));
+			TipoResposta tipoResposta = MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null, null));
 			Assinante assinante = MyUtils.entidade(despachoServico.obterAssinante(MyUtils.idItemSelecionado(cbbAssinante), null, null, null));
 			SolicitacaoResposta entidade;
 			

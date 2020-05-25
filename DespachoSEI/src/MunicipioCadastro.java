@@ -244,7 +244,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 		Municipio municipio = new Municipio(txtMunicipioId.getTextAsInteger(), txtNome.getText(), 
 				MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipioComarca), null)), 
 				MyUtils.entidade(despachoServico.obterDestino(MyUtils.idItemSelecionado(cbbDestino), null, null, null, null, null)),
-				MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+				MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null, null)));
 
 		salvarMunicipio(municipio);
 	}

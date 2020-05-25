@@ -124,7 +124,7 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	public void prepararParaEdicao() {
 		txtTipoRespostaId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 		try {
-			TipoResposta entidade = despachoServico.obterTipoResposta(Integer.parseInt(txtTipoRespostaId.getText()), null).iterator().next();
+			TipoResposta entidade = despachoServico.obterTipoResposta(Integer.parseInt(txtTipoRespostaId.getText()), null, null).iterator().next();
 
 			txtDescricao.setText(entidade.getDescricao());
 			txtTipoDocumento.setText(entidade.getTipoDocumento());
@@ -143,7 +143,7 @@ public class TipoRespostaCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterTipoResposta(null, null), "tipoRespostaId", "descricao", "tipoDocumento", "numeroDocumentoModelo", 
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(despachoServico.obterTipoResposta(null, null, null), "tipoRespostaId", "descricao", "tipoDocumento", "numeroDocumentoModelo", 
 				"gerarProcessoIndividualAsString", "unidadeAberturaProcesso", "tipoProcesso", "imprimirRespostaAsString", "quantidadeAssinaturas", "origem.descricao", "respostaSPUNet", "complementoSPUNet"));
 		return tm;
 	}

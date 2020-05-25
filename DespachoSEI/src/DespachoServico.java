@@ -137,8 +137,8 @@ public class DespachoServico {
 		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
-	public List<SolicitacaoResposta> obterRespostasAGerar() throws Exception {
-		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, false, null, null, null, null, true, false, false);
+	public List<SolicitacaoResposta> obterRespostasAGerar(Assinante assinante) throws Exception {
+		List<SolicitacaoResposta> respostas = obterSolicitacaoResposta(null, null, false, null, assinante, null, null, true, false, false);
 		return  respostas;
 	}
 
@@ -368,11 +368,11 @@ public class DespachoServico {
 		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
 	}
 
-	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao) throws Exception {
-		return obterTipoResposta(tipoRespostaId, descricao, null, false);
+	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Boolean gerarProcessoIndividual) throws Exception {
+		return obterTipoResposta(tipoRespostaId, descricao, gerarProcessoIndividual, null, false);
 	}
 
-	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Origem origem, boolean incluirSemOrigem) throws Exception {
+	public List<TipoResposta> obterTipoResposta(Integer tipoRespostaId, String descricao, Boolean gerarProcessoIndividual, Origem origem, boolean incluirSemOrigem) throws Exception {
 		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
 		StringBuilder sql = new StringBuilder("");
 		sql.append("select tr from TipoResposta tr ");
@@ -385,6 +385,10 @@ public class DespachoServico {
 			if (descricao != null) {
 				sql.append(" and tr.descricao like :descricao");
 				parametros.put("descricao", descricao);
+			}
+			if (gerarProcessoIndividual != null) {
+				sql.append(" and tr.gerarProcessoIndividual = :gerarProcessoIndividual");
+				parametros.put("gerarProcessoIndividual", gerarProcessoIndividual);
 			}
 			if (origem != null && origem.getOrigemId() != null) {
 				sql.append(" and (o.origemId = :origemId");
@@ -518,7 +522,7 @@ public class DespachoServico {
 	public void preencherOpcoesTipoResposta(MyComboBox cbbTipoResposta, List<TipoResposta> opcoesIniciais, Origem origem) {
 		try {
 			if (opcoesIniciais == null) opcoesIniciais = new ArrayList<TipoResposta>();
-			opcoesIniciais.addAll(obterTipoResposta(null, null, origem, true));
+			opcoesIniciais.addAll(obterTipoResposta(null, null, null, origem, true));
 			MyUtils.insereOpcoesComboBox(cbbTipoResposta, opcoesIniciais);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Erro ao carregar as opções de Tipo de Resposta: \n\n" + e.getMessage());

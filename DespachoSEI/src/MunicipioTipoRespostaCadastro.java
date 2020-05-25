@@ -88,7 +88,7 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 		entidade.setMunicipioTipoRespostaId(txtMunicipioTipoRespostaId.getTextAsInteger());
 		entidade.setMunicipio(MyUtils.entidade(despachoServico.obterMunicipio(MyUtils.idItemSelecionado(cbbMunicipio), null)));
 		entidade.setOrigem(MyUtils.entidade(despachoServico.obterOrigem(MyUtils.idItemSelecionado(cbbOrigem), null)));
-		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null)));
+		entidade.setTipoResposta(MyUtils.entidade(despachoServico.obterTipoResposta(MyUtils.idItemSelecionado(cbbTipoResposta), null, null)));
 		JPAUtils.persistir(conexao, entidade);
 	}
 
