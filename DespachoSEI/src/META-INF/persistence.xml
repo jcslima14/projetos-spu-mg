@@ -24,7 +24,7 @@
 			<property name="hibernate.connection.password" value="" />
 			<property name="hibernate.connection.user" value="" />
 			<property name="hibernate.connection.autocommit" value="true" />
-			<property name="hibernate.connection.url" value="jdbc:sqlite:DespachoSEI.db" />
+			<property name="hibernate.connection.url" value="jdbc:sqlite:./DespachoSEI.db" />
 			<!-- <property name="hibernate.connection.url" value="jdbc:sqlite:L:\DIVERSOS\Ferramentas SPU\Despacho SEI\DespachoSEI.db"/> -->
 			<property name="hibernate.show_sql" value="true" />
 			<property name="hibernate.flushMode" value="ALWAYS" />

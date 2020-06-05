@@ -136,7 +136,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	}
 
 	private void gerarRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
-		String msgVldPastaAssinante = validarPastaProcessoIndividual();
+		String msgVldPastaAssinante = validarPastaProcessoIndividual(assinanteId);
         if (!msgVldPastaAssinante.equals("")) {
         	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
         	return;
@@ -441,9 +441,15 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		WebElement txtDescricaoProcesso = MyUtils.encontrarElemento(wait, By.id("txtDescricao"));
 		txtDescricaoProcesso.sendKeys(resposta.getSolicitacao().getNumeroProcesso());
 
-		WebElement optNivelAcessoProcesso = MyUtils.encontrarElemento(wait, By.id("optPublico"));
+		WebElement optNivelAcessoProcesso = MyUtils.encontrarElemento(wait, By.id("optRestrito"));
 		optNivelAcessoProcesso.click();
+		TimeUnit.MILLISECONDS.sleep(200);
 		
+		Select cbxHipoteseLegal = new Select(MyUtils.encontrarElemento(wait, By.id("selHipoteseLegal")));
+		TimeUnit.MILLISECONDS.sleep(200);
+		cbxHipoteseLegal.selectByValue("34");
+		TimeUnit.MILLISECONDS.sleep(200);
+
 		WebElement btnSalvarProcesso = MyUtils.encontrarElemento(wait, By.id("btnSalvar"));
 		btnSalvarProcesso.click();
 
@@ -642,10 +648,10 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		return Arrays.asList(diretorio.listFiles(filtro));
 	}
 	
-	private String validarPastaProcessoIndividual() throws Exception {
+	private String validarPastaProcessoIndividual(Integer assinanteId) throws Exception {
 		List<TipoResposta> respostas = despachoServico.obterTipoResposta(null, null, Boolean.TRUE);
 		if (respostas != null && respostas.size() > 0) {
-			List<Assinante> assinantes = despachoServico.obterAssinante(null, null, false, true);
+			List<Assinante> assinantes = despachoServico.obterAssinante(assinanteId == null || assinanteId.intValue() == 0 ? null : assinanteId, null, false, true);
 			for (Assinante assinante : assinantes) {
 				if (assinante.getPastaArquivoProcesso().equals("") || !MyUtils.arquivoExiste(assinante.getPastaArquivoProcesso())) {
 					return "A pasta de arquivos de processos individuais para o assinante " + assinante.getNome() + " não existe ou não está configurada: " + assinante.getPastaArquivoProcesso() + "\nConfigure a pasta para o assinante e tente novamente.";
