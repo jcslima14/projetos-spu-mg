@@ -381,7 +381,7 @@ public class RespostaProcesso extends JInternalFrame {
         	}
 
 	        // determina o tipo de filtro de busca
-        	String textoBotaoBusca = (chaveBusca.equals(numeroProcesso) ? "Processo Judicial" : "NUP");
+        	String textoBotaoBusca = (chaveBusca.length() != 17 ? "Processo Judicial" : "NUP");
         	
         	if (retorno.get(textoBotaoBusca) == null) retorno.put(textoBotaoBusca, new ArrayList<Object[]>());
         	retorno.get(textoBotaoBusca).add(new Object[] { chaveBusca, arquivo });

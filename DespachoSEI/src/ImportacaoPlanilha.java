@@ -193,18 +193,18 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			TipoProcesso tipoProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(1))).trim().toLowerCase().startsWith("f") ? TipoProcesso.FISICO : TipoProcesso.ELETRONICO;
 			String numeroProcessoOriginal = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(2))).trim();
 			String numeroProcesso = numeroProcessoOriginal.replaceAll("\\D+", "").trim();
-			String autor = MyUtils.obterValorCelula(linha.getCell(3));
+			String autor = MyUtils.obterValorCelula(linha.getCell(3)).trim();
 			String cartorio = "";
-			String endereco = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(5)));
-			String nomeMunicipio = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(6)));
-			String coordenada = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(7)));
+			String endereco = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(5))).trim();
+			String nomeMunicipio = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(6))).trim();
+			String coordenada = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(7))).trim();
 			coordenada = (coordenada.trim().length() <= 1 ? "" : coordenada);
-			String area = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(8)));
+			String area = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(8))).trim();
 			area = (area.trim().length() <= 1 ? "" : area);
-			String origemProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14)));
+			String origemProcesso = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14))).trim();
 			String chaveBusca = (tipoProcesso.getTipoProcessoId().equals(TipoProcesso.FISICO_ID) || origemProcesso.equalsIgnoreCase("judicial") ? "" : MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).toUpperCase().replaceAll("[^A-Z0-9]", "").trim());
-			String tipoResposta = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(15)));
-			String observacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(17)));
+			String tipoResposta = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(15))).trim();
+			String observacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(17))).trim();
 			observacao = (observacao.trim().length() <= 1 ? "" : observacao);
 			String statusAtual = "";
 			if (linha.getCell(18) != null) {
