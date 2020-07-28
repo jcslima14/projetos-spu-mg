@@ -313,7 +313,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
 						btnGerarDocumento.click();
 	
-						String nomeArquivoPasta = pastaRespostasImpressas + "\\" + respostaAImprimir.getSolicitacao().getOrigem().getDescricao() + "\\" + nomeArquivoFinal + ".pdf";
+						String nomeArquivoPasta = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao() + "\\" + nomeArquivoFinal + ".pdf";
 						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, nomeArquivoPasta);
 	
 						// atualiza o indicativo de que o documento foi impresso
@@ -429,11 +429,11 @@ public class ImpressaoDespacho extends JInternalFrame {
 	}
 	
 	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) throws Exception {
-		MyUtils.apagarArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
+		MyUtils.apagarArquivo(diretorioDespachos + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
 	}
 
 	private void renomearArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI, String arquivoRenomeado) throws Exception {
-		MyUtils.renomearArquivo(diretorioDespachos + "\\" + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 300, false);
+		MyUtils.renomearArquivo(diretorioDespachos + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 300, false);
 	}
 
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {
@@ -505,7 +505,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 
 		// cria as pastas das origens, caso elas não existam
 		for (Origem origem : despachoServico.obterOrigem(null, null)) {
-			String pastaOrigem = pastaDownload + "\\" + origem.getDescricao();
+			String pastaOrigem = pastaDownload + File.separator + origem.getDescricao();
 
 			if (!MyUtils.arquivoExiste(pastaOrigem)) {
 				(new File(pastaOrigem)).mkdir();

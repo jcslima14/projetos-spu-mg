@@ -543,7 +543,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 	}
 	
 	private void preparaPastaProcesso(String caminho, String processo, String dataHora) throws Exception {
-		File diretorio = new File(caminho + "\\" + processo + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")");
+		File diretorio = new File(caminho + File.separator + processo + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")");
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		} else {
@@ -555,7 +555,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
 	private boolean arquivosBaixadosERenomeados(JTextArea logArea, String caminho, String nup, String numeroProcesso, String dataHora, boolean isComplementacao) throws Exception {
 		File arquivoBaixado = null;
-		String pastaProcesso = caminho + "\\" + numeroProcesso + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")";
+		String pastaProcesso = caminho + File.separator + numeroProcesso + " (" + MyUtils.formatarData(MyUtils.obterData(dataHora, "dd-MM-yyyy HH:mm"), "yyyyMMdd_HHmm") + ")";
 		String ultimaChave = "";
 		int segundosDesdeUltimaAlteracao = 0;
 		FilenameFilter filtro = new FilenameFilter() {
@@ -566,7 +566,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 			}
 		};
 
-		MyUtils.appendLogArea(logArea, "- Baixando o arquivo " + caminho + "\\" + nup + ".pdf");
+		MyUtils.appendLogArea(logArea, "- Baixando o arquivo " + caminho + File.separator + nup + ".pdf");
 
 		do {
 			segundosDesdeUltimaAlteracao++;
@@ -591,7 +591,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 			return false;
 		}
 
-		if (arquivoBaixado.renameTo(new File(pastaProcesso + "\\" + numeroProcesso + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + ".pdf"))) {
+		if (arquivoBaixado.renameTo(new File(pastaProcesso + File.separator + numeroProcesso + (isComplementacao ? " --- COMPLEMENTAÇÃO ---" : "") + ".pdf"))) {
 			apagaPastaDeDownloads(caminho);
 		} else {
 			MyUtils.appendLogArea(logArea, "Ocorreu um erro ao renomear o arquivo. Será feita uma nova tentativa...");

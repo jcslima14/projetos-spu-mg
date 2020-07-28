@@ -477,8 +477,8 @@ public class MyUtils {
 		return retorno;
 	}
 
-	public static void criarDiretorioBackup(String caminho) {
-		File diretorio = new File(caminho + File.separator + "bkp");
+	public static void criarDiretorioBackup(String caminho, String subpasta) {
+		File diretorio = new File(caminho + File.separator + subpasta);
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		}
@@ -570,14 +570,14 @@ public class MyUtils {
 			// continua se o diretório existir
 			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
 				// adiciona o nome da pasta escondida de ferramentas SPU
-				arquivoPropriedades += "\\.ferramentasspu";
+				arquivoPropriedades += File.separator + ".ferramentasspu";
 				// se a pasta não existe, cria antes de continuar
 				if (!MyUtils.arquivoExiste(arquivoPropriedades)) {
 					(new File(arquivoPropriedades)).mkdir();
 				}
 
 				// verifica se o arquivo de propriedades existe
-				arquivoPropriedades += "\\ferramentasspu.properties";
+				arquivoPropriedades += File.separator + "ferramentasspu.properties";
 				Properties props = new Properties();
 				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
 					props = MyUtils.obterPropriedades(arquivoPropriedades);
@@ -599,11 +599,11 @@ public class MyUtils {
 			// continua se o diretório existir
 			if (MyUtils.arquivoExiste(arquivoPropriedades)) {
 				// adiciona o nome da pasta escondida de ferramentas SPU
-				arquivoPropriedades += "\\.ferramentasspu";
+				arquivoPropriedades += File.separator + ".ferramentasspu";
 				// continua se a pasta existe
 				if (MyUtils.arquivoExiste(arquivoPropriedades)) {
 					// verifica se o arquivo de propriedades existe
-					arquivoPropriedades += "\\ferramentasspu.properties";
+					arquivoPropriedades += File.separator + "ferramentasspu.properties";
 					if (MyUtils.arquivoExiste(arquivoPropriedades)) {
 						Properties props = MyUtils.obterPropriedades(arquivoPropriedades);
 						retorno = props.getProperty(propriedade);

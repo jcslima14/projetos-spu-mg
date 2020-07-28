@@ -53,6 +53,7 @@ public class RespostaProcesso extends JInternalFrame {
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
+	private boolean moverRespostaNaoEncontrada = false;
 
 	public RespostaProcesso(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -62,6 +63,7 @@ public class RespostaProcesso extends JInternalFrame {
 		setClosable(true);
 
 		despachoServico = new DespachoServico(conexao);
+		moverRespostaNaoEncontrada = despachoServico.obterConteudoParametro(Parametro.MOVER_RESPOSTAS_NAO_ENCONTRADAS).trim().equalsIgnoreCase("sim");
 		
 		cbbNavegador.addItem("Chrome");
 		cbbNavegador.addItem("Firefox");
@@ -286,7 +288,7 @@ public class RespostaProcesso extends JInternalFrame {
 						break;
 					}
 
-					if (!numeroProcessoJudicial.startsWith(numeroProcesso)) {
+					if (!numeroProcessoJudicial.trim().equals("") && !numeroProcessoJudicial.startsWith(numeroProcesso)) {
 						MyUtils.appendLogArea(logArea, "O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
 						inconsistente = true;
 						break;
@@ -345,16 +347,19 @@ public class RespostaProcesso extends JInternalFrame {
 		        	if (!encontrado) {
 						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
 		        	}
-
-		        	continue;
 		        }
-		        
-				// mover o arquivo
-	        	TimeUnit.MILLISECONDS.sleep(50);
-		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
-		        String nomeArquivoBkp = pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName();
-		        
-		        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
+
+		        if (!inconsistente) {
+		        	if (encontrado || moverRespostaNaoEncontrada) {
+						// mover o arquivo
+		        		String subpastaDestino = encontrado ? "bkp" : "nao_encontrado";
+			        	TimeUnit.MILLISECONDS.sleep(50);
+				        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, subpastaDestino);
+				        String nomeArquivoBkp = pastaDespachosSalvos + File.separator + subpastaDestino + File.separator + arquivo.getName();
+				        
+				        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
+		        	}
+		        }
 	        }
 
         	// ao terminar o tipo de filtro, dar um refresh na página para limpar os filtros e reiniciar o processo para o segundo tipo de filtro

@@ -142,7 +142,7 @@ public class RespostaSPUNet extends JInternalFrame {
 
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + "\\" + spunet.getDescricao());
+        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + spunet.getDescricao());
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
         	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem SPUNet (" + Origem.SPUNET_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
         	return;
@@ -329,14 +329,14 @@ public class RespostaSPUNet extends JInternalFrame {
 	            passarMouse.moveToElement(btnFechar);
 	            btnFechar.click();
 
+				// mover o arquivo
+		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, "bkp");
+				arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
+
 	            MyUtils.esperarCarregamento(2000, wait5, "//p[contains(text(), 'Carregando')]");
 	        } else {
 	        	MyUtils.appendLogArea(logArea, "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.");
 	        }
-
-			// mover o arquivo
-	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos);
-			arquivo.renameTo(new File(pastaDespachosSalvos + "\\bkp\\" + arquivo.getName()));
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
