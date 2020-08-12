@@ -35,6 +35,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
 import framework.JPAUtils;
@@ -155,6 +156,15 @@ public class ImpressaoDespacho extends JInternalFrame {
 				put("pdfjs.disabled", true); 
 				put("plugins.always_open_pdf_externally", true);
 				}});
+			
+			opcoes.addArguments("start-maximized"); // open Browser in maximized mode
+			opcoes.addArguments("disable-infobars"); // disabling infobars
+			opcoes.addArguments("--disable-extensions"); // disabling extensions
+			opcoes.addArguments("--disable-gpu"); // applicable to windows os only
+			opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+			opcoes.addArguments("--no-sandbox"); // Bypass OS security model
+			opcoes.addArguments("--ignore-certificate-errors");
+			
 			opcoes.addArguments("--disable-extensions");
 			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 	        driver = new ChromeDriver(opcoes);
@@ -200,6 +210,12 @@ public class ImpressaoDespacho extends JInternalFrame {
         // Find the text input element by its name
         WebElement weSenha = driver.findElement(By.id("pwdSenha"));
         weSenha.sendKeys(senha);
+
+        // selecionar a unidade do SEI
+        Select cbxOrgao = new Select(MyUtils.encontrarElemento(wait, By.id("selOrgao")));
+        cbxOrgao.selectByVisibleText(despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+        
+        TimeUnit.MILLISECONDS.sleep(1500);
 
         // Find the text input element by its name
         WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));

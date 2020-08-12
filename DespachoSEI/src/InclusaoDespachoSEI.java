@@ -145,6 +145,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 		ChromeOptions opcoes = new ChromeOptions();
+		
+		opcoes.addArguments("start-maximized"); // open Browser in maximized mode
+		opcoes.addArguments("disable-infobars"); // disabling infobars
+		opcoes.addArguments("--disable-extensions"); // disabling extensions
+		opcoes.addArguments("--disable-gpu"); // applicable to windows os only
+		opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+		opcoes.addArguments("--no-sandbox"); // Bypass OS security model
+
 		opcoes.addArguments("--ignore-certificate-errors");
         WebDriver driver = new ChromeDriver(opcoes);
 
@@ -155,7 +163,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 			throw new Exception("Nenhum assinante superior cadastrado.");
 		}
 		
-		 superior = assinanteIterator.next();
+		superior = assinanteIterator.next();
 		
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
@@ -179,6 +187,12 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         WebElement weSenha = driver.findElement(By.id("pwdSenha"));
         weSenha.sendKeys(senha);
 
+        // selecionar a unidade do SEI
+        Select cbxOrgao = new Select(MyUtils.encontrarElemento(wait, By.id("selOrgao")));
+        cbxOrgao.selectByVisibleText(despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+
+        TimeUnit.MILLISECONDS.sleep(1500);
+
         // Find the text input element by its name
         WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));
         botaoAcessar.click();
@@ -189,7 +203,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
         // selecionar a unidade default
         MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
-        
+
 		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
 		for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
 			List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
