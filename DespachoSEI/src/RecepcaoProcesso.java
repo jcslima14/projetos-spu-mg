@@ -161,6 +161,15 @@ public class RecepcaoProcesso extends JInternalFrame {
 		receberProcessoSemArquivo = despachoServico.obterConteudoParametro(Parametro.RECEBER_PROCESSO_SEM_ARQUIVO).equalsIgnoreCase("Sim");
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
+			opcoes.addArguments("start-maximized"); // open Browser in maximized mode
+			opcoes.addArguments("disable-infobars"); // disabling infobars
+			opcoes.addArguments("--disable-extensions"); // disabling extensions
+			opcoes.addArguments("--disable-gpu"); // applicable to windows os only
+			opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+			opcoes.addArguments("--no-sandbox"); // Bypass OS security model
+
+			opcoes.addArguments("--ignore-certificate-errors");
+
 			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
 				put("download.prompt_for_download", false); 
 				put("download.default_directory", pastaDeDownload); 
