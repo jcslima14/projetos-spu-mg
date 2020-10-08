@@ -203,6 +203,7 @@ public class RecepcaoProcesso extends JInternalFrame {
 
         // acessando o endereço
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
+        driver.manage().timeouts().implicitlyWait(Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_LIMITE_ESPERA)), TimeUnit.MINUTES);
         Actions passarMouse = new Actions(driver);
 
         Wait<WebDriver> wait60 = new FluentWait<WebDriver>(driver)
