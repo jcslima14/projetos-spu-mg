@@ -24,6 +24,7 @@ public class Parametro {
 	public static int RECEBER_PROCESSO_SEM_ARQUIVO = 13;
 	public static int MOVER_RESPOSTAS_NAO_ENCONTRADAS = 14;
 	public static int ORGAO_LOGIN_SEI = 15;
+	public static int TEMPO_LIMITE_ESPERA = 16;
 
 	@SuppressWarnings("serial")
 	public static Map<Integer, String[]> DESCRICOES = new LinkedHashMap<Integer, String[]>() {{ 
@@ -42,6 +43,7 @@ public class Parametro {
 		put(RECEBER_PROCESSO_SEM_ARQUIVO, new String[] { "Receber processo do Sapiens sem arquivo baixado por excesso de tentativas", "Não" });
 		put(MOVER_RESPOSTAS_NAO_ENCONTRADAS, new String[] { "Mover despachos de respostas não encontradas para subpasta específica", "Não" });
 		put(ORGAO_LOGIN_SEI, new String[] { "Órgão para login no SEI", "ME" });
+		put(TEMPO_LIMITE_ESPERA, new String[] { "Limite de tempo para espera de resposta do robô (em minutos)", "20" });
 	}};
 
 	public static String obterDescricao(int parametroId) {
