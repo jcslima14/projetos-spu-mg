@@ -286,15 +286,33 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 				driver.switchTo().window(tituloJanela);
 			}
 
-			// encontrar o iframe que contem o corpo do documento a ser editado
-			driver.switchTo().defaultContent();
-			// alterna para o frame de destinatário para substituir os dados
+			// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
 			driver.switchTo().frame(3);
-			// encontra o primeiro parágrafo e clica nele para mudar o foco para o elemento
 			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
 			TimeUnit.SECONDS.sleep(1);
 
-			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoes());
+			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCabecalho());
+
+			// alterna para o frame do corpo do documento para promover as substituições e clica no primeiro elemento p para mudar o foco
+			driver.switchTo().frame(4);
+			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
+			TimeUnit.SECONDS.sleep(1);
+
+			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCorpo());
+
+			/*
+
+<tr>
+	<td height="21">@municipio_imovel@</td>
+	<td>@rip_imovel@</td>
+	<td sdnum="1046;0;#" sdval="4763000145003">@rip_utilizacao@</td>
+	<td>@regime_utilizacao@</td>
+	<td>@endereco_imovel@</td>
+	<td sdnum="1046;0;#.##0,00;(#.##0,00)" sdval="218">@area_imovel@</td>
+</tr>
+
+			 */
+			
 			
 				// procura o botão salvar, conferindo que ele esteja habilitado
 				WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
@@ -612,9 +630,10 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		String enderecoDestinatario;
 		String complementoEnderecoDestinatario;
 		String emailDestinatario;
+		String vocativoDestinatario;
 		List<Imovel> listaImoveis = new ArrayList<Imovel>();
 
-		public Oficio(String ugResponsavel, String tratamentoDestinatario, String nomeDestinatario, String cargoDestinatario, String pessoaJuridica, String enderecoDestinatario, String complementoEnderecoDestinatario, String emailDestinatario) {
+		public Oficio(String ugResponsavel, String tratamentoDestinatario, String nomeDestinatario, String cargoDestinatario, String pessoaJuridica, String enderecoDestinatario, String complementoEnderecoDestinatario, String emailDestinatario, String vocativoDestinatario) {
 			this.ugResponsavel = ugResponsavel;
 			this.tratamentoDestinatario = tratamentoDestinatario;
 			this.nomeDestinatario = nomeDestinatario;
@@ -623,9 +642,10 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			this.enderecoDestinatario = enderecoDestinatario;
 			this.complementoEnderecoDestinatario = complementoEnderecoDestinatario;
 			this.emailDestinatario = emailDestinatario;
+			this.vocativoDestinatario = vocativoDestinatario;
 		}
-		
-		public Map<String, String> mapaSubstituicoes() {
+
+		public Map<String, String> mapaSubstituicoesCabecalho() {
 			Map<String, String> mapaSubstituicoes = new LinkedHashMap<String, String>();
 			
 			mapaSubstituicoes.put("@tratamento_destinatario@", this.tratamentoDestinatario);
@@ -635,6 +655,15 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			mapaSubstituicoes.put("@endereco_destinatario@", this.enderecoDestinatario);
 			mapaSubstituicoes.put("@complemento_endereco_destinatario@", this.complementoEnderecoDestinatario);
 			mapaSubstituicoes.put("@email_destinatario@", this.emailDestinatario);
+
+			return mapaSubstituicoes;
+		}
+
+		public Map<String, String> mapaSubstituicoesCorpo() {
+			Map<String, String> mapaSubstituicoes = new LinkedHashMap<String, String>();
+			
+			mapaSubstituicoes.put("@vocativo_destinatario@", this.tratamentoDestinatario);
+			mapaSubstituicoes.put("@ug_responavel@", this.ugResponsavel);
 
 			return mapaSubstituicoes;
 		}
@@ -672,19 +701,20 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(4))).trim(),
 						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(5))).trim(),
 						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(6))).trim(),
-						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(7))).trim()
+						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(7))).trim(),
+						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(8))).trim()
 						);
 				
 				retorno.put(chaveAtual, oficio);
 			}
 			
 			oficio.adicionaImovel(
-					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(8))).trim(), 
-					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(9))).trim(),
+					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(9))).trim(), 
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(10))).trim(),
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(11))).trim(),
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(12))).trim(),
-					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(13))).trim()
+					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(13))).trim(),
+					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14))).trim()
 					);
 			MyUtils.appendLogArea(logArea, "Lendo a linha " + (l+1) + "/" + (planilha.getLastRowNum()+1) + "...");
 			chaveAnterior = chaveAtual;
