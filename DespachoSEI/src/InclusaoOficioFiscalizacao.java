@@ -51,17 +51,17 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 	private JFileChooser filArquivo = new JFileChooser();
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
-	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
+	private JLabel lblNomeArquivo = new JLabel("C:\\Users\\Júlio Lima\\Downloads\\planilha_oficios.xlsx") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
-	private JTextField txtNumeroProcesso = new JTextField(15);
+	private JTextField txtNumeroProcesso = new JTextField("10154.138675/2019-49", 15);
 	private JLabel lblNumeroProcesso = new JLabel("Nº Processo SEI:") {{ setLabelFor(txtNumeroProcesso); }};
-	private JTextField txtNumeroDocumentoModelo = new JTextField(15);
+	private JTextField txtNumeroDocumentoModelo = new JTextField("11047332", 15);
 	private JLabel lblNumeroDocumentoModelo = new JLabel("Nº Documento Modelo:") {{ setLabelFor(txtNumeroDocumentoModelo); }};
-	private JTextField txtBlocoAssinatura = new JTextField(15);
+	private JTextField txtBlocoAssinatura = new JTextField("157322", 15);
 	private JLabel lblBlocoAssinatura = new JLabel("Nº Bloco Assinatura:") {{ setLabelFor(txtBlocoAssinatura); }};
-	private JTextField txtUsuario = new JTextField(15);
+	private JTextField txtUsuario = new JTextField("julio.lima", 15);
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
-	private JPasswordField txtSenha = new JPasswordField(15);
+	private JPasswordField txtSenha = new JPasswordField("astpuf.00", 15);
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
@@ -263,22 +263,28 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			driver.switchTo().frame(4);
 			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
 			TimeUnit.SECONDS.sleep(1);
-
-			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCorpo());
 			
 			// obtem a linha da tabela que possui os marcadores a serem substituídos e armazena em string para servir de template para novas linhas a serem adicionadas
-			String imovelTemplate = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("innerHTML");
+			String imovelTemplate = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("outerHTML");
 
 			// exclui a linha de template para, em seguida, adicionar as linhas com os dados reais
 			js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
 			TimeUnit.MILLISECONDS.sleep(500);
 			
+			String novosImoveis = "";
+			
 			// adicionar linhas à tabela de imóveis a vistoriar
 			for (Imovel imovel : oficio.listaImoveis) {
-				String novoImovel = imovel.substituirMarcadores(imovelTemplate);
-				js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').appendChild(document.createTextNode('" + novoImovel + "'))");
+				novosImoveis += imovel.substituirMarcadores(imovelTemplate);
 				TimeUnit.MILLISECONDS.sleep(500);
 			}
+
+			// adiciona os novos imóveis à tabela
+			js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').innerHTML += '" + novosImoveis + "'");
+			TimeUnit.MILLISECONDS.sleep(500);
+
+			// substitui os marcadores do corpo
+			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCorpo());
 		
 			// procura o botão salvar, conferindo que ele esteja habilitado
 			WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
@@ -451,30 +457,31 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		return retorno;
 	}
 
-	private void substituirMarcacaoDocumento(WebDriver driver, Wait<WebDriver> wait, Map<String, String> mapaSubstituicoes) {
+	private void substituirMarcacaoDocumento(WebDriver driver, Wait<WebDriver> wait, Map<String, String> mapaSubstituicoes) throws Exception {
 		// volta ao conteúdo default
 		driver.switchTo().defaultContent();
 
 		// clica no botão localizar
 		WebElement btnSubstituir = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[@title = 'Substituir']"));
 		btnSubstituir.click();
+		TimeUnit.MILLISECONDS.sleep(500);
 
 		// repetir este pedaço para todos os textos a serem substituídos no documento
 		for (String chave : mapaSubstituicoes.keySet()) {
 			String textoSubstituto = mapaSubstituicoes.get(chave);
 
 			// preenche o texto a ser encontrado
-			WebElement txtPesquisar = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[1]"));
+			WebElement txtPesquisar = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[1]"));
 			txtPesquisar.clear();
 			txtPesquisar.sendKeys(chave);
 			
 			// preenche o texto para substituição
-			WebElement txtSubstituir = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[2]"));
+			WebElement txtSubstituir = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[2]"));
 			txtSubstituir.clear();
 			txtSubstituir.sendKeys(textoSubstituto);
 			
 			// clica em substituir tudo
-			WebElement btnSubstituirTudo = MyUtils.encontrarElemento(wait, By.xpath("//a[@title = 'Substituir Tudo']"));
+			WebElement btnSubstituirTudo = MyUtils.encontrarElemento(wait, By.xpath("//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//a[@title = 'Substituir Tudo']"));
 			btnSubstituirTudo.click();
 			
 			// clica em ok na mensagem apresentada
@@ -482,7 +489,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		}
 		
 		// clica em fechar
-		WebElement btnFechar = MyUtils.encontrarElemento(wait, By.xpath("//span[text() = 'Fechar']"));
+		WebElement btnFechar = MyUtils.encontrarElemento(wait, By.xpath("//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//span[text() = 'Fechar']"));
 		btnFechar.click();
 	}
 }
