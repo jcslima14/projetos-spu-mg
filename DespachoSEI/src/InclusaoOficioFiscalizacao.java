@@ -2,19 +2,13 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
@@ -32,12 +26,12 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -48,28 +42,13 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.JPAUtils;
-import framework.MyComboBox;
-import framework.MyLabel;
 import framework.MyUtils;
 import framework.SpringUtilities;
-import model.Assinante;
-import model.AssinanteTipoResposta;
-import model.Destino;
-import model.Municipio;
-import model.Origem;
 import model.Parametro;
-import model.Solicitacao;
-import model.SolicitacaoEnvio;
-import model.SolicitacaoResposta;
-import model.TipoImovel;
-import model.TipoProcesso;
-import model.TipoResposta;
 
 @SuppressWarnings("serial")
 public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
-	private EntityManager conexao;
 	private JFileChooser filArquivo = new JFileChooser();
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
@@ -78,6 +57,8 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	private JLabel lblNumeroProcesso = new JLabel("Nº Processo SEI:") {{ setLabelFor(txtNumeroProcesso); }};
 	private JTextField txtNumeroDocumentoModelo = new JTextField(15);
 	private JLabel lblNumeroDocumentoModelo = new JLabel("Nº Documento Modelo:") {{ setLabelFor(txtNumeroDocumentoModelo); }};
+	private JTextField txtBlocoAssinatura = new JTextField(15);
+	private JLabel lblBlocoAssinatura = new JLabel("Nº Bloco Assinatura:") {{ setLabelFor(txtBlocoAssinatura); }};
 	private JTextField txtUsuario = new JTextField(15);
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
 	private JPasswordField txtSenha = new JPasswordField(15);
@@ -87,7 +68,6 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
-	private Assinante superior;
 
 	public InclusaoOficioFiscalizacao(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -96,15 +76,15 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		setIconifiable(true);
 		setClosable(true);
 
-		this.conexao = conexao;
 		despachoServico = new DespachoServico(conexao);
-
 		painelDados.add(new JPanel() {{ add(lblArquivo); add(btnAbrirArquivo); }});
 		painelDados.add(lblNomeArquivo);
 		painelDados.add(lblNumeroProcesso);
 		painelDados.add(txtNumeroProcesso);
 		painelDados.add(lblNumeroDocumentoModelo);
 		painelDados.add(txtNumeroDocumentoModelo);
+		painelDados.add(lblBlocoAssinatura);
+		painelDados.add(txtBlocoAssinatura);
 		painelDados.add(lblUsuario);
 		painelDados.add(txtUsuario);
 		painelDados.add(lblSenha);
@@ -113,7 +93,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		painelDados.add(new JPanel()); 
 
 		SpringUtilities.makeGrid(painelDados,
-	            6, 2, //rows, cols
+	            7, 2, //rows, cols
 	            6, 6, //initX, initY
 	            6, 6); //xPad, yPad
 
@@ -130,7 +110,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText());
+								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText(), txtBlocoAssinatura.getText());
 							} catch (Exception e) {
 								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
 								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
@@ -153,22 +133,12 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		btnAbrirArquivo.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String diretorioPadrao = despachoServico.obterConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO);
-				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
-					File dirPadrao = new File(diretorioPadrao);
-					if (dirPadrao.exists()) {
-						filArquivo.setCurrentDirectory(dirPadrao);
-					}
-				}
 				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
 				detalhes.actionPerformed(null);
 				int retorno = filArquivo.showOpenDialog(InclusaoOficioFiscalizacao.this);
 				if (retorno == JFileChooser.APPROVE_OPTION) {
 					if (filArquivo.getSelectedFile().exists()) {
 						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-						if (!diretorioPadrao.equals(filArquivo.getSelectedFile().getParent())) {
-							despachoServico.salvarConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO, filArquivo.getSelectedFile().getParent());
-						}
 					}
 				}
 			}
@@ -182,7 +152,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarRespostaSEI(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo) throws Exception {
+	private void gerarRespostaSEI(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 		ChromeOptions opcoes = new ChromeOptions();
@@ -196,15 +166,6 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 		opcoes.addArguments("--ignore-certificate-errors");
         WebDriver driver = new ChromeDriver(opcoes);
-
-        // obter os dados do superior assinante
-		Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
-		
-		if(!assinanteIterator.hasNext()) {
-			throw new Exception("Nenhum assinante superior cadastrado.");
-		}
-		
-		superior = assinanteIterator.next();
 		
         // And now use this to visit Google
         driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
@@ -219,6 +180,8 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
         		.withTimeout(Duration.ofSeconds(2))
         		.pollingEvery(Duration.ofSeconds(1))
         		.ignoring(NoSuchElementException.class);
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
 
         // Find the text input element by its name
         WebElement weUsuario = driver.findElement(By.id("txtUsuario"));
@@ -250,7 +213,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		Map<String, Oficio> oficiosAGerar = obterDadosOficios(lblNomeArquivo.getText());
 		for (Oficio oficio : oficiosAGerar.values()) {
 			MyUtils.appendLogArea(logArea, "Gerando ofício para UG: " + oficio.ugResponsavel);
-
+			
 			// clica em inserir documento
 			driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
 			WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
@@ -286,6 +249,9 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 				driver.switchTo().window(tituloJanela);
 			}
 
+			String numeroDocumentoSEIGerado = driver.getTitle().split(" - ")[1];
+			MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
+
 			// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
 			driver.switchTo().frame(3);
 			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
@@ -299,308 +265,58 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			TimeUnit.SECONDS.sleep(1);
 
 			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCorpo());
-
-			/*
-
-<tr>
-	<td height="21">@municipio_imovel@</td>
-	<td>@rip_imovel@</td>
-	<td sdnum="1046;0;#" sdval="4763000145003">@rip_utilizacao@</td>
-	<td>@regime_utilizacao@</td>
-	<td>@endereco_imovel@</td>
-	<td sdnum="1046;0;#.##0,00;(#.##0,00)" sdval="218">@area_imovel@</td>
-</tr>
-
-			 */
 			
+			// obtem a linha da tabela que possui os marcadores a serem substituídos e armazena em string para servir de template para novas linhas a serem adicionadas
+			String imovelTemplate = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("innerHTML");
+
+			// exclui a linha de template para, em seguida, adicionar as linhas com os dados reais
+			js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
+			TimeUnit.MILLISECONDS.sleep(500);
 			
-				// procura o botão salvar, conferindo que ele esteja habilitado
-				WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
-				btnSalvar.click();
-				
+			// adicionar linhas à tabela de imóveis a vistoriar
+			for (Imovel imovel : oficio.listaImoveis) {
+				String novoImovel = imovel.substituirMarcadores(imovelTemplate);
+				js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').appendChild(document.createTextNode('" + novoImovel + "'))");
 				TimeUnit.MILLISECONDS.sleep(500);
+			}
+		
+			// procura o botão salvar, conferindo que ele esteja habilitado
+			WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
+			btnSalvar.click();
 				
-				// aguarda até que o botão de salvar esteja novamente desabilitado para fechar a janela
-				MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and @aria-disabled]"));
-				
-				driver.close();
-				driver.switchTo().window(janelaPrincipal);
+			TimeUnit.MILLISECONDS.sleep(500);
+			
+			// aguarda até que o botão de salvar esteja novamente desabilitado para fechar a janela
+			MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and @aria-disabled]"));
+			
+			driver.close();
+			driver.switchTo().window(janelaPrincipal);
 
-				// clica no botão adicionar ao bloco interno
-				respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
-				
-				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
-				WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
-				btnIncluirBlocoAssinatura.click();
+			driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
+			WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
+			btnIncluirBlocoAssinatura.click();
 
-				// seleciona o bloco interno desejado
-				Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
-				cbxBlocoAssinatura.selectByValue(respostaAGerar.getBlocoAssinatura());
+			// seleciona o bloco interno desejado
+			Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
+			cbxBlocoAssinatura.selectByValue(blocoAssinatura);
 
-				// aguardar que a linha com o documento gerado seja carregada
-				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "']]"));
+			// aguardar que a linha com o documento gerado seja carregada
+			MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + numeroDocumentoSEIGerado + "']]"));
 
-				// clica em incluir
-				WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
-				btnIncluir.click();
+			// clica em incluir
+			WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
+			btnIncluir.click();
 
-				// aguardar que a linha retorno indicando que o registro está inserido no bloco
-				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "'] and ./td[5]/a[text() = '" + respostaAGerar.getBlocoAssinatura() + "']]"));
-				
-				driver.switchTo().defaultContent();
-				
-				// atualiza o número do documento gerado no SEI
-				atualizarDocumentoGerado(respostaAGerar, superior);
-			} // fim do loop de respostas a gerar por unidade
+			// aguardar que a linha retorno indicando que o registro está inserido no bloco
+			MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + numeroDocumentoSEIGerado + "'] and ./td[5]/a[text() = '" + blocoAssinatura + "']]"));
+			
+			driver.switchTo().defaultContent();
 		} // fim do loop de todas as respostas a gerar
 
 		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
 
         driver.close();
         driver.quit();
-	}
-
-	private String obterBlocoAssinatura(Assinante assinante, TipoResposta tipoResposta) throws Exception {
-		List<AssinanteTipoResposta> confs = despachoServico.obterAssinanteTipoResposta(null, assinante.getAssinanteId(), tipoResposta.getTipoRespostaId());
-		if (confs != null && confs.size() > 0) {
-			return confs.iterator().next().getBlocoAssinatura();
-		} else {
-			return assinante.getBlocoAssinatura();
-		}
-	}
-
-	private void gerarProcessoIndividual(WebDriver driver, Wait<WebDriver> wait, SolicitacaoResposta resposta, String pastaArquivosProcessosIndividuais) throws Exception {
-		String numeroProcesso = null;
-
-		MyUtils.appendLogArea(logArea, "Gerando processo individual...");
-		
-		// encontrar link de iniciar processo
-		WebElement lnkIniciarProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = 'Iniciar Processo']"));
-		lnkIniciarProcesso.click();
-
-		WebElement lnkExibirTodosTipos = null;
-
-		try {
-			lnkExibirTodosTipos = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Exibir todos os tipos']"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if (lnkExibirTodosTipos != null) {
-			lnkExibirTodosTipos.click();
-		}
-
-		WebElement lnkTipoProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + resposta.getTipoResposta().getTipoProcesso() + "']"));
-		lnkTipoProcesso.click();
-
-		WebElement txtDescricaoProcesso = MyUtils.encontrarElemento(wait, By.id("txtDescricao"));
-		txtDescricaoProcesso.sendKeys(resposta.getSolicitacao().getNumeroProcesso());
-
-		WebElement optNivelAcessoProcesso = MyUtils.encontrarElemento(wait, By.id("optRestrito"));
-		optNivelAcessoProcesso.click();
-		TimeUnit.MILLISECONDS.sleep(200);
-		
-		Select cbxHipoteseLegal = new Select(MyUtils.encontrarElemento(wait, By.id("selHipoteseLegal")));
-		TimeUnit.MILLISECONDS.sleep(200);
-		cbxHipoteseLegal.selectByValue("34");
-		TimeUnit.MILLISECONDS.sleep(200);
-
-		WebElement btnSalvarProcesso = MyUtils.encontrarElemento(wait, By.id("btnSalvar"));
-		btnSalvarProcesso.click();
-
-		TimeUnit.SECONDS.sleep(2);
-		driver.switchTo().defaultContent();
-
-		WebElement ifrArvore = MyUtils.encontrarElemento(wait, By.xpath("//iframe[@id = 'ifrArvore']"));
-		driver.switchTo().frame(ifrArvore);
-		WebElement txtNumeroProcesso = MyUtils.encontrarElemento(wait, By.xpath("//div[@id = 'topmenu']/a[@target = 'ifrVisualizacao']"));
-		numeroProcesso = txtNumeroProcesso.getText();
-		MyUtils.appendLogArea(logArea, "Gerado o processo individual nº " + numeroProcesso);
-
-		resposta.getSolicitacao().setNumeroProcessoSEI(numeroProcesso);
-		atualizarProcessoGerado(resposta);
-		
-		driver.switchTo().defaultContent();
-	}
-	
-	public String anexarArquivosProcesso(SolicitacaoResposta resposta, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
-		for (File anexo : anexos) {
-			driver.switchTo().defaultContent();
-
-			WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.id("txtPesquisaRapida"));
-			txtPesquisaRapida.sendKeys(resposta.getSolicitacao().getNumeroProcessoSEI());
-			txtPesquisaRapida.sendKeys(Keys.RETURN);
-
-			MyUtils.appendLogArea(logArea, "Anexando o arquivo " + anexo.getName());
-
-			// mudar de frame
-			WebElement ifrVisualizacao = MyUtils.encontrarElemento(wait, By.xpath("//iframe[@id = 'ifrVisualizacao']"));
-			driver.switchTo().frame(ifrVisualizacao);
-
-			// incluir os documentos no processo
-			WebElement btnIncluirDocumento = null;
-			try {
-				btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
-			} catch (Exception e) {
-				return "Não foi encontrado o botão de incluir documentos no processo " + resposta.getNumeroProcessoSEI() + ". Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.";
-			}
-			btnIncluirDocumento.click();
-
-			WebElement lnkTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = ' Externo']"));
-			lnkTipoDocumento.click();
-
-			Select cbxTipoDocumento = new Select(MyUtils.encontrarElemento(wait, By.id("selSerie")));
-			cbxTipoDocumento.selectByVisibleText("Processo");
-			TimeUnit.MILLISECONDS.sleep(800);
-
-			WebElement txtDataDocumento = MyUtils.encontrarElemento(wait, By.id("txtDataElaboracao"));
-			txtDataDocumento.sendKeys(MyUtils.formatarData(new Date(), "dd/MM/yyyy"));
-
-			WebElement optNatoDigital = MyUtils.encontrarElemento(wait, By.id("optNato"));
-			optNatoDigital.click();
-
-			WebElement optNivelAcessoDocumento = MyUtils.encontrarElemento(wait, By.id("optPublico"));
-			optNivelAcessoDocumento.click();
-
-			WebElement updArquivo = MyUtils.encontrarElemento(wait, By.id("filArquivo"));
-			updArquivo.sendKeys(anexo.getAbsolutePath());
-
-			// loop para esperar que o documento apareça na lista
-			WebElement divDocumentoNaLista = null;
-			do {
-				try {
-					divDocumentoNaLista = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblAnexos']//tr/td/div[text() = '" + anexo.getName() + "']"));
-				} catch (Exception e) {
-					divDocumentoNaLista = null;
-				}
-			} while (divDocumentoNaLista == null);
-	
-			WebElement btnSalvarDocumento = MyUtils.encontrarElemento(wait, By.id("btnSalvar"));
-			btnSalvarDocumento.click();
-
-			TimeUnit.MILLISECONDS.sleep(1500);
-
-			// espera aparecer o botão de consultar/alterar documento para ter certeza de que o upload terminou
-			MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Consultar/Alterar Documento Externo']"));
-		} // fim do loop de anexação de arquivos
-		
-		driver.switchTo().defaultContent();
-		
-		resposta.getSolicitacao().setArquivosAnexados(true);
-		atualizarArquivosAnexados(resposta);
-
-		return "";
-	}
-
-	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {
-		Map<String, String> retorno = new LinkedHashMap<String, String>();
-		String numeroProcesso = resposta.getSolicitacao().getNumeroProcesso();
-		if (resposta.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && resposta.getSolicitacao().getNumeroProcesso().length() == 17) {
-			// reformata o número do processo para a máscara UUUU.NNNNNN/AAAA-DD
-			numeroProcesso = numeroProcesso.substring(0, 5) + "." + numeroProcesso.substring(5, 11) + "/" + numeroProcesso.substring(11, 15) + "-" + numeroProcesso.substring(15); 
-		}
-		retorno.put("<numero_processo>", numeroProcesso);
-		retorno.put("<numero_atendimento>", resposta.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) ? MyUtils.emptyStringIfNull(resposta.getSolicitacao().getChaveBusca()) : "");
-		retorno.put("<autor>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getAutor()));
-		retorno.put("<comarca>", (resposta.getSolicitacao().getMunicipio() == null || resposta.getSolicitacao().getMunicipio().getMunicipioComarca() == null ? "" : resposta.getSolicitacao().getMunicipio().getMunicipioComarca().getNome().toUpperCase()));
-		retorno.put("<cartorio>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCartorio()));
-		String destino = resposta.getSolicitacao().getDestino().getUsarCartorio() ? resposta.getSolicitacao().getCartorio() : resposta.getSolicitacao().getDestino().getDescricao();
-		retorno.put("<destino_inicial>", resposta.getSolicitacao().getDestino().getArtigo() + " " + destino);
-		if (resposta.getSolicitacao().getTipoImovel().getDescricao().equalsIgnoreCase("rural") && !resposta.getSolicitacao().getEndereco().equalsIgnoreCase("")) {
-			retorno.put("<tipo_imovel>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getEndereco()));
-			retorno.put("<endereco>", "");
-		} else {
-			retorno.put("<tipo_imovel>", (resposta.getSolicitacao().getTipoImovel() == null ? "" : resposta.getSolicitacao().getTipoImovel().getDescricao().toLowerCase()));
-			retorno.put("<endereco>", resposta.getSolicitacao().getEndereco() == null || resposta.getSolicitacao().getEndereco().trim().equals("") ? "" : "localizado na " + resposta.getSolicitacao().getEndereco() + ", ");
-		}
-		retorno.put("<municipio>", resposta.getSolicitacao().getMunicipio() == null ? "" : resposta.getSolicitacao().getMunicipio().getNome());
-		retorno.put("<area>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getArea()).trim().equals("") ? "" : "com área de " + resposta.getSolicitacao().getArea() + ", ");
-		retorno.put("<coordenada>", MyUtils.emptyStringIfNull(resposta.getSolicitacao().getCoordenada()).trim().equals("") ? "" : "cuja poligonal possui um dos vértices com coordenada " + resposta.getSolicitacao().getCoordenada() + ", ");
-		retorno.put("<destino_final>", resposta.getSolicitacao().getDestino().getArtigo().toLowerCase() + " " + (destino.startsWith("Procuradoria") ? "Procuradoria" : destino));
-		retorno.put("<assinante>", resposta.getAssinante().getNome());
-		retorno.put("<assinante_cargo>", resposta.getAssinante().getCargo());
-		retorno.put("<assinante_setor>", resposta.getAssinante().getSetor());
-		retorno.put("<assinante_superior>", superior.getNome());
-		retorno.put("<assinante_superior_cargo>", superior.getCargo());
-		retorno.put("<assinante_superior_setor>", superior.getSetor());
-		retorno.put("<observacao>", MyUtils.emptyStringIfNull(resposta.getObservacao().trim()));
-		retorno.put("<data_hoje>", MyUtils.formatarData(new Date(), "dd 'de' MMMM 'de' yyyy").toLowerCase());
-		return retorno;
-	}
-
-	private void atualizarProcessoGerado(SolicitacaoResposta resposta) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("update solicitacao "
-				 + "   set numeroprocessosei = '" + resposta.getSolicitacao().getNumeroProcessoSEI() + "' "
-				 + "	 , arquivosanexados = false "
-				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
-
-		JPAUtils.executeUpdate(conexao, sql.toString());
-	}
-
-	private void atualizarArquivosAnexados(SolicitacaoResposta resposta) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("update solicitacao "
-				 + "   set arquivosanexados = true "
-				 + " where solicitacaoid = " + resposta.getSolicitacao().getSolicitacaoId());
-
-		JPAUtils.executeUpdate(conexao, sql.toString());
-	}
-
-	private void atualizarDocumentoGerado(SolicitacaoResposta resposta, Assinante superior) throws Exception {
-		StringBuilder sql = new StringBuilder("");
-		sql.append("update solicitacaoresposta "
-				 + "   set numerodocumentosei = '" + resposta.getNumeroDocumentoSEI() + "'"
-				 + (MyUtils.isPostgreSQL(conexao) 
-					? "	 , datahoraresposta = now() "
-					: "	 , datahoraresposta = datetime('now', 'localtime') "
-				)
-				 + "	 , numeroprocessosei = '" + resposta.getNumeroProcessoSEI() + "' "
-				 + "	 , respostaimpressa = " + (resposta.getTipoResposta().getImprimirResposta() ? "false" : "true")
-				 + "	 , blocoassinatura = '" + resposta.getBlocoAssinatura() + "' "
-				 + "	 , respostanoblocoassinatura = true "
-				 + "     , assinanteidsuperior = " + superior.getAssinanteId()
-				 + " where solicitacaorespostaid = " + resposta.getSolicitacaoRespostaId());
-
-		JPAUtils.executeUpdate(conexao, sql.toString());
-	}
-
-	private Map<String, List<SolicitacaoResposta>> obterRespostasACadastrar(Integer assinanteId) throws Exception {
-		Map<String, List<SolicitacaoResposta>> retorno = new TreeMap<String, List<SolicitacaoResposta>>();
-		Assinante assinante = null;
-		if (assinanteId != null && assinanteId.intValue() > 0) {
-			assinante = new Assinante(assinanteId, null);
-		}
-
-		List<SolicitacaoResposta> respostas = despachoServico.obterRespostasAGerar(assinante);
-		
-		for (SolicitacaoResposta resposta : respostas) {
-			String unidadeAberturaProcesso = resposta.getTipoResposta().getUnidadeAberturaProcesso();
-			if (unidadeAberturaProcesso == null) unidadeAberturaProcesso = "";
-			if (retorno.get(unidadeAberturaProcesso) == null) retorno.put(unidadeAberturaProcesso, new ArrayList<SolicitacaoResposta>());
-			retorno.get(unidadeAberturaProcesso).add(resposta);
-		}
-		
-		return retorno;
-	}
-
-	private List<File> obterArquivos(String pasta, String filtroNomeArquivo, String filtroExtensao) {
-		FilenameFilter filtro = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				boolean atendeNome = true;
-				boolean atendeExtensao = true;
-				if (filtroNomeArquivo != null && !filtroNomeArquivo.equalsIgnoreCase("")) {
-					atendeNome = name.toLowerCase().contains(filtroNomeArquivo.toLowerCase());
-				}
-				if (filtroExtensao != null && !filtroExtensao.equalsIgnoreCase("")) {
-					atendeExtensao = name.toLowerCase().endsWith(filtroExtensao.toLowerCase());
-				}
-				return atendeNome && atendeExtensao;
-			}
-		};
-		File diretorio = new File(pasta);
-		return Arrays.asList(diretorio.listFiles(filtro));
 	}
 
 	private class Imovel {
@@ -619,10 +335,21 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			this.enderecoImovel = enderecoImovel;
 			this.areaImovel = areaImovel;
 		}
+
+		public String substituirMarcadores(String imovelTemplate) {
+			return imovelTemplate
+					.replaceAll("@municipio_imovel@", this.municipioImovel)
+					.replaceAll("@rip_imovel@", this.ripImovel)
+					.replaceAll("@rip_utilizacao@", this.ripUtilizacao)
+					.replaceAll("@regime_utilizacao@", this.regimeUtilizacao)
+					.replaceAll("@endereco_imovel@", this.enderecoImovel)
+					.replaceAll("@area_imovel@", this.areaImovel);
+		}
 	}
 	
 	private class Oficio {
 		String ugResponsavel;
+		String vocativoDestinatario;
 		String tratamentoDestinatario;
 		String nomeDestinatario;
 		String cargoDestinatario;
@@ -630,11 +357,11 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		String enderecoDestinatario;
 		String complementoEnderecoDestinatario;
 		String emailDestinatario;
-		String vocativoDestinatario;
 		List<Imovel> listaImoveis = new ArrayList<Imovel>();
 
-		public Oficio(String ugResponsavel, String tratamentoDestinatario, String nomeDestinatario, String cargoDestinatario, String pessoaJuridica, String enderecoDestinatario, String complementoEnderecoDestinatario, String emailDestinatario, String vocativoDestinatario) {
+		public Oficio(String ugResponsavel, String vocativoDestinatario, String tratamentoDestinatario, String nomeDestinatario, String cargoDestinatario, String pessoaJuridica, String enderecoDestinatario, String complementoEnderecoDestinatario, String emailDestinatario) {
 			this.ugResponsavel = ugResponsavel;
+			this.vocativoDestinatario = vocativoDestinatario;
 			this.tratamentoDestinatario = tratamentoDestinatario;
 			this.nomeDestinatario = nomeDestinatario;
 			this.cargoDestinatario = cargoDestinatario;
@@ -642,7 +369,6 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			this.enderecoDestinatario = enderecoDestinatario;
 			this.complementoEnderecoDestinatario = complementoEnderecoDestinatario;
 			this.emailDestinatario = emailDestinatario;
-			this.vocativoDestinatario = vocativoDestinatario;
 		}
 
 		public Map<String, String> mapaSubstituicoesCabecalho() {
@@ -662,7 +388,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		public Map<String, String> mapaSubstituicoesCorpo() {
 			Map<String, String> mapaSubstituicoes = new LinkedHashMap<String, String>();
 			
-			mapaSubstituicoes.put("@vocativo_destinatario@", this.tratamentoDestinatario);
+			mapaSubstituicoes.put("@vocativo_destinatario@", this.vocativoDestinatario);
 			mapaSubstituicoes.put("@ug_responavel@", this.ugResponsavel);
 
 			return mapaSubstituicoes;

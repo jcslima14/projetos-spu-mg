@@ -69,6 +69,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmRespostaSPUNet = new JMenuItem("Resposta a Processos do SPUNet");
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
+		JMenuItem sbmInclusaoOficioVistoria = new JMenuItem("Inclusão de Ofícios de Vistoria");
 		JMenuItem sbmRespostaProcesso = new JMenu("Resposta a Processos") {{ add(sbmRespostaSapiens); add(sbmRespostaSPUNet); }};
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
@@ -77,7 +78,7 @@ public class DespachoSEI extends JFrame {
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 															}};
-		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmExecucaoScript); }};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmInclusaoOficioVistoria); addSeparator(); add(sbmExecucaoScript); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
 
 		sbmExecucaoScript.addActionListener(new ActionListener() {
@@ -158,6 +159,15 @@ public class DespachoSEI extends JFrame {
 				InclusaoDespachoSEI geracaoRespostaSEI = new InclusaoDespachoSEI("Geração de Respostas no SEI", conexao);
 				desktop.add(geracaoRespostaSEI);
 				geracaoRespostaSEI.abrirJanela();
+			}
+		});
+
+		sbmInclusaoOficioVistoria.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				InclusaoOficioFiscalizacao janela = new InclusaoOficioFiscalizacao("Inclusão de Ofícios de Vistoria", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
 			}
 		});
 		
