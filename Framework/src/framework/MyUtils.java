@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -305,10 +306,15 @@ public class MyUtils {
 		sdf.setLenient(false);
 		return sdf.parse(data);
 	}
-	
+
 	public static String formatarData(Date data, String formato) {
 		SimpleDateFormat f = new SimpleDateFormat(formato, new Locale("pt", "BR"));
 		return f.format(data);
+	}
+
+	public static String formatarNumero(Number numero, String formato) {
+		DecimalFormat f = new DecimalFormat(formato);
+		return f.format(numero);
 	}
 
 	public static void fecharPopup(WebDriver driver) {

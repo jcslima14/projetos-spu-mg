@@ -51,7 +51,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 	private JFileChooser filArquivo = new JFileChooser();
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
-	private JLabel lblNomeArquivo = new JLabel("C:\\Users\\Júlio Lima\\Downloads\\planilha_oficios.xlsx") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
+	private JLabel lblNomeArquivo = new JLabel("C:\\Users\\90768116600\\Documents\\planilha_oficios.xlsx") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
 	private JTextField txtNumeroProcesso = new JTextField("10154.138675/2019-49", 15);
 	private JLabel lblNumeroProcesso = new JLabel("Nº Processo SEI:") {{ setLabelFor(txtNumeroProcesso); }};
@@ -110,7 +110,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 						@Override
 						public void run() {
 							try {
-								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText(), txtBlocoAssinatura.getText());
+								gerarOficios(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText(), txtBlocoAssinatura.getText());
 							} catch (Exception e) {
 								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
 								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
@@ -152,7 +152,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarRespostaSEI(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
+	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 		ChromeOptions opcoes = new ChromeOptions();
@@ -213,9 +213,15 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		Map<String, Oficio> oficiosAGerar = obterDadosOficios(lblNomeArquivo.getText());
 		for (Oficio oficio : oficiosAGerar.values()) {
 			MyUtils.appendLogArea(logArea, "Gerando ofício para UG: " + oficio.ugResponsavel);
+
+			// clica no número do processo para habilitar os botões de ação do processo
+			driver.switchTo().frame("ifrArvore");
+			WebElement lnkNumeroProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a/span[contains(text(), '" + numeroProcesso + "')]"));
+			lnkNumeroProcesso.click();
+			driver.switchTo().defaultContent();
 			
 			// clica em inserir documento
-			driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
+			driver.switchTo().frame("ifrVisualizacao");
 			WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
 			btnIncluirDocumento.click();
 
@@ -253,6 +259,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
 
 			// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
+			TimeUnit.SECONDS.sleep(1);
 			driver.switchTo().frame(3);
 			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
 			TimeUnit.SECONDS.sleep(1);
@@ -395,7 +402,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			Map<String, String> mapaSubstituicoes = new LinkedHashMap<String, String>();
 			
 			mapaSubstituicoes.put("@vocativo_destinatario@", this.vocativoDestinatario);
-			mapaSubstituicoes.put("@ug_responavel@", this.ugResponsavel);
+			mapaSubstituicoes.put("@ug_responsavel@", this.ugResponsavel);
 
 			return mapaSubstituicoes;
 		}
@@ -424,7 +431,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			Oficio oficio = retorno.get(chaveAtual);
 			
 			// se o ofício lido não foi encontrado, gera um novo ofício, preenchendo seus dados
-			if (!chaveAnterior.equals(chaveAtual)) {
+			if (oficio == null) {
 				oficio = new Oficio(
 						ugResponsavel, 
 						MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(1))).trim(),
@@ -446,7 +453,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(11))).trim(),
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(12))).trim(),
 					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(13))).trim(),
-					MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(14))).trim()
+					MyUtils.formatarNumero(Double.parseDouble(MyUtils.obterValorCelula(linha.getCell(14))), "#,##0.00").trim()
 					);
 			MyUtils.appendLogArea(logArea, "Lendo a linha " + (l+1) + "/" + (planilha.getLastRowNum()+1) + "...");
 			chaveAnterior = chaveAtual;
