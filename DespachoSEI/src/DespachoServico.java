@@ -7,9 +7,9 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.swing.JOptionPane;
 
-import framework.JPAUtils;
-import framework.MyComboBox;
-import framework.MyUtils;
+import framework.components.MyComboBox;
+import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
 import model.Assinante;
 import model.AssinanteTipoResposta;
 import model.Destino;

@@ -1,19 +1,21 @@
-package framework;
-import javax.swing.JTextArea;
+package framework.components;
+import javax.swing.JCheckBox;
+
+import framework.models.PropriedadesEdicao;
 
 @SuppressWarnings("serial")
-public class MyTextArea extends JTextArea implements PropriedadesEdicao {
+public class MyCheckBox extends JCheckBox implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyTextArea() {
+	public MyCheckBox() {
 		super();
 	}
 	
-	public MyTextArea(String caption) {
+	public MyCheckBox(String caption) {
 		super(caption);
 	}
 	

@@ -1,4 +1,4 @@
-package framework;
+package framework.components;
 import java.util.List;
 
 import javax.swing.JTable;

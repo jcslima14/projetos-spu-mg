@@ -1,19 +1,21 @@
-package framework;
-import javax.swing.JCheckBox;
+package framework.components;
+import javax.swing.JTextField;
+
+import framework.models.PropriedadesEdicao;
 
 @SuppressWarnings("serial")
-public class MyCheckBox extends JCheckBox implements PropriedadesEdicao {
+public class MyTextField extends JTextField implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyCheckBox() {
+	public MyTextField() {
 		super();
 	}
 	
-	public MyCheckBox(String caption) {
+	public MyTextField(String caption) {
 		super(caption);
 	}
 	
@@ -39,5 +41,17 @@ public class MyCheckBox extends JCheckBox implements PropriedadesEdicao {
 	
 	public void setExclusao(boolean exclusao) {
 		this.exclusao = exclusao;
+	}
+
+	public Integer getTextAsInteger() {
+		return getTextAsInteger(null);
+	}
+	
+	public Integer getTextAsInteger(Integer defaultValue) {
+		if (getText().equals("")) {
+			return defaultValue;
+		} else {
+			return Integer.parseInt(getText());
+		}
 	}
 }

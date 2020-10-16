@@ -22,9 +22,9 @@ import javax.swing.SwingConstants;
 
 import org.apache.commons.io.FilenameUtils;
 
-import framework.MyButton;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyButton;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class ValidacaoDadosCadastrados extends JInternalFrame {

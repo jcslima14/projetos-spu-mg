@@ -14,9 +14,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 
-import framework.JPAUtils;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class ExecucaoScript extends JInternalFrame {

@@ -44,8 +44,8 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 import model.Origem;
 import model.Parametro;
 import model.Solicitacao;

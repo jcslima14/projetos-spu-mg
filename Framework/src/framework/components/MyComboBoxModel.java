@@ -1,5 +1,7 @@
-package framework;
+package framework.components;
 import javax.swing.DefaultComboBoxModel;
+
+import framework.models.ComboBoxItem;
 
 @SuppressWarnings("serial")
 public class MyComboBoxModel extends DefaultComboBoxModel<ComboBoxItem> {

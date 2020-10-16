@@ -21,8 +21,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import framework.JPAUtils;
-import framework.MyUtils;
+import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
 import model.Origem;
 import model.Parametro;
 import model.TipoImovel;

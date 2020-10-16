@@ -1,4 +1,4 @@
-package framework;
+package framework.models;
 public class ComboBoxItem {
 	private Integer intId;
 	

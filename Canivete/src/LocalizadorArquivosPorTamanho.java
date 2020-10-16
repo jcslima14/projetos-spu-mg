@@ -32,8 +32,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class LocalizadorArquivosPorTamanho extends JInternalFrame {

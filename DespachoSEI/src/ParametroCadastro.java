@@ -7,14 +7,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.table.TableModel;
 
-import framework.CadastroTemplate;
-import framework.JPAUtils;
-import framework.MyCheckBox;
-import framework.MyLabel;
-import framework.MyTableColumn;
-import framework.MyTableModel;
-import framework.MyTextField;
-import framework.MyUtils;
+import framework.components.MyCheckBox;
+import framework.components.MyLabel;
+import framework.components.MyTableColumn;
+import framework.components.MyTableModel;
+import framework.components.MyTextField;
+import framework.templates.CadastroTemplate;
+import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
 import model.Parametro;
 
 @SuppressWarnings("serial")

@@ -1,4 +1,4 @@
-package framework;
+package framework.components;
 import java.util.Vector;
 
 import javax.swing.table.DefaultTableModel;

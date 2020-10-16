@@ -1,4 +1,4 @@
-package framework;
+package framework.templates;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -7,17 +7,24 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyVetoException;
 import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
+import framework.components.MyButton;
+import framework.components.MyTable;
+import framework.components.MyTableColumn;
+import framework.models.PropriedadesEdicao;
+
 @SuppressWarnings("serial")
-public abstract class CadastroController extends JPanel {
+public abstract class CadastroTemplate extends JInternalFrame {
 
 	private MyTable tabela = new MyTable();
 	private MyButton btnAtualizar = new MyButton("Atualizar") {{ setExclusao(true); }};
@@ -25,13 +32,15 @@ public abstract class CadastroController extends JPanel {
 	private MyButton btnExcluir = new MyButton("Excluir") {{ setExclusao(true); }};
 	private MyButton btnSalvar = new MyButton("Salvar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyButton btnCancelar = new MyButton("Cancelar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyButton[] btnBotoesPosteriores = null;
-	private JPanel pnlCamposEditaveis = null;
+	private MyButton[] btnBotoesAcimaPosteriores = null;
+	private MyButton[] btnBotoesAbaixoPosteriores = null;
+	private JPanel pnlCamposEditaveis;
 	private JPanel pnlFiltros = null;
-	private boolean exibirTabelaDados = true;
-	private boolean exibirBotoesCadastro = true;
-	private boolean exibirBotaoCancelarEdicao = true;
 	private boolean exibirBotaoIncluir = true;
+
+	public void setExibirBotaoIncluir(boolean exibirBotaoIncluir) {
+		this.exibirBotaoIncluir = exibirBotaoIncluir;
+	}
 
 	public MyTable getTabela() {
 		return this.tabela;
@@ -45,80 +54,78 @@ public abstract class CadastroController extends JPanel {
 		this.pnlFiltros = pnlFiltros;
 	}
 
-	public void setBtnBotoesPosteriores(MyButton... btnBotoesPosteriores) {
-		this.btnBotoesPosteriores = btnBotoesPosteriores;
+	public void setBtnBotoesAcimaPosteriores(MyButton... btnBotoesAcimaPosteriores) {
+		this.btnBotoesAcimaPosteriores = btnBotoesAcimaPosteriores;
 	}
 
-	public void setExibirTabelaDados(boolean exibirTabelaDados) {
-		this.exibirTabelaDados = exibirTabelaDados;
+	public void setBtnBotoesAbaixoPosteriores(MyButton... btnBotoesAbaixoPosteriores) {
+		this.btnBotoesAbaixoPosteriores = btnBotoesAbaixoPosteriores;
 	}
 
-	public void setExibirBotoesCadastro(boolean exibirBotoesCadastro) {
-		this.exibirBotoesCadastro = exibirBotoesCadastro;
-	}
-	
-	public void setExibirBotaoCancelarEdicao(boolean exibirBotaoCancelarEdicao) {
-		this.exibirBotaoCancelarEdicao = exibirBotaoCancelarEdicao;
+	public CadastroTemplate() {
+		super();
+		setResizable(true);
+		setMaximizable(true);
+		setIconifiable(true);
+		setClosable(true);
+		setSize(1000, 500);
 	}
 
-	public void setExibirBotaoIncluir(boolean exibirBotaoIncluir) {
-		this.exibirBotaoIncluir = exibirBotaoIncluir;
+	public CadastroTemplate(String tituloJanela) {
+		super(tituloJanela);
+		setResizable(true);
+		setMaximizable(true);
+		setIconifiable(true);
+		setClosable(true);
+		setSize(1000, 500);
 	}
 
 	public void inicializar() {
-		this.setLayout(new BorderLayout());
-		// define se deve ser exibida a tabela de dados
-		if (exibirTabelaDados) {
-			JScrollPane areaRolavel = new JScrollPane(tabela);
-			areaRolavel.setVisible(true);
-			add(areaRolavel, BorderLayout.CENTER);
-
-			try {
-				resetarDados();
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}
-		}
-
-		// define se deve ser exibido o painel superior da janela (criado se exibir botões de cadastro, ou botões adicionais, ou painel de filtros)
-		if (exibirBotoesCadastro || btnBotoesPosteriores != null || pnlFiltros != null) {
-			JPanel pnlPainelSuperior = new JPanel();
-			pnlPainelSuperior.setLayout(new BoxLayout(pnlPainelSuperior, BoxLayout.Y_AXIS));
-
-			// criado o painel de botões se for para exibir os botões de cadastro ou botões adicionais
-			if (exibirBotoesCadastro || btnBotoesPosteriores != null) {
-				JPanel pnlBotoesAcima = new JPanel(new FlowLayout());
-
-				if (exibirBotoesCadastro) {
-					pnlBotoesAcima.add(btnAtualizar);
-					if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
-					pnlBotoesAcima.add(btnExcluir);
-				}
+		inicializar(true);
+	}
 	
-				if (btnBotoesPosteriores != null) {
-					for (MyButton botao : btnBotoesPosteriores) {
-						pnlBotoesAcima.add(botao);
-					}
-				}
+	public void inicializar(boolean mostrarAreaEdicao) {
+		JScrollPane areaRolavel = new JScrollPane(tabela);
+		areaRolavel.setVisible(true);
+		add(areaRolavel, BorderLayout.CENTER);
 
-				pnlPainelSuperior.add(pnlBotoesAcima);
-			}
+		try {
+			resetarDados();
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+		
+		JPanel pnlPainelSuperior = new JPanel();
+		pnlPainelSuperior.setLayout(new BoxLayout(pnlPainelSuperior, BoxLayout.Y_AXIS));
+		JPanel pnlBotoesAcima = new JPanel(new FlowLayout());
+		pnlBotoesAcima.add(btnAtualizar);
+		if (exibirBotaoIncluir) pnlBotoesAcima.add(btnIncluir);
+		pnlBotoesAcima.add(btnExcluir);
 
-			// verifica se o painel de filtros deve ser exibido
-			if (pnlFiltros != null) {
-				pnlPainelSuperior.add(pnlFiltros);
+		if (btnBotoesAcimaPosteriores != null) {
+			for (MyButton botao : btnBotoesAcimaPosteriores) {
+				pnlBotoesAcima.add(botao);
 			}
-			
-			add(pnlPainelSuperior, BorderLayout.NORTH);
 		}
 
-		// verifica se o painel de campos editáveis deve ser exibido
-		if (pnlCamposEditaveis != null) {
+		pnlPainelSuperior.add(pnlBotoesAcima);
+		if (pnlFiltros != null) {
+			pnlPainelSuperior.add(pnlFiltros);
+		}
+		
+		add(pnlPainelSuperior, BorderLayout.NORTH);
+
+		if (mostrarAreaEdicao) {
 			JPanel pnlBotoesAbaixo = new JPanel(new FlowLayout());
 			pnlBotoesAbaixo.add(btnSalvar);
-			if (exibirBotaoCancelarEdicao) {
-				pnlBotoesAbaixo.add(btnCancelar);
+			pnlBotoesAbaixo.add(btnCancelar);
+
+			if (btnBotoesAbaixoPosteriores != null) {
+				for (MyButton botao : btnBotoesAbaixoPosteriores) {
+					pnlBotoesAbaixo.add(botao);
+				}
 			}
+
 			JPanel pnlAreaEdicao = new JPanel();
 			pnlAreaEdicao.setLayout(new BoxLayout(pnlAreaEdicao, BoxLayout.PAGE_AXIS));
 			pnlAreaEdicao.add(this.pnlCamposEditaveis);
@@ -142,13 +149,7 @@ public abstract class CadastroController extends JPanel {
 		btnIncluir.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {
-					incluirRegistro();
-					definirPermissoesInclusao();
-				} catch (Exception e1) {
-					JOptionPane.showMessageDialog(null, "Erro ao tentar incluir registro: \n\n" + e1.getMessage());
-					e1.printStackTrace();
-				}
+				incluirRegistro();
 			}
 		});
 
@@ -169,10 +170,8 @@ public abstract class CadastroController extends JPanel {
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-				if (exibirTabelaDados) {
-					cancelarEdicao();
-					limparCamposEditaveis();
-				}
+				cancelarEdicao();
+				limparCamposEditaveis();
 			}
 		});
 
@@ -204,14 +203,12 @@ public abstract class CadastroController extends JPanel {
 		        JTable table = (JTable) mouseEvent.getSource();
 		        if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
 		        	prepararParaEdicao();
-					definirPermissoesEdicao();
+					editarRegistro();
 		        }
 			}
 		});
 	}
 
-	public abstract void incluirRegistro() throws Exception;
-	
 	public abstract void excluirRegistro(Integer id) throws Exception;
 
 	public abstract void salvarRegistro() throws Exception;
@@ -224,16 +221,11 @@ public abstract class CadastroController extends JPanel {
 	
 	public abstract List<MyTableColumn> getColunas();
 
-	public void doEditarRegistro() {
-		prepararParaEdicao();
-		definirPermissoesEdicao();
-	}
-	
-	private void definirPermissoesEdicao() {
+	private void editarRegistro() {
 		componentesEmEdicao(this, true);
 	}
 
-	private void definirPermissoesInclusao() {
+	public void incluirRegistro() {
 		componentesEmInclusao(this, true);
 	}
 
@@ -268,11 +260,20 @@ public abstract class CadastroController extends JPanel {
 		componentesEmInclusao(this, false);
 	}
 
-	private void resetarDados() throws Exception {
-		if (exibirTabelaDados) {
-			tabela.setModel(obterDados());
-			tabela.resizeColumns(getColunas(), true);
+	public void abrirJanela() {
+		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		try {
+			this.setMaximum(true);
+		} catch (PropertyVetoException e) {
+			e.printStackTrace();
 		}
+		this.setVisible(true);
+		this.show();
+	}
+
+	private void resetarDados() throws Exception {
+		tabela.setModel(obterDados());
+		tabela.resizeColumns(getColunas(), true);
 	}
 
 	public void executarAtualizar() {

@@ -25,14 +25,14 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import framework.CadastroTemplate;
-import framework.DialogTemplate;
-import framework.MyButton;
-import framework.MyLabel;
-import framework.MyTableColumn;
-import framework.MyTableModel;
-import framework.MyTextField;
-import framework.MyUtils;
+import framework.components.MyButton;
+import framework.components.MyLabel;
+import framework.components.MyTableColumn;
+import framework.components.MyTableModel;
+import framework.components.MyTextField;
+import framework.templates.CadastroTemplate;
+import framework.templates.DialogTemplate;
+import framework.utils.MyUtils;
 
 @SuppressWarnings("serial")
 public class MunicipioCadastro extends CadastroTemplate {

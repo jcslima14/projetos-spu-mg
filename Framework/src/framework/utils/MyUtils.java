@@ -1,4 +1,4 @@
-package framework;
+package framework.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -44,6 +44,11 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
 import com.sun.rowset.CachedRowSetImpl;
+
+import framework.components.MyComboBox;
+import framework.components.MyTableColumn;
+import framework.models.ComboBoxItem;
+import framework.models.ItemComboBox;
 
 public class MyUtils {
 

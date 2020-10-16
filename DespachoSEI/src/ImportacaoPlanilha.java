@@ -28,10 +28,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import framework.MyComboBox;
-import framework.MyLabel;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyComboBox;
+import framework.components.MyLabel;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 import model.Assinante;
 import model.Destino;
 import model.Municipio;

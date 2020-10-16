@@ -9,14 +9,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.table.TableModel;
 
-import framework.CadastroTemplate;
-import framework.MyCheckBox;
-import framework.MyComboBox;
-import framework.MyComboBoxModel;
-import framework.MyLabel;
-import framework.MyTableColumn;
-import framework.MyTableModel;
-import framework.MyUtils;
+import framework.components.MyCheckBox;
+import framework.components.MyComboBox;
+import framework.components.MyComboBoxModel;
+import framework.components.MyLabel;
+import framework.components.MyTableColumn;
+import framework.components.MyTableModel;
+import framework.templates.CadastroTemplate;
+import framework.utils.MyUtils;
 
 @SuppressWarnings("serial")
 public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {

@@ -30,10 +30,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import framework.ComboBoxItem;
-import framework.MyComboBoxModel;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyComboBoxModel;
+import framework.models.ComboBoxItem;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class ExportacaoPlanilha extends JInternalFrame {

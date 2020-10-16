@@ -1,4 +1,4 @@
-package framework;
+package framework.templates;
 import java.awt.BorderLayout;
 import java.awt.Dialog;
 

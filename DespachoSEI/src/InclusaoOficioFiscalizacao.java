@@ -4,7 +4,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,17 +32,14 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.services.SEIService;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 import model.Parametro;
 
 @SuppressWarnings("serial")
@@ -68,6 +64,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
+	private SEIService seiServico = new SEIService();
 
 	public InclusaoOficioFiscalizacao(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -154,34 +151,12 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-		ChromeOptions opcoes = new ChromeOptions();
-
-		opcoes.addArguments("start-maximized"); // open Browser in maximized mode
-		opcoes.addArguments("disable-infobars"); // disabling infobars
-		opcoes.addArguments("--disable-extensions"); // disabling extensions
-		opcoes.addArguments("--disable-gpu"); // applicable to windows os only
-		opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-		opcoes.addArguments("--no-sandbox"); // Bypass OS security model
-
-		opcoes.addArguments("--ignore-certificate-errors");
-        WebDriver driver = new ChromeDriver(opcoes);
-		
-        // And now use this to visit Google
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-
-        Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        // este wait não deve ter seu tempo alterado, pois é usado apenas para buscar a variante <autor> no frame correto; se for aumentada, pode ter impacto negativo em função da quantidade de frames que pode conter um documento
-        Wait<WebDriver> wait2 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(2))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
+        WebDriver driver = seiServico.obterWebDriver("chrome", true, "");
+        Wait<WebDriver> wait = seiServico.obterWait(driver, 60, 3);
         JavascriptExecutor js = (JavascriptExecutor) driver;
+		
+        // acessa o SEI
+        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 
         // Find the text input element by its name
         WebElement weUsuario = driver.findElement(By.id("txtUsuario"));

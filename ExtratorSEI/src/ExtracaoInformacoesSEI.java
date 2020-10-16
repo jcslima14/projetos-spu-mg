@@ -18,7 +18,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.MyUtils;
+import framework.utils.MyUtils;
 
 public class ExtracaoInformacoesSEI {
 

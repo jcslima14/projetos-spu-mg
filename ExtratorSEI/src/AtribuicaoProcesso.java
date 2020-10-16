@@ -35,11 +35,11 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.ComboBoxItem;
-import framework.MyComboBox;
-import framework.MyComboBoxModel;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyComboBox;
+import framework.components.MyComboBoxModel;
+import framework.models.ComboBoxItem;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class AtribuicaoProcesso extends JInternalFrame {

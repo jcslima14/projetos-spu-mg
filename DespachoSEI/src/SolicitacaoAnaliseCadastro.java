@@ -4,7 +4,7 @@ import javax.persistence.EntityManager;
 import javax.swing.JInternalFrame;
 import javax.swing.JTabbedPane;
 
-import framework.CadastroController;
+import framework.controllers.CadastroController;
 import model.Solicitacao;
 
 @SuppressWarnings("serial")

@@ -5,7 +5,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import framework.ItemComboBox;
+import framework.models.ItemComboBox;
 
 @Entity
 @Table(name = "assinante")

@@ -1,19 +1,21 @@
-package framework;
-import javax.swing.JTextField;
+package framework.components;
+import javax.swing.JButton;
+
+import framework.models.PropriedadesEdicao;
 
 @SuppressWarnings("serial")
-public class MyTextField extends JTextField implements PropriedadesEdicao {
+public class MyButton extends JButton implements PropriedadesEdicao {
 	private boolean inclusao = false;
 	
 	private boolean edicao = false;
 	
 	private boolean exclusao = false;
 
-	public MyTextField() {
+	public MyButton() {
 		super();
 	}
 	
-	public MyTextField(String caption) {
+	public MyButton(String caption) {
 		super(caption);
 	}
 	
@@ -39,17 +41,5 @@ public class MyTextField extends JTextField implements PropriedadesEdicao {
 	
 	public void setExclusao(boolean exclusao) {
 		this.exclusao = exclusao;
-	}
-
-	public Integer getTextAsInteger() {
-		return getTextAsInteger(null);
-	}
-	
-	public Integer getTextAsInteger(Integer defaultValue) {
-		if (getText().equals("")) {
-			return defaultValue;
-		} else {
-			return Integer.parseInt(getText());
-		}
 	}
 }

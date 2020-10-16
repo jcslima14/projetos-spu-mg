@@ -38,11 +38,11 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 
-import framework.JPAUtils;
-import framework.MyComboBox;
-import framework.MyLabel;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyComboBox;
+import framework.components.MyLabel;
+import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 import model.Assinante;
 import model.Origem;
 import model.Parametro;

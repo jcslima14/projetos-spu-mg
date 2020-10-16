@@ -32,12 +32,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import framework.ComboBoxItem;
-import framework.MyComboBox;
-import framework.MyComboBoxModel;
-import framework.MyTextField;
-import framework.MyUtils;
-import framework.SpringUtilities;
+import framework.components.MyComboBox;
+import framework.components.MyComboBoxModel;
+import framework.components.MyTextField;
+import framework.models.ComboBoxItem;
+import framework.utils.MyUtils;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class ImportacaoPlanilha extends JInternalFrame {

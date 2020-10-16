@@ -20,7 +20,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
-import framework.SpringUtilities;
+import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
 public class CopiarNomeArquivo extends JInternalFrame {

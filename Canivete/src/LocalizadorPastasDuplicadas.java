@@ -35,7 +35,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import framework.MyUtils;
+import framework.utils.MyUtils;
 
 @SuppressWarnings("serial")
 public class LocalizadorPastasDuplicadas extends JInternalFrame {
