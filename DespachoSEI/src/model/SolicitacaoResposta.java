@@ -7,7 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import framework.MyUtils;
+import framework.utils.MyUtils;
 
 @Entity
 @Table(name = "solicitacaoresposta")

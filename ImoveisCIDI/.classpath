@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="target/classes" path="src">
@@ -23,3 +24,30 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Framework"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
+=======
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+		<accessrules>
+			<accessrule kind="accessible" pattern="com/apple/eawt/**"/>
+			<accessrule kind="accessible" pattern="javax/smartcardio/**"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/Framework"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
+>>>>>>> refs/heads/inclusao-oficio-fiscalizacao

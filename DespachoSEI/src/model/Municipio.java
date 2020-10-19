@@ -7,7 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import framework.ItemComboBox;
+import framework.models.ItemComboBox;
 
 @Entity
 @Table(name = "municipio")
