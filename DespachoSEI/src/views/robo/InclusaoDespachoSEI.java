@@ -42,6 +42,7 @@ import org.openqa.selenium.support.ui.Wait;
 
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
+import framework.services.SEIService;
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -143,20 +144,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
         	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
         	return;
         }
-
+        
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-		ChromeOptions opcoes = new ChromeOptions();
-		
-		opcoes.addArguments("start-maximized"); // open Browser in maximized mode
-		opcoes.addArguments("disable-infobars"); // disabling infobars
-		opcoes.addArguments("--disable-extensions"); // disabling extensions
-		opcoes.addArguments("--disable-gpu"); // applicable to windows os only
-		opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-		opcoes.addArguments("--no-sandbox"); // Bypass OS security model
-
-		opcoes.addArguments("--ignore-certificate-errors");
-        WebDriver driver = new ChromeDriver(opcoes);
 
         // obter os dados do superior assinante
 		Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
@@ -166,52 +155,17 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		}
 		
 		superior = assinanteIterator.next();
-		
-        // And now use this to visit Google
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 
-        Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
+        SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 
-        // este wait não deve ter seu tempo alterado, pois é usado apenas para buscar a variante <autor> no frame correto; se for aumentada, pode ter impacto negativo em função da quantidade de frames que pode conter um documento
-        Wait<WebDriver> wait2 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(2))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.id("txtUsuario"));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.id("pwdSenha"));
-        weSenha.sendKeys(senha);
-
-        // selecionar a unidade do SEI
-        Select cbxOrgao = new Select(MyUtils.encontrarElemento(wait, By.id("selOrgao")));
-        cbxOrgao.selectByVisibleText(despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-
-        TimeUnit.MILLISECONDS.sleep(1500);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));
-        botaoAcessar.click();
-
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        MyUtils.fecharPopup(driver);
-        String janelaPrincipal = driver.getWindowHandle();
-
-        // selecionar a unidade default
-        MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
+        seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
 
 		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
 		for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
 			List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
 
 			if (!unidadeAberturaProcesso.trim().equals("")) {
-				MyUtils.selecionarUnidade(driver, wait, unidadeAberturaProcesso);
+				seiServico.selecionarUnidadePadrao(unidadeAberturaProcesso);
 			}
 
 			for (SolicitacaoResposta respostaAGerar : respostasDaUnidade) {
@@ -232,7 +186,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 							continue;
 						}
 	
-						gerarProcessoIndividual(driver, wait, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
+						gerarProcessoIndividual(seiServico, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
 					}
 	
 					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
@@ -430,61 +384,17 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		}
 	}
 
-	private void gerarProcessoIndividual(WebDriver driver, Wait<WebDriver> wait, SolicitacaoResposta resposta, String pastaArquivosProcessosIndividuais) throws Exception {
-		String numeroProcesso = null;
-
+	private void gerarProcessoIndividual(SEIService seiServico, SolicitacaoResposta resposta, String pastaArquivosProcessosIndividuais) throws Exception {
 		MyUtils.appendLogArea(logArea, "Gerando processo individual...");
-		
-		// encontrar link de iniciar processo
-		WebElement lnkIniciarProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = 'Iniciar Processo']"));
-		lnkIniciarProcesso.click();
-
-		WebElement lnkExibirTodosTipos = null;
-
-		try {
-			lnkExibirTodosTipos = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Exibir todos os tipos']"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if (lnkExibirTodosTipos != null) {
-			lnkExibirTodosTipos.click();
-		}
-
-		WebElement lnkTipoProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + resposta.getTipoResposta().getTipoProcesso() + "']"));
-		lnkTipoProcesso.click();
-
-		WebElement txtDescricaoProcesso = MyUtils.encontrarElemento(wait, By.id("txtDescricao"));
-		txtDescricaoProcesso.sendKeys(resposta.getSolicitacao().getNumeroProcesso());
-
-		WebElement optNivelAcessoProcesso = MyUtils.encontrarElemento(wait, By.id("optRestrito"));
-		optNivelAcessoProcesso.click();
-		TimeUnit.MILLISECONDS.sleep(200);
-		
-		Select cbxHipoteseLegal = new Select(MyUtils.encontrarElemento(wait, By.id("selHipoteseLegal")));
-		TimeUnit.MILLISECONDS.sleep(200);
-		cbxHipoteseLegal.selectByValue("34");
-		TimeUnit.MILLISECONDS.sleep(200);
-
-		WebElement btnSalvarProcesso = MyUtils.encontrarElemento(wait, By.id("btnSalvar"));
-		btnSalvarProcesso.click();
-
-		TimeUnit.SECONDS.sleep(2);
-		driver.switchTo().defaultContent();
-
-		WebElement ifrArvore = MyUtils.encontrarElemento(wait, By.xpath("//iframe[@id = 'ifrArvore']"));
-		driver.switchTo().frame(ifrArvore);
-		WebElement txtNumeroProcesso = MyUtils.encontrarElemento(wait, By.xpath("//div[@id = 'topmenu']/a[@target = 'ifrVisualizacao']"));
-		numeroProcesso = txtNumeroProcesso.getText();
+		String numeroProcesso = seiServico.gerarProcessoIndividual(resposta.getTipoResposta().getTipoProcesso(), resposta.getSolicitacao().getNumeroProcesso());
 		MyUtils.appendLogArea(logArea, "Gerado o processo individual nº " + numeroProcesso);
 
 		resposta.getSolicitacao().setNumeroProcessoSEI(numeroProcesso);
 		atualizarProcessoGerado(resposta);
-		
-		driver.switchTo().defaultContent();
 	}
 	
-	public String anexarArquivosProcesso(SolicitacaoResposta resposta, List<File> anexos, WebDriver driver, Wait<WebDriver> wait) throws Exception {
+	public String anexarArquivosProcesso(SEIService seiServico, SolicitacaoResposta resposta, List<File> anexos) throws Exception {
+		seiServico.anexarArquivosProcesso(resposta.getSolicitacao().getNumeroProcessoSEI(), anexos);
 		for (File anexo : anexos) {
 			driver.switchTo().defaultContent();
 

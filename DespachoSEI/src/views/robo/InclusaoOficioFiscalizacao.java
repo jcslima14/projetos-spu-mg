@@ -199,7 +199,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCorpo());
 
 			// salvar documento
-			seiServico.salvarFecharDocumento();
+			seiServico.salvarFecharDocumentoEditado();
 			seiServico.incluirDocumentoBlocoAssinatura(numeroDocumentoSEIGerado, blocoAssinatura);
 		} // fim do loop de todas as respostas a gerar
 
