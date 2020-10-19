@@ -31,12 +31,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.Wait;
 
 import framework.services.SEIService;
 import framework.utils.MyUtils;
@@ -66,7 +60,6 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	private JTextArea logArea = new JTextArea(30, 100);
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
-	private SEIService seiServico = new SEIService();
 
 	public InclusaoOficioFiscalizacao(String tituloJanela, EntityManager conexao) {
 		super(tituloJanela);
@@ -153,106 +146,41 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-        WebDriver driver = seiServico.obterWebDriver("chrome", true, "");
-        Wait<WebDriver> wait = seiServico.obterWait(driver, 60, 3);
-        JavascriptExecutor js = (JavascriptExecutor) driver;
 		
-        // acessa o SEI
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-
-        // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.id("txtUsuario"));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.id("pwdSenha"));
-        weSenha.sendKeys(senha);
-
-        // selecionar a unidade do SEI
-        Select cbxOrgao = new Select(MyUtils.encontrarElemento(wait, By.id("selOrgao")));
-        cbxOrgao.selectByVisibleText(despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-
-        TimeUnit.MILLISECONDS.sleep(1500);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));
-        botaoAcessar.click();
-
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        MyUtils.fecharPopup(driver);
-        String janelaPrincipal = driver.getWindowHandle();
+		SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
+		
+        // acessa o SEI, realiza o login e seleciona unidade padrão
+        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
 
 		// pesquisa o processo onde deverão ser incluídos os ofícios
-		WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtPesquisaRapida']"));
-		txtPesquisaRapida.sendKeys(numeroProcesso);
-		txtPesquisaRapida.sendKeys(Keys.RETURN);
+        seiServico.pesquisarProcesso(numeroProcesso);
 
 		Map<String, Oficio> oficiosAGerar = obterDadosOficios(lblNomeArquivo.getText());
 		for (Oficio oficio : oficiosAGerar.values()) {
 			MyUtils.appendLogArea(logArea, "Gerando ofício para UG: " + oficio.ugResponsavel);
 
-			// clica no número do processo para habilitar os botões de ação do processo
-			driver.switchTo().frame("ifrArvore");
-			WebElement lnkNumeroProcesso = MyUtils.encontrarElemento(wait, By.xpath("//a/span[contains(text(), '" + numeroProcesso + "')]"));
-			lnkNumeroProcesso.click();
-			driver.switchTo().defaultContent();
-			
-			// clica em inserir documento
-			driver.switchTo().frame("ifrVisualizacao");
-			WebElement btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
-			btnIncluirDocumento.click();
-
-			// clica no tipo de documento
-			WebElement btnOpcaoTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = 'Ofício']"));
-			btnOpcaoTipoDocumento.click();
-
-			// clica em documento modelo
-			WebElement lblDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//label[contains(text(), 'Documento Modelo')]"));
-			lblDocumentoModelo.click();
-
-			// preenche o código do documento modelo
-			WebElement txtCodigoDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtProtocoloDocumentoTextoBase']"));
-			txtCodigoDocumentoModelo.sendKeys(numeroDocumentoModelo);
-
-			// seleciona nivel de acesso do documento
-			WebElement lblNivelAcessoPublico = MyUtils.encontrarElemento(wait, By.xpath("//label[@id = 'lblPublico']"));
-			lblNivelAcessoPublico.click();
-			
-			// clica em confirmar dados
-			WebElement btnConfirmarDados = MyUtils.encontrarElemento(wait, By.xpath("//button[@id = 'btnSalvar']"));
-			btnConfirmarDados.click();
-
-			// esperar abrir a janela popup
-			do {
-				TimeUnit.SECONDS.sleep(1);
-			} while (driver.getWindowHandles().size() == 1);
-			
-			// abriu janela para editar o documento, então navega até a janela
-			for (String tituloJanela : driver.getWindowHandles()) {
-				driver.switchTo().window(tituloJanela);
-			}
-
-			String numeroDocumentoSEIGerado = driver.getTitle().split(" - ")[1];
+			// insere um novo documento
+			String numeroDocumentoSEIGerado = seiServico.inserirDocumentoNoProcesso(numeroProcesso, "Ofício", numeroDocumentoModelo);
 			MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
 
 			// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
 			TimeUnit.SECONDS.sleep(1);
-			driver.switchTo().frame(3);
-			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
+			seiServico.alterarParaFrame(3);
+			seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
 			TimeUnit.SECONDS.sleep(1);
 
-			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCabecalho());
+			seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCabecalho());
 
 			// alterna para o frame do corpo do documento para promover as substituições e clica no primeiro elemento p para mudar o foco
-			driver.switchTo().frame(4);
-			MyUtils.encontrarElemento(wait, By.xpath("(//p)[1]")).click();
+			seiServico.alterarParaFrame(4);
+			seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
 			TimeUnit.SECONDS.sleep(1);
 			
 			// obtem a linha da tabela que possui os marcadores a serem substituídos e armazena em string para servir de template para novas linhas a serem adicionadas
-			String imovelTemplate = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("outerHTML");
+			String imovelTemplate = seiServico.encontrarElemento(By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("outerHTML");
 
 			// exclui a linha de template para, em seguida, adicionar as linhas com os dados reais
-			js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
+			seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
 			TimeUnit.MILLISECONDS.sleep(500);
 			
 			String novosImoveis = "";
@@ -264,49 +192,20 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			}
 
 			// adiciona os novos imóveis à tabela
-			js.executeScript("document.querySelector('#tabela-imoveis-vistoria > tbody').innerHTML += '" + novosImoveis + "'");
+			seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').innerHTML += '" + novosImoveis + "'");
 			TimeUnit.MILLISECONDS.sleep(500);
 
 			// substitui os marcadores do corpo
-			substituirMarcacaoDocumento(driver, wait, oficio.mapaSubstituicoesCorpo());
-		
-			// procura o botão salvar, conferindo que ele esteja habilitado
-			WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
-			btnSalvar.click();
-				
-			TimeUnit.MILLISECONDS.sleep(500);
-			
-			// aguarda até que o botão de salvar esteja novamente desabilitado para fechar a janela
-			MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and @aria-disabled]"));
-			
-			driver.close();
-			driver.switchTo().window(janelaPrincipal);
+			seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCorpo());
 
-			driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
-			WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
-			btnIncluirBlocoAssinatura.click();
-
-			// seleciona o bloco interno desejado
-			Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
-			cbxBlocoAssinatura.selectByValue(blocoAssinatura);
-
-			// aguardar que a linha com o documento gerado seja carregada
-			MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + numeroDocumentoSEIGerado + "']]"));
-
-			// clica em incluir
-			WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
-			btnIncluir.click();
-
-			// aguardar que a linha retorno indicando que o registro está inserido no bloco
-			MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + numeroDocumentoSEIGerado + "'] and ./td[5]/a[text() = '" + blocoAssinatura + "']]"));
-			
-			driver.switchTo().defaultContent();
+			// salvar documento
+			seiServico.salvarFecharDocumento();
+			seiServico.incluirDocumentoBlocoAssinatura(numeroDocumentoSEIGerado, blocoAssinatura);
 		} // fim do loop de todas as respostas a gerar
 
 		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
 
-        driver.close();
-        driver.quit();
+		seiServico.fechaNavegador();
 	}
 
 	private class Imovel {
@@ -439,41 +338,5 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		wb.close();
 
 		return retorno;
-	}
-
-	private void substituirMarcacaoDocumento(WebDriver driver, Wait<WebDriver> wait, Map<String, String> mapaSubstituicoes) throws Exception {
-		// volta ao conteúdo default
-		driver.switchTo().defaultContent();
-
-		// clica no botão localizar
-		WebElement btnSubstituir = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[@title = 'Substituir']"));
-		btnSubstituir.click();
-		TimeUnit.MILLISECONDS.sleep(500);
-
-		// repetir este pedaço para todos os textos a serem substituídos no documento
-		for (String chave : mapaSubstituicoes.keySet()) {
-			String textoSubstituto = mapaSubstituicoes.get(chave);
-
-			// preenche o texto a ser encontrado
-			WebElement txtPesquisar = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[1]"));
-			txtPesquisar.clear();
-			txtPesquisar.sendKeys(chave);
-			
-			// preenche o texto para substituição
-			WebElement txtSubstituir = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[2]"));
-			txtSubstituir.clear();
-			txtSubstituir.sendKeys(textoSubstituto);
-			
-			// clica em substituir tudo
-			WebElement btnSubstituirTudo = MyUtils.encontrarElemento(wait, By.xpath("//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//a[@title = 'Substituir Tudo']"));
-			btnSubstituirTudo.click();
-			
-			// clica em ok na mensagem apresentada
-			driver.switchTo().alert().accept();
-		}
-		
-		// clica em fechar
-		WebElement btnFechar = MyUtils.encontrarElemento(wait, By.xpath("//div[@role= 'dialog' and not(contains(@style, 'display: none'))]//span[text() = 'Fechar']"));
-		btnFechar.click();
 	}
 }

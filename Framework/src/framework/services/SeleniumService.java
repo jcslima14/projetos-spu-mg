@@ -2,21 +2,45 @@ package framework.services;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
 
 public class SeleniumService {
+	
+	protected WebDriver driver;
+	protected WebDriverWait wait;
+	protected String janelaPrincipal;
+
+	public SeleniumService(String navegador, String endereco, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
+		this.driver = obterWebDriver(navegador, exibirNavegador, pastaDeDownload, timeoutImplicito);
+		this.wait = new WebDriverWait(driver, timeoutImplicito * 60);
+		this.wait.pollingEvery(Duration.ofSeconds(3));
+		this.wait.withTimeout(Duration.ofSeconds(60));
+		this.wait.ignoring(NoSuchElementException.class);
+		
+		if (!endereco.trim().equals("")) {
+			acessarEndereco(endereco);
+		}
+	}
+	
 	@SuppressWarnings("serial")
-	public WebDriver obterWebDriver(String navegador, boolean exibirNavegador, String pastaDeDownload) throws Exception {
+	private WebDriver obterWebDriver(String navegador, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
 		// verifica se a pasta de downloads existe
 		if (!pastaDeDownload.contentEquals("") && !MyUtils.arquivoExiste(pastaDeDownload)) {
 			throw new Exception("A pasta para download dos arquivos não existe");
@@ -65,6 +89,8 @@ public class SeleniumService {
 			driver = new FirefoxDriver(opcoes);
 		}
 		
+        driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
+
 		return driver;
 	}
 	
@@ -73,5 +99,62 @@ public class SeleniumService {
         		.withTimeout(Duration.ofSeconds(timeout))
         		.pollingEvery(Duration.ofSeconds(pollingEvery))
         		.ignoring(NoSuchElementException.class);
+	}
+	
+	public void acessarEndereco(String endereco) {
+		driver.get(endereco);
+	}
+
+	public void fecharPopup() {
+		String primeiraJanela = "";
+        for (String tituloJanela : this.driver.getWindowHandles()) {
+        	if (!primeiraJanela.equalsIgnoreCase("")) {
+        		this.driver.switchTo().window(tituloJanela);
+        		this.driver.close();
+        	} else {
+        		primeiraJanela = tituloJanela;
+        	}
+        }
+
+        this.driver.switchTo().window(primeiraJanela);
+	}
+
+	public WebElement encontrarElemento(By by) {
+		return this.wait.until(new Function<WebDriver, WebElement>() {
+			@Override
+			public WebElement apply(WebDriver t) {
+				WebElement element = t.findElement(by);
+				if (element == null) {
+					System.out.println("Elemento não encontrado...");
+				}
+				return element;
+			}
+		});
+	}
+
+	public List<WebElement> encontrarElementos(By by) {
+		return this.wait.until(new Function<WebDriver, List<WebElement>>() {
+			@Override
+			public List<WebElement> apply(WebDriver t) {
+				List<WebElement> elements = t.findElements(by);
+				if (elements == null) {
+					System.out.println("Elemento não encontrado...");
+				}
+				return elements;
+			}
+		});
+	}
+	
+	public void alterarParaFrame(int index) {
+		driver.switchTo().frame(index);
+	}
+
+	public void executarJavaScript(String script, Object... args) {
+		((JavascriptExecutor) driver).executeScript(script, args);
+	}
+	
+	public void fechaNavegador() {
+        driver.close();
+        driver.quit();
 	}
 }
