@@ -65,7 +65,7 @@ public class SEIService extends SeleniumService {
 		txtPesquisaRapida.sendKeys(numeroProcesso);
 		txtPesquisaRapida.sendKeys(Keys.RETURN);
 	}
-	
+
 	public void acessarRaizProcesso(String numeroProcesso) {
 		driver.switchTo().frame("ifrArvore");
 		WebElement lnkNumeroProcesso = encontrarElemento(By.xpath("//a/span[contains(text(), '" + numeroProcesso + "')]"));
@@ -78,7 +78,7 @@ public class SEIService extends SeleniumService {
 		return inserirDocumentoNativo(tipoDocumento, documentoModelo);
 	}
 	
-	public void inserirDocumento(String tipoDocumento) throws Exception {
+	private void inserirDocumento(String tipoDocumento) throws Exception {
 		driver.switchTo().frame("ifrVisualizacao");
 		// incluir os documentos no processo
 		WebElement btnIncluirDocumento = null;
@@ -307,6 +307,41 @@ public class SEIService extends SeleniumService {
 			acessarRaizProcesso(numeroProcesso);
 		}
 
+		driver.switchTo().defaultContent();
+	}
+	
+	public void acessarFramePorConteudo(By by) throws Exception {
+		driver.switchTo().defaultContent();
+		List<WebElement> frmIFrames = null;
+		int espera = 15;
+		do {
+			TimeUnit.SECONDS.sleep(2);
+			frmIFrames = encontrarElementos(By.tagName("iframe"));
+		} while (--espera >= 0 && (frmIFrames == null || frmIFrames.size() <= 1));
+
+		WebElement welAutor = null;
+		
+		for (WebElement frmIFrame : frmIFrames) {
+			driver.switchTo().frame(frmIFrame);
+
+			try {
+				welAutor = encontrarElemento(by);
+			} catch (Exception e) {
+				welAutor = null;
+			}
+
+			if (welAutor != null) {
+				break;
+			} else {
+				driver.switchTo().defaultContent();
+			}
+		}
+		
+		// clica no primeiro paragrafo encontrado no iframe
+		welAutor.click();
+		TimeUnit.SECONDS.sleep(1);
+		
+		// volta ao conteúdo default
 		driver.switchTo().defaultContent();
 	}
 }

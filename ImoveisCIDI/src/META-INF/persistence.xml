@@ -2,9 +2,9 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
     <persistence-unit name="ImoveisCIDI" transaction-type="RESOURCE_LOCAL">
     	<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-    	<class>BemNaoOperacional</class>
-    	<class>BemOperacional</class>
-    	<class>BemTransferidoSPU</class>
+    	<class>models.BemNaoOperacional</class>
+    	<class>models.BemOperacional</class>
+    	<class>models.BemTransferidoSPU</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" /> <!-- DB Driver -->
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://10.209.227.154:5432/cidi" /> <!-- BD Mane -->

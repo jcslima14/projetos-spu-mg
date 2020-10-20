@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -15,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -30,15 +28,6 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.Wait;
 
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
@@ -190,11 +179,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					}
 	
 					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
-						String msgAnexarArquivos = anexarArquivosProcesso(respostaAGerar, anexos, driver, wait);
-						if (!msgAnexarArquivos.equals("")) {
-							MyUtils.appendLogArea(logArea, msgAnexarArquivos);
-							continue;
-						}
+						anexarArquivosProcesso(seiServico, respostaAGerar, anexos);
 					}
 
 					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
@@ -206,163 +191,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					}
 				}
 
-				// pesquisa o processo onde deverá ser incluído a resposta
-				WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtPesquisaRapida']"));
-				txtPesquisaRapida.sendKeys(respostaAGerar.getNumeroProcessoSEI());
-				txtPesquisaRapida.sendKeys(Keys.RETURN);
+				respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
+				seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
+				seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
+				seiServico.salvarFecharDocumentoEditado();
 				
-				// clica em inserir documento
-				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
-				WebElement btnIncluirDocumento = null;
-				try {
-					btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
-				} catch (Exception e) {
-					MyUtils.appendLogArea(logArea, "Não foi encontrado o botão de incluir documentos no processo " + respostaAGerar.getNumeroProcessoSEI() + ". Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
-					continue;
-				}
-				btnIncluirDocumento.click();
-				
-				// clica no tipo de documento
-				WebElement btnOpcaoTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = '" + respostaAGerar.getTipoResposta().getTipoDocumento() + "']"));
-				btnOpcaoTipoDocumento.click();
-	
-				// clica em documento modelo
-				WebElement lblDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//label[contains(text(), 'Documento Modelo')]"));
-				lblDocumentoModelo.click();
-	
-				// preenche o código do documento modelo
-				WebElement txtCodigoDocumentoModelo = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtProtocoloDocumentoTextoBase']"));
-				txtCodigoDocumentoModelo.sendKeys(respostaAGerar.getTipoResposta().getNumeroDocumentoModelo());
-	
-				// seleciona nivel de acesso do documento
-				WebElement lblNivelAcessoPublico = MyUtils.encontrarElemento(wait, By.xpath("//label[@id = 'lblPublico']"));
-				lblNivelAcessoPublico.click();
-				
-				// clica em confirmar dados
-				WebElement btnConfirmarDados = MyUtils.encontrarElemento(wait, By.xpath("//button[@id = 'btnSalvar']"));
-				btnConfirmarDados.click();
-				
-				// esperar abrir a janela popup
-				do {
-					TimeUnit.SECONDS.sleep(1);
-				} while (driver.getWindowHandles().size() == 1);
-				
-				// abriu janela para editar o documento, então navega até a janela
-				for (String tituloJanela : driver.getWindowHandles()) {
-					driver.switchTo().window(tituloJanela);
-				}
-	
-				respostaAGerar.setNumeroDocumentoSEI(driver.getTitle().split(" - ")[1]);
-				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + respostaAGerar.getNumeroDocumentoSEI());
-	
-				// encontrar o iframe que contem o corpo do documento a ser editado
-				driver.switchTo().defaultContent();
-				List<WebElement> frmIFrames = null;
-				int espera = 15;
-				do {
-					TimeUnit.SECONDS.sleep(2);
-					frmIFrames = MyUtils.encontrarElementos(wait, By.tagName("iframe"));
-				} while (--espera >= 0 && (frmIFrames == null || frmIFrames.size() <= 1));
-	
-				WebElement welAutor = null;
-				
-				for (WebElement frmIFrame : frmIFrames) {
-					driver.switchTo().frame(frmIFrame);
-
-					try {
-						welAutor = MyUtils.encontrarElemento(wait2, By.xpath("//*[contains(text(), '<autor>')]"));
-					} catch (Exception e) {
-						welAutor = null;
-					}
-	
-					if (welAutor != null) {
-						break;
-					} else {
-						driver.switchTo().defaultContent();
-					}
-				}
-				
-				// clica no primeiro paragrafo encontrado no iframe
-				welAutor.click();
-				TimeUnit.SECONDS.sleep(1);
-				
-				// volta ao conteúdo default
-				driver.switchTo().defaultContent();
-				
-				// clica no botão localizar
-				WebElement btnLocalizar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[@title = 'Localizar']"));
-				btnLocalizar.click();
-	
-				// clica na aba substituir
-				WebElement tabSubstituir = MyUtils.encontrarElemento(wait, By.xpath("//a[contains(text(), 'Substituir')]"));
-				TimeUnit.SECONDS.sleep(1);
-				tabSubstituir.click();
-	
-				Map<String, String> mapaSubstituicoes = obterMapaSubstituicoes(respostaAGerar, superior);
-				
-				// repetir este pedaço para todos os textos a serem substituídos no documento
-				for (String chave : mapaSubstituicoes.keySet()) {
-					String textoSubstituto = mapaSubstituicoes.get(chave);
-	
-					// appendLogArea(logArea, "Substituindo '" + chave + "' por '" + textoSubstituto + "'");
-					
-					// preenche o texto a ser encontrado
-					WebElement txtPesquisar = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[1]"));
-					txtPesquisar.clear();
-					txtPesquisar.sendKeys(chave);
-					
-					// preenche o texto para substituição
-					WebElement txtSubstituir = MyUtils.encontrarElemento(wait, By.xpath("(//div[@role = 'tabpanel' and not(contains(@style, 'display: none'))]//input[@type = 'text'])[2]"));
-					txtSubstituir.clear();
-					txtSubstituir.sendKeys(textoSubstituto);
-					
-					// clica em substituir tudo
-					WebElement btnSubstituirTudo = MyUtils.encontrarElemento(wait, By.xpath("//a[@title = 'Substituir Tudo']"));
-					btnSubstituirTudo.click();
-					
-					// clica em ok na mensagem apresentada
-					// MyUtils.appendLogArea(logArea, "Resultado da substituição de '" + chave + "' por '" + textoSubstituto + "': " + driver.switchTo().alert().getText());
-					driver.switchTo().alert().accept();
-				}
-				
-				// clica em fechar
-				WebElement btnFechar = MyUtils.encontrarElemento(wait, By.xpath("//span[text() = 'Fechar']"));
-				btnFechar.click();
-	
-				// procura o botão salvar, conferindo que ele esteja habilitado
-				WebElement btnSalvar = MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and not(@aria-disabled)]"));
-				btnSalvar.click();
-				
-				TimeUnit.MILLISECONDS.sleep(500);
-				
-				// aguarda até que o botão de salvar esteja novamente desabilitado para fechar a janela
-				MyUtils.encontrarElemento(wait, By.xpath("//div[contains(@id, 'cke_txaEditor') and contains(@class, 'cke_detached') and not(contains(@style, 'display: none'))]//a[contains(@title, 'Salvar') and @aria-disabled]"));
-				
-				driver.close();
-				driver.switchTo().window(janelaPrincipal);
-
-				// clica no botão adicionar ao bloco interno
+				// incluir no bloco de assinatura
 				respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
-				
-				driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
-				WebElement btnIncluirBlocoAssinatura = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
-				btnIncluirBlocoAssinatura.click();
-
-				// seleciona o bloco interno desejado
-				Select cbxBlocoAssinatura = new Select(MyUtils.encontrarElemento(wait, By.id("selBloco")));
-				cbxBlocoAssinatura.selectByValue(respostaAGerar.getBlocoAssinatura());
-
-				// aguardar que a linha com o documento gerado seja carregada
-				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "']]"));
-
-				// clica em incluir
-				WebElement btnIncluir = MyUtils.encontrarElemento(wait, By.id("sbmIncluir"));
-				btnIncluir.click();
-
-				// aguardar que a linha retorno indicando que o registro está inserido no bloco
-				MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/tbody/tr[./td[2]/a[text() = '" + respostaAGerar.getNumeroDocumentoSEI() + "'] and ./td[5]/a[text() = '" + respostaAGerar.getBlocoAssinatura() + "']]"));
-				
-				driver.switchTo().defaultContent();
+				seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());
 				
 				// atualiza o número do documento gerado no SEI
 				atualizarDocumentoGerado(respostaAGerar, superior);
@@ -371,8 +207,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
 
-        driver.close();
-        driver.quit();
+		seiServico.fechaNavegador();
 	}
 
 	private String obterBlocoAssinatura(Assinante assinante, TipoResposta tipoResposta) throws Exception {
@@ -393,74 +228,12 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		atualizarProcessoGerado(resposta);
 	}
 	
-	public String anexarArquivosProcesso(SEIService seiServico, SolicitacaoResposta resposta, List<File> anexos) throws Exception {
+	public void anexarArquivosProcesso(SEIService seiServico, SolicitacaoResposta resposta, List<File> anexos) throws Exception {
+		MyUtils.appendLogArea(logArea, "Anexando os arquivos ao processo...");
 		seiServico.anexarArquivosProcesso(resposta.getSolicitacao().getNumeroProcessoSEI(), anexos);
-		for (File anexo : anexos) {
-			driver.switchTo().defaultContent();
-
-			WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait, By.id("txtPesquisaRapida"));
-			txtPesquisaRapida.sendKeys(resposta.getSolicitacao().getNumeroProcessoSEI());
-			txtPesquisaRapida.sendKeys(Keys.RETURN);
-
-			MyUtils.appendLogArea(logArea, "Anexando o arquivo " + anexo.getName());
-
-			// mudar de frame
-			WebElement ifrVisualizacao = MyUtils.encontrarElemento(wait, By.xpath("//iframe[@id = 'ifrVisualizacao']"));
-			driver.switchTo().frame(ifrVisualizacao);
-
-			// incluir os documentos no processo
-			WebElement btnIncluirDocumento = null;
-			try {
-				btnIncluirDocumento = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Incluir Documento']"));
-			} catch (Exception e) {
-				return "Não foi encontrado o botão de incluir documentos no processo " + resposta.getNumeroProcessoSEI() + ". Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.";
-			}
-			btnIncluirDocumento.click();
-
-			WebElement lnkTipoDocumento = MyUtils.encontrarElemento(wait, By.xpath("//a[text() = ' Externo']"));
-			lnkTipoDocumento.click();
-
-			Select cbxTipoDocumento = new Select(MyUtils.encontrarElemento(wait, By.id("selSerie")));
-			cbxTipoDocumento.selectByVisibleText("Processo");
-			TimeUnit.MILLISECONDS.sleep(800);
-
-			WebElement txtDataDocumento = MyUtils.encontrarElemento(wait, By.id("txtDataElaboracao"));
-			txtDataDocumento.sendKeys(MyUtils.formatarData(new Date(), "dd/MM/yyyy"));
-
-			WebElement optNatoDigital = MyUtils.encontrarElemento(wait, By.id("optNato"));
-			optNatoDigital.click();
-
-			WebElement optNivelAcessoDocumento = MyUtils.encontrarElemento(wait, By.id("optPublico"));
-			optNivelAcessoDocumento.click();
-
-			WebElement updArquivo = MyUtils.encontrarElemento(wait, By.id("filArquivo"));
-			updArquivo.sendKeys(anexo.getAbsolutePath());
-
-			// loop para esperar que o documento apareça na lista
-			WebElement divDocumentoNaLista = null;
-			do {
-				try {
-					divDocumentoNaLista = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblAnexos']//tr/td/div[text() = '" + anexo.getName() + "']"));
-				} catch (Exception e) {
-					divDocumentoNaLista = null;
-				}
-			} while (divDocumentoNaLista == null);
-	
-			WebElement btnSalvarDocumento = MyUtils.encontrarElemento(wait, By.id("btnSalvar"));
-			btnSalvarDocumento.click();
-
-			TimeUnit.MILLISECONDS.sleep(1500);
-
-			// espera aparecer o botão de consultar/alterar documento para ter certeza de que o upload terminou
-			MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Consultar/Alterar Documento Externo']"));
-		} // fim do loop de anexação de arquivos
-		
-		driver.switchTo().defaultContent();
 		
 		resposta.getSolicitacao().setArquivosAnexados(true);
 		atualizarArquivosAnexados(resposta);
-
-		return "";
 	}
 
 	private Map<String, String> obterMapaSubstituicoes(SolicitacaoResposta resposta, Assinante superior) {
