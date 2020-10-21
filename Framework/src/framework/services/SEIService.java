@@ -66,11 +66,24 @@ public class SEIService extends SeleniumService {
 		txtPesquisaRapida.sendKeys(Keys.RETURN);
 	}
 
-	public void acessarRaizProcesso(String numeroProcesso) {
+	public void acessarRaizProcesso(String numeroProcesso) throws Exception {
+		driver.switchTo().defaultContent();
 		driver.switchTo().frame("ifrArvore");
 		WebElement lnkNumeroProcesso = encontrarElemento(By.xpath("//a/span[contains(text(), '" + numeroProcesso + "')]"));
 		lnkNumeroProcesso.click();
+		// espera retornar o botão incluir documento
+		TimeUnit.MILLISECONDS.sleep(200);
 		driver.switchTo().defaultContent();
+	}
+
+	private WebElement obterBotaoIncluirDocumento() throws Exception {
+		WebElement btnIncluirDocumento = null;
+		try {
+			btnIncluirDocumento = encontrarElemento(By.xpath("//img[@alt = 'Incluir Documento']"));
+		} catch (Exception e) {
+			throw new Exception("Não foi encontrado o botão de incluir documentos no processo. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
+		}
+		return btnIncluirDocumento;
 	}
 	
 	public String inserirDocumentoNoProcesso(String numeroProcesso, String tipoDocumento, String documentoModelo) throws Exception {
@@ -81,12 +94,7 @@ public class SEIService extends SeleniumService {
 	private void inserirDocumento(String tipoDocumento) throws Exception {
 		driver.switchTo().frame("ifrVisualizacao");
 		// incluir os documentos no processo
-		WebElement btnIncluirDocumento = null;
-		try {
-			btnIncluirDocumento = encontrarElemento(By.xpath("//img[@alt = 'Incluir Documento']"));
-		} catch (Exception e) {
-			throw new Exception("Não foi encontrado o botão de incluir documentos no processo. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
-		}
+		WebElement btnIncluirDocumento = obterBotaoIncluirDocumento();
 		btnIncluirDocumento.click();
 
 		// clica no tipo de documento
@@ -314,18 +322,19 @@ public class SEIService extends SeleniumService {
 		driver.switchTo().defaultContent();
 		List<WebElement> frmIFrames = null;
 		int espera = 15;
+		
 		do {
 			TimeUnit.SECONDS.sleep(2);
 			frmIFrames = encontrarElementos(By.tagName("iframe"));
 		} while (--espera >= 0 && (frmIFrames == null || frmIFrames.size() <= 1));
-
+		
 		WebElement welAutor = null;
 		
 		for (WebElement frmIFrame : frmIFrames) {
 			driver.switchTo().frame(frmIFrame);
 
 			try {
-				welAutor = encontrarElemento(by);
+				welAutor = encontrarElemento(2, 1, by);
 			} catch (Exception e) {
 				welAutor = null;
 			}

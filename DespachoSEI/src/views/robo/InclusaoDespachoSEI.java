@@ -146,7 +146,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		superior = assinanteIterator.next();
 
         SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-
+        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
         seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
 
 		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
@@ -177,7 +177,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	
 						gerarProcessoIndividual(seiServico, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
 					}
-	
+
 					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
 						anexarArquivosProcesso(seiServico, respostaAGerar, anexos);
 					}
@@ -191,6 +191,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					}
 				}
 
+				seiServico.pesquisarProcesso(respostaAGerar.getNumeroProcessoSEI());
 				respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
 				seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
 				seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));

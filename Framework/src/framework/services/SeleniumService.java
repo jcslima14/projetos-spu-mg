@@ -3,7 +3,6 @@ package framework.services;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.openqa.selenium.By;
@@ -17,22 +16,16 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
 
 public class SeleniumService {
 	
 	protected WebDriver driver;
-	protected WebDriverWait wait;
 	protected String janelaPrincipal;
 
 	public SeleniumService(String navegador, String endereco, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
 		this.driver = obterWebDriver(navegador, exibirNavegador, pastaDeDownload, timeoutImplicito);
-		this.wait = new WebDriverWait(driver, timeoutImplicito * 60);
-		this.wait.pollingEvery(Duration.ofSeconds(3));
-		this.wait.withTimeout(Duration.ofSeconds(60));
-		this.wait.ignoring(NoSuchElementException.class);
 		
 		if (!endereco.trim().equals("")) {
 			acessarEndereco(endereco);
@@ -89,7 +82,7 @@ public class SeleniumService {
 			driver = new FirefoxDriver(opcoes);
 		}
 		
-        driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
+        // driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
 
 		return driver;
 	}
@@ -119,8 +112,15 @@ public class SeleniumService {
         this.driver.switchTo().window(primeiraJanela);
 	}
 
-	public WebElement encontrarElemento(By by) {
-		return this.wait.until(new Function<WebDriver, WebElement>() {
+	private FluentWait<WebDriver> espera(int timeout, int pollingEvery) {
+		return new FluentWait<WebDriver>(driver)
+				.withTimeout(Duration.ofSeconds(timeout))
+				.pollingEvery(Duration.ofSeconds(pollingEvery))
+				.ignoring(NoSuchElementException.class);
+	}
+	
+	public WebElement encontrarElemento(int timeout, int pollingEvery, By by) {
+		return espera(timeout, pollingEvery).until(new Function<WebDriver, WebElement>() {
 			@Override
 			public WebElement apply(WebDriver t) {
 				WebElement element = t.findElement(by);
@@ -132,8 +132,12 @@ public class SeleniumService {
 		});
 	}
 
+	public WebElement encontrarElemento(By by) {
+		return encontrarElemento(60, 3, by);
+	}
+
 	public List<WebElement> encontrarElementos(By by) {
-		return this.wait.until(new Function<WebDriver, List<WebElement>>() {
+		return espera(60, 3).until(new Function<WebDriver, List<WebElement>>() {
 			@Override
 			public List<WebElement> apply(WebDriver t) {
 				List<WebElement> elements = t.findElements(by);
