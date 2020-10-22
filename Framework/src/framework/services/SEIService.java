@@ -76,26 +76,14 @@ public class SEIService extends SeleniumService {
 		driver.switchTo().defaultContent();
 	}
 
-	private WebElement obterBotaoIncluirDocumento() throws Exception {
-		WebElement btnIncluirDocumento = null;
-		try {
-			btnIncluirDocumento = encontrarElemento(By.xpath("//img[@alt = 'Incluir Documento']"));
-		} catch (Exception e) {
-			throw new Exception("Não foi encontrado o botão de incluir documentos no processo. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
-		}
-		return btnIncluirDocumento;
-	}
-	
 	public String inserirDocumentoNoProcesso(String numeroProcesso, String tipoDocumento, String documentoModelo) throws Exception {
 		acessarRaizProcesso(numeroProcesso);
 		return inserirDocumentoNativo(tipoDocumento, documentoModelo);
 	}
 	
 	private void inserirDocumento(String tipoDocumento) throws Exception {
-		driver.switchTo().frame("ifrVisualizacao");
 		// incluir os documentos no processo
-		WebElement btnIncluirDocumento = obterBotaoIncluirDocumento();
-		btnIncluirDocumento.click();
+		clicarBotaoAcaoProcesso("Incluir Documento");
 
 		// clica no tipo de documento
 		WebElement btnOpcaoTipoDocumento = encontrarElemento(By.xpath("//a[text() = '" + tipoDocumento + "']"));
@@ -112,16 +100,7 @@ public class SEIService extends SeleniumService {
 	}
 
 	private String editarDocumentoNativo() throws Exception {
-		// esperar abrir a janela popup
-		do {
-			TimeUnit.SECONDS.sleep(1);
-		} while (driver.getWindowHandles().size() == 1);
-		
-		// abriu janela para editar o documento, então navega até a janela
-		for (String tituloJanela : driver.getWindowHandles()) {
-			driver.switchTo().window(tituloJanela);
-		}
-
+		mudaFocoParaPopup(1);
 		return driver.getTitle().split(" - ")[1];
 	}
 	
@@ -174,10 +153,8 @@ public class SEIService extends SeleniumService {
 		driver.switchTo().window(janelaPrincipal);
 	}
 	
-	public void incluirDocumentoBlocoAssinatura(String numeroDocumento, String blocoAssinatura) {
-		driver.switchTo().frame("ifrVisualizacao");
-		WebElement btnIncluirBlocoAssinatura = encontrarElemento(By.xpath("//img[@alt = 'Incluir em Bloco de Assinatura']"));
-		btnIncluirBlocoAssinatura.click();
+	public void incluirDocumentoBlocoAssinatura(String numeroDocumento, String blocoAssinatura) throws Exception {
+		clicarBotaoAcaoProcesso("Incluir em Bloco de Assinatura");
 
 		// seleciona o bloco interno desejado
 		Select cbxBlocoAssinatura = new Select(encontrarElemento(By.id("selBloco")));
@@ -352,5 +329,155 @@ public class SEIService extends SeleniumService {
 		
 		// volta ao conteúdo default
 		driver.switchTo().defaultContent();
+	}
+	
+	public void acessarPaginaImpressaoDocumentos() throws Exception {
+		// clicar em gerar documentos
+		clicarBotaoAcaoProcesso("Incluir Documento");
+
+		// encontra a quantidade de registros aptos a serem impressos
+		aguardarCargaListaDocumentos("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados());
+
+		// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
+		WebElement btnDesmarcarTudo = encontrarElemento(By.xpath("//img[@title = 'Selecionar Tudo']"));
+		btnDesmarcarTudo.click();
+		TimeUnit.SECONDS.sleep(1);
+		btnDesmarcarTudo.click();
+
+	}
+	
+	private void clicarBotaoAcaoProcesso(String botao) throws Exception {
+		String xpath = null;
+		
+		switch (botao) {
+			case "Incluir Documento": xpath = "//img[@alt = 'Incluir Documento']";
+			case "Imprimir Documento": xpath = "//img[@alt = 'Gerar Arquivo PDF do Processo']";
+			case "Incluir em Bloco de Assinatura": xpath = "//img[@alt = 'Incluir em Bloco de Assinatura']";
+		}
+		
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+		WebElement btnAcao = null;
+		try {
+			btnAcao = encontrarElemento(By.xpath(xpath));
+		} catch (Exception e) {
+			throw new Exception("Não foi encontrado o botão '" + botao + "'. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
+		}
+		btnAcao.click();
+	}
+
+	private int obterQuantidadeDocumentosEsperados() {
+		String quantidadeRegistros = encontrarElemento(By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
+		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
+		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
+		return Integer.parseInt(quantidadeRegistros);
+	}
+
+	public String imprimirDocumento(String numeroProcesso, String numeroProcessoSEI, String numeroDocumentoSEI, int quantidadeAssinaturas, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
+		String retorno = null;
+		// encontra e marca o checkbox do documento
+		WebElement chkSelecionarDocumento = null;
+		try {
+			chkSelecionarDocumento = encontrarElemento(5, 1, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (chkSelecionarDocumento != null) {
+			// trecho para verificar se o documento possui a quantidade de assinaturas necessárias
+			WebElement lnkDocumento = encontrarElemento(5, 1, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
+			TimeUnit.MILLISECONDS.sleep(100);
+			moverMouseParaElemento(lnkDocumento);
+			lnkDocumento.click();
+
+			mudaFocoParaPopup(1);
+			retorno = confereQuantidadeAssinaturasDocumento(numeroProcesso, quantidadeAssinaturas);
+			
+			if (retorno != null) {
+				return retorno;
+			} else {
+				retorno = gerarDocumentoPDF(chkSelecionarDocumento, numeroProcessoSEI, numeroDocumentoSEI, pastaDownload, pastaDestino, nomeArquivo);
+			}
+		} else {
+			retorno = "Documento não encontrado ou não habilitado para geração em PDF";
+		}
+		
+		return retorno;
+	}
+	
+	private String confereQuantidadeAssinaturasDocumento(String numeroProcesso, int quantidadeAssinaturas) {
+		// espera encontrar o fim do documento para verificar se a quantidade de assinaturas está correta
+		encontrarElemento(By.xpath("//p[contains(text(), 'Processo nº " + numeroProcesso + "')]"));
+		List<WebElement> assinaturas = encontrarElementos(By.xpath("//p[contains(text(), 'Documento assinado eletronicamente por')]"));
+
+		driver.close();
+		driver.switchTo().window(janelaAtual);
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+
+		if (assinaturas.size() != quantidadeAssinaturas) {
+			return "Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.";
+		}
+		return null;
+	}
+	
+	private String gerarDocumentoPDF(WebElement checkBoxDocumento, String numeroProcessoSEI, String numeroDocumentoSEI, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
+		moverMouseParaElemento(checkBoxDocumento);
+		checkBoxDocumento.click();
+
+		// certifica-se de que o documento está marcado e que somente 1 documento está marcado na lista
+		encontrarElemento(5, 1, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+		
+		List<WebElement> documentosMarcados = encontrarElementos(5, 1, By.xpath("//tr[contains(@class, 'infraTrMarcada')]/*/input[@class = 'infraCheckbox']"));
+		if (documentosMarcados.size() != 1) {
+			return "A lista de documentos a serem impressos deveria ter apenas 1 documento marcado, mas está com " + documentosMarcados.size() + " marcados. Tente imprimir o documento novamente mais tarde.";
+		}
+
+		// apaga arquivo com o nome do processo, caso já exista
+		MyUtils.apagarArquivo(pastaDownload + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
+
+		// gera o arquivo no diretório de downloads
+		WebElement btnGerarDocumento = encontrarElemento(5, 1, By.name("btnGerar"));
+		btnGerarDocumento.click();
+
+		String nomeArquivoDestino = pastaDestino + File.separator + nomeArquivo + ".pdf";
+		MyUtils.renomearArquivo(pastaDownload + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", nomeArquivoDestino, 300, false);
+
+		esperarCarregamento(200, 5, 1, "//div[@id = 'divInfraAvisoFundo' and contains(@style, 'visibility: visible')]//span[@id = 'spnInfraAviso']");
+
+		aguardarCargaListaDocumentos(60, 3, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados());
+
+		checkBoxDocumento = encontrarElemento(5, 1, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+		checkBoxDocumento.click();
+		
+		// verifica se o documento está mesmo desmcarcado
+		encontrarElemento(5, 1, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
+		
+		return null;
+	}
+	
+	public String acessarBlocoAssinatura(String blocoAssinatura) {
+		driver.switchTo().defaultContent();
+		WebElement btnControleProcessos = encontrarElemento(5, 1, By.id("lnkControleProcessos"));
+		btnControleProcessos.click();
+
+		WebElement btnBlocosAssinatura = encontrarElemento(5, 1, By.xpath("//a[text() = 'Blocos de Assinatura']"));
+		btnBlocosAssinatura.click();
+
+		WebElement lnkBlocoAssinatura = null;
+
+		try {
+			lnkBlocoAssinatura = encontrarElemento(5, 1, By.xpath("//table[@summary = 'Tabela de Blocos.']/tbody/tr/td/a[text() = '" + blocoAssinatura + "']"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (lnkBlocoAssinatura == null) {
+			return "*** Não foi possível encontrar o bloco de assinatura " + blocoAssinatura + ".";
+		}
+
+		lnkBlocoAssinatura.click();
+
+		return null;
 	}
 }

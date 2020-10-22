@@ -41,6 +41,7 @@ import org.openqa.selenium.support.ui.Wait;
 
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
+import framework.services.SEIService;
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -149,206 +150,37 @@ public class ImpressaoDespacho extends JInternalFrame {
         }
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
-		if (navegador.equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
-				put("download.prompt_for_download", false); 
-				put("download.default_directory", pastaRespostasImpressas); 
-				put("pdfjs.disabled", true); 
-				put("plugins.always_open_pdf_externally", true);
-				}});
-			
-			opcoes.addArguments("start-maximized"); // open Browser in maximized mode
-			opcoes.addArguments("disable-infobars"); // disabling infobars
-			opcoes.addArguments("--disable-extensions"); // disabling extensions
-			opcoes.addArguments("--disable-gpu"); // applicable to windows os only
-			opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-			opcoes.addArguments("--no-sandbox"); // Bypass OS security model
-			opcoes.addArguments("--ignore-certificate-errors");
-			
-			opcoes.addArguments("--disable-extensions");
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			// FirefoxProfile perfil = new FirefoxProfile();
-			opcoes.addPreference("browser.download.folderList", 2);
-			opcoes.addPreference("browser.download.dir", pastaRespostasImpressas);
-			opcoes.addPreference("browser.download.useDownloadDir", true);
-			opcoes.addPreference("browser.helperApps.neverAsk.saveToDisk", "application/pdf");
-			opcoes.addPreference("browser.link.open_newwindow", 3);
-			opcoes.addPreference("pdfjs.disabled", true);  // disable the built-in PDF viewer
-			opcoes.addPreference("pdfjs.previousHandler.alwaysAskBeforeHandling", true);
-			opcoes.addPreference("pdfjs.previousHandler.preferredAction", 4);
-			opcoes.addPreference("pdfjs.enabledCache.state", false);
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
-
-        // And now use this to visit Google
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-        Actions passarMouse = new Actions(driver);
-
-        Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait3 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(3))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.id("txtUsuario"));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.id("pwdSenha"));
-        weSenha.sendKeys(senha);
-
-        // selecionar a unidade do SEI
-        Select cbxOrgao = new Select(MyUtils.encontrarElemento(wait, By.id("selOrgao")));
-        cbxOrgao.selectByVisibleText(despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-        
-        TimeUnit.MILLISECONDS.sleep(1500);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.id("sbmLogin"));
-        botaoAcessar.click();
-
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        MyUtils.fecharPopup(driver);
-
-        // selecionar a unidade default
-        MyUtils.selecionarUnidade(driver, wait, despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
+		
+		SEIService seiServico = new SEIService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI), true, pastaRespostasImpressas);
+		seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+		seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
 
 		Map<String, List<SolicitacaoResposta>> respostasAImprimir = obterRespostasAProcessar(1, assinanteId);
 		for (String numeroProcessoSEI : respostasAImprimir.keySet()) {
 			// pesquisa o número do processo
-			driver.switchTo().defaultContent();
-			WebElement txtPesquisaRapida = MyUtils.encontrarElemento(wait5, By.name("txtPesquisaRapida"));
-			txtPesquisaRapida.clear();
-			txtPesquisaRapida.sendKeys(numeroProcessoSEI);
-			txtPesquisaRapida.sendKeys(Keys.ENTER);
-
-			// clicar em gerar documentos
-			WebElement ifrVisualizacao = MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao"));
-			driver.switchTo().frame(ifrVisualizacao);
-			WebElement btnGerarPDF = MyUtils.encontrarElemento(wait, By.xpath("//img[@alt = 'Gerar Arquivo PDF do Processo']"));
-			btnGerarPDF.click();
-
-			// encontra a quantidade de registros aptos a serem impressos
-			MyUtils.aguardarCargaListaDocumentos(wait, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(wait));
-
-			// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
-			WebElement btnDesmarcarTudo = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Selecionar Tudo']"));
-			btnDesmarcarTudo.click();
-			TimeUnit.SECONDS.sleep(1);
-			btnDesmarcarTudo.click();
+			seiServico.pesquisarProcesso(numeroProcessoSEI);
+			seiServico.acessarPaginaImpressaoDocumentos();
 
 			for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
 				String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
-				String nomeArquivoFinal;
+				String nomeArquivo;
 				if (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("")) {
-					nomeArquivoFinal = respostaAImprimir.getSolicitacao().getChaveBusca() + "-" + respostaAImprimir.getNumeroDocumentoSEI();
+					nomeArquivo = respostaAImprimir.getSolicitacao().getChaveBusca() + "-" + respostaAImprimir.getNumeroDocumentoSEI();
 				} else {
-					nomeArquivoFinal = numeroProcesso;
+					nomeArquivo = numeroProcesso;
 				}
 				String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
 
 				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
-	
-				// encontra e marca o checkbox do documento
-				WebElement chkSelecionarDocumento = null;
-				try {
-					chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
 
-				if (chkSelecionarDocumento != null) {
-					// trecho para verificar se o documento possui a quantidade de assinaturas necessárias
-					String janelaAtual = driver.getWindowHandle();
-	
-					WebElement lnkDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = '" + numeroDocumentoSEI + "']"));
-					TimeUnit.MILLISECONDS.sleep(100);
-					try {
-						passarMouse.moveToElement(lnkDocumento).perform();
-					} catch (Exception e) {
-					}
-					lnkDocumento.click();
+				String pastaDestino = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao();
+				msgValidacao = seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
 
-					do {
-						if (driver.getWindowHandles().size() > 1) {
-							break;
-						}
-						TimeUnit.SECONDS.sleep(1);
-					} while (true);
-					
-					for (String janelaAberta : driver.getWindowHandles()) {
-						driver.switchTo().window(janelaAberta);
-					}
-
-					// espera encontrar o fim do documento para verificar se a quantidade de assinaturas está correta
-					MyUtils.encontrarElemento(wait, By.xpath("//p[contains(text(), 'Processo nº " + numeroProcessoSEI + "')]"));
-					
-					List<WebElement> assinaturas = MyUtils.encontrarElementos(wait5, By.xpath("//p[contains(text(), 'Documento assinado eletronicamente por')]"));
-	
-					driver.close();
-					driver.switchTo().window(janelaAtual);
-					driver.switchTo().defaultContent();
-					ifrVisualizacao = MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao"));
-					driver.switchTo().frame(ifrVisualizacao);
-	
-					int quantidadeAssinaturas = respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas();
-					
-					if (assinaturas.size() != quantidadeAssinaturas) {
-						MyUtils.appendLogArea(logArea, "Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.");
-					} else {
-						passarMouse.moveToElement(chkSelecionarDocumento).perform();
-						chkSelecionarDocumento.click();
-	
-						// certifica-se de que o documento está marcado e que somente 1 documento está marcado na lista
-						MyUtils.encontrarElemento(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
-						
-						List<WebElement> documentosMarcados = MyUtils.encontrarElementos(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada')]/*/input[@class = 'infraCheckbox']"));
-						if (documentosMarcados.size() != 1) {
-							MyUtils.appendLogArea(logArea, "A lista de documentos a serem impressos deveria ter apenas 1 documento marcado, mas está com " + documentosMarcados.size() + " marcados. Tente imprimir o documento novamente mais tarde.");
-							continue;
-						}
-
-						// apaga arquivo com o nome do processo, caso já exista
-						apagarArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI);
-	
-						// gera o arquivo no diretório de downloads
-						WebElement btnGerarDocumento = MyUtils.encontrarElemento(wait5, By.name("btnGerar"));
-						btnGerarDocumento.click();
-	
-						String nomeArquivoPasta = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao() + "\\" + nomeArquivoFinal + ".pdf";
-						renomearArquivoProcesso(pastaRespostasImpressas, numeroProcessoSEI, nomeArquivoPasta);
-	
-						// atualiza o indicativo de que o documento foi impresso
-						atualizarRespostaImpressa(respostaAImprimir, nomeArquivoPasta);
-
-						MyUtils.esperarCarregamento(200, wait5, "//div[@id = 'divInfraAvisoFundo' and contains(@style, 'visibility: visible')]//span[@id = 'spnInfraAviso']");
-
-						MyUtils.aguardarCargaListaDocumentos(wait, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(wait));
-
-						chkSelecionarDocumento = MyUtils.encontrarElemento(wait5, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
-						chkSelecionarDocumento.click();
-						
-						// verifica se o documento está mesmo desmcarcado
-						MyUtils.encontrarElemento(wait5, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
-					}
+				if (msgValidacao != null) {
+					MyUtils.appendLogArea(logArea, msgValidacao);
 				} else {
-					MyUtils.appendLogArea(logArea, "Documento não encontrado ou não habilitado para geração em PDF");
+					// atualiza o indicativo de que o documento foi impresso
+					atualizarRespostaImpressa(respostaAImprimir, pastaDestino + File.separator + nomeArquivo + ".pdf");
 				}
 			} // fim do loop de leitura das respostas de cada processo
 		} // fim do loop de diferentes processos com documentos a serem impressos
@@ -360,28 +192,15 @@ public class ImpressaoDespacho extends JInternalFrame {
 		for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
 			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
 			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
-
-			driver.switchTo().defaultContent();
-			WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
-			btnControleProcessos.click();
-
-			WebElement btnBlocosAssinatura = MyUtils.encontrarElemento(wait5, By.xpath("//a[text() = 'Blocos de Assinatura']"));
-			btnBlocosAssinatura.click();
-
-			WebElement lnkBlocoAssinatura = null;
-
+			
 			try {
-				lnkBlocoAssinatura = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Blocos.']/tbody/tr/td/a[text() = '" + blocoAssinatura + "']"));
-			} catch (Exception e) {
-				e.printStackTrace();
+				seiServico.acessarBlocoAssinatura(blocoAssinatura);
 			}
-
-			if (lnkBlocoAssinatura == null) {
-				MyUtils.appendLogArea(logArea, "*** Não foi possível encontrar o bloco de assinatura " + blocoAssinatura + ".");
+			msgValidacao = seiServico.acessarBlocoAssinatura(blocoAssinatura);
+			if (msgValidacao != null) {
+				MyUtils.appendLogArea(logArea, msgValidacao);
 				continue;
 			}
-
-			lnkBlocoAssinatura.click();
 
 			// aguarda a carga de todos os registros
 			WebElement capQuantidadeRegistros = null;
@@ -435,25 +254,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 		
 		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
 
-        driver.close();
-        driver.quit();
-	}
-
-	private int obterQuantidadeDocumentosEsperados(Wait<WebDriver> wait) {
-		String quantidadeRegistros = MyUtils.encontrarElemento(wait, By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
-		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
-		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
-		return Integer.parseInt(quantidadeRegistros);
+        seiServico.fechaNavegador();
 	}
 	
-	private void apagarArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI) throws Exception {
-		MyUtils.apagarArquivo(diretorioDespachos + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", 30);
-	}
-
-	private void renomearArquivoProcesso(String diretorioDespachos, String numeroProcessoSEI, String arquivoRenomeado) throws Exception {
-		MyUtils.renomearArquivo(diretorioDespachos + File.separator + "SEI_" + numeroProcessoSEI.replace("/", "_").replace("-", "_") + ".pdf", arquivoRenomeado, 300, false);
-	}
-
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {
 		if (MyUtils.arquivoExiste(nomeArquivo)) {
 			StringBuilder sql = new StringBuilder("");

@@ -3,17 +3,20 @@ package framework.services;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 
@@ -23,6 +26,7 @@ public class SeleniumService {
 	
 	protected WebDriver driver;
 	protected String janelaPrincipal;
+	protected String janelaAtual;
 
 	public SeleniumService(String navegador, String endereco, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
 		this.driver = obterWebDriver(navegador, exibirNavegador, pastaDeDownload, timeoutImplicito);
@@ -136,8 +140,8 @@ public class SeleniumService {
 		return encontrarElemento(60, 3, by);
 	}
 
-	public List<WebElement> encontrarElementos(By by) {
-		return espera(60, 3).until(new Function<WebDriver, List<WebElement>>() {
+	public List<WebElement> encontrarElementos(int timeout, int pollingEvery, By by) {
+		return espera(timeout, pollingEvery).until(new Function<WebDriver, List<WebElement>>() {
 			@Override
 			public List<WebElement> apply(WebDriver t) {
 				List<WebElement> elements = t.findElements(by);
@@ -147,6 +151,10 @@ public class SeleniumService {
 				return elements;
 			}
 		});
+	}
+
+	public List<WebElement> encontrarElementos(By by) {
+		return encontrarElementos(60, 3, by);
 	}
 	
 	public void alterarParaFrame(int index) {
@@ -160,5 +168,71 @@ public class SeleniumService {
 	public void fechaNavegador() {
         driver.close();
         driver.quit();
+	}
+
+	public void aguardarCargaListaDocumentos(String xpath, int quantRegistrosEsperados) throws Exception {
+		// encontra a quantidade de registros aptos a serem impressos
+		do {
+			List<WebElement> linhasAptas = encontrarElementos(By.xpath(xpath));
+			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
+	}
+
+	protected void moverMouseParaElemento(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).perform();
+		} catch (Exception ex) {
+		}
+	}
+	
+	protected void mudaFocoParaPopup(int janelasAbertas) throws Exception {
+		janelaAtual = driver.getWindowHandle();
+		do {
+			if (driver.getWindowHandles().size() > janelasAbertas) {
+				break;
+			}
+			TimeUnit.SECONDS.sleep(1);
+		} while (true);
+		
+		for (String janelaAberta : driver.getWindowHandles()) {
+			driver.switchTo().window(janelaAberta);
+		}
+	}
+
+	protected void esperarCarregamento(int esperaInicialEmMilissegundos, int timeout, int pollingEvery, String xpath) throws Exception {
+        TimeUnit.MILLISECONDS.sleep(esperaInicialEmMilissegundos);
+
+        WebElement infCarregando = null;
+        do {
+        	try {
+        		infCarregando = encontrarElemento(timeout, pollingEvery, By.xpath(xpath));
+        	} catch (Exception e) {
+        		infCarregando = null;
+        	}
+        	try {
+	        	if (infCarregando == null || !infCarregando.isDisplayed()) {
+	        		break;
+	        	}
+        	} catch (StaleElementReferenceException e) {
+        		break;
+        	}
+        } while (true);
+	}
+
+	protected void aguardarCargaListaDocumentos(int timeout, int pollingEvery, String xpath, int quantRegistrosEsperados) throws InterruptedException {
+		// encontra a quantidade de registros aptos a serem impressos
+		do {
+			List<WebElement> linhasAptas = encontrarElementos(timeout, pollingEvery, By.xpath(xpath));
+			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
 	}
 }
