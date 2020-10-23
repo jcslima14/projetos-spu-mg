@@ -170,10 +170,14 @@ public class SeleniumService {
         driver.quit();
 	}
 
-	public void aguardarCargaListaDocumentos(String xpath, int quantRegistrosEsperados) throws Exception {
+	protected void aguardarCargaListaDocumentos(String xpath, int quantRegistrosEsperados) throws Exception {
+		aguardarCargaListaDocumentos(60, 3, xpath, quantRegistrosEsperados);
+	}
+
+	protected void aguardarCargaListaDocumentos(int timeout, int pollingEvery, String xpath, int quantRegistrosEsperados) throws InterruptedException {
 		// encontra a quantidade de registros aptos a serem impressos
 		do {
-			List<WebElement> linhasAptas = encontrarElementos(By.xpath(xpath));
+			List<WebElement> linhasAptas = encontrarElementos(timeout, pollingEvery, By.xpath(xpath));
 			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
 				break;
 			} else {
@@ -222,17 +226,5 @@ public class SeleniumService {
         		break;
         	}
         } while (true);
-	}
-
-	protected void aguardarCargaListaDocumentos(int timeout, int pollingEvery, String xpath, int quantRegistrosEsperados) throws InterruptedException {
-		// encontra a quantidade de registros aptos a serem impressos
-		do {
-			List<WebElement> linhasAptas = encontrarElementos(timeout, pollingEvery, By.xpath(xpath));
-			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
-				break;
-			} else {
-				TimeUnit.SECONDS.sleep(1);
-			}
-		} while (true);
 	}
 }

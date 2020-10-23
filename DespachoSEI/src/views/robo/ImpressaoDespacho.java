@@ -5,12 +5,10 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -25,20 +23,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.Wait;
-
+import framework.MyException;
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
 import framework.services.SEIService;
@@ -174,14 +159,15 @@ public class ImpressaoDespacho extends JInternalFrame {
 				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
 
 				String pastaDestino = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao();
-				msgValidacao = seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
-
-				if (msgValidacao != null) {
-					MyUtils.appendLogArea(logArea, msgValidacao);
-				} else {
-					// atualiza o indicativo de que o documento foi impresso
-					atualizarRespostaImpressa(respostaAImprimir, pastaDestino + File.separator + nomeArquivo + ".pdf");
+				try {
+					seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
+				} catch (MyException e) {
+					MyUtils.appendLogArea(logArea, e.getMessage());
+					continue;
 				}
+
+				// atualiza o indicativo de que o documento foi impresso
+				atualizarRespostaImpressa(respostaAImprimir, pastaDestino + File.separator + nomeArquivo + ".pdf");
 			} // fim do loop de leitura das respostas de cada processo
 		} // fim do loop de diferentes processos com documentos a serem impressos
 
@@ -195,55 +181,26 @@ public class ImpressaoDespacho extends JInternalFrame {
 			
 			try {
 				seiServico.acessarBlocoAssinatura(blocoAssinatura);
-			}
-			msgValidacao = seiServico.acessarBlocoAssinatura(blocoAssinatura);
-			if (msgValidacao != null) {
+			} catch (MyException e) {
 				MyUtils.appendLogArea(logArea, msgValidacao);
 				continue;
 			}
-
-			// aguarda a carga de todos os registros
-			WebElement capQuantidadeRegistros = null;
-			try {
-				capQuantidadeRegistros = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/caption"));
-			} catch (Exception e) {
-				MyUtils.appendLogArea(logArea, "O bloco de assinatura " + blocoAssinatura + " não possui nenhum documento para ser retirado.");
-				continue;
-			}
-
-			String quantidadeRegistros = capQuantidadeRegistros.getText();
-			quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
-			quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
-
-			// aguarda encontrar a linha que contém o sequencial igual à quantidade de registros lida acima
-			MyUtils.aguardarCargaListaDocumentos(wait, "//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[./td]", Integer.parseInt(quantidadeRegistros));
 			
 			for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
-				WebElement chkSelecaoLinha = null;
 				try {
-					chkSelecaoLinha = MyUtils.encontrarElemento(wait3, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + respostaARetirar.getNumeroDocumentoSEI() + "']]/td/input"));
-				} catch (Exception e) {
+					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
+					seiServico.marcarDocumentoParaRetiradaBlocoAssinatura(respostaARetirar.getNumeroDocumentoSEI());
+				} catch (MyException e) {
+					MyUtils.appendLogArea(logArea, e.getMessage());
+					continue;
 				}
 
-				if (chkSelecaoLinha != null) {
-					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
-					chkSelecaoLinha.click();
-					respostasRetiradas.add(respostaARetirar);
-				} else {
-					MyUtils.appendLogArea(logArea, "O documento " + respostaARetirar.getNumeroDocumentoSEI() + " não foi encontrado no bloco de assinatura.");
-					respostasRetiradas.add(respostaARetirar);
-				}
+				respostasRetiradas.add(respostaARetirar);
 			}
-			
+
 			if (respostasRetiradas.size() > 0) {
 				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
-				WebElement btnExcluir = MyUtils.encontrarElemento(wait5, By.id("btnExcluir"));
-				btnExcluir.click();
-				TimeUnit.MILLISECONDS.sleep(500);
-				driver.switchTo().alert().accept();
-				TimeUnit.SECONDS.sleep(2);
-
-				MyUtils.encontrarElemento(wait5, By.id("btnFechar"));
+				seiServico.confirmarRetiradaDocumentosBlocoAssinatura();
 
 				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
 				for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {

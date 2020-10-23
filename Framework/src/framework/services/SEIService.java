@@ -11,6 +11,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
+import framework.MyException;
 import framework.utils.MyUtils;
 
 public class SEIService extends SeleniumService {
@@ -336,7 +337,7 @@ public class SEIService extends SeleniumService {
 		clicarBotaoAcaoProcesso("Incluir Documento");
 
 		// encontra a quantidade de registros aptos a serem impressos
-		aguardarCargaListaDocumentos("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados());
+		aguardarCargaListaDocumentos("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(60, 3, By.xpath("//table[@id = 'tblDocumentos']/caption")));
 
 		// clicar em selecionar tudo (precisa clicar 2x, pois o primeiro click marca todos (que já estão marcados) e o segundo desmarca tudo)
 		WebElement btnDesmarcarTudo = encontrarElemento(By.xpath("//img[@title = 'Selecionar Tudo']"));
@@ -366,15 +367,20 @@ public class SEIService extends SeleniumService {
 		btnAcao.click();
 	}
 
-	private int obterQuantidadeDocumentosEsperados() {
-		String quantidadeRegistros = encontrarElemento(By.xpath("//table[@id = 'tblDocumentos']/caption")).getText();
+	private int obterQuantidadeDocumentosEsperados(int timeout, int pollingEvery, By by) throws Exception {
+		WebElement capQuantidadeRegistros = null;
+		try {
+			capQuantidadeRegistros = encontrarElemento(timeout, pollingEvery, by);
+		} catch (Exception e) {
+			throw new MyException("A tabela pesquisada não possui nenhum documento.");
+		}
+		String quantidadeRegistros = capQuantidadeRegistros.getText();
 		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
 		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
 		return Integer.parseInt(quantidadeRegistros);
 	}
 
-	public String imprimirDocumento(String numeroProcesso, String numeroProcessoSEI, String numeroDocumentoSEI, int quantidadeAssinaturas, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
-		String retorno = null;
+	public void imprimirDocumento(String numeroProcesso, String numeroProcessoSEI, String numeroDocumentoSEI, int quantidadeAssinaturas, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
 		// encontra e marca o checkbox do documento
 		WebElement chkSelecionarDocumento = null;
 		try {
@@ -391,21 +397,14 @@ public class SEIService extends SeleniumService {
 			lnkDocumento.click();
 
 			mudaFocoParaPopup(1);
-			retorno = confereQuantidadeAssinaturasDocumento(numeroProcesso, quantidadeAssinaturas);
-			
-			if (retorno != null) {
-				return retorno;
-			} else {
-				retorno = gerarDocumentoPDF(chkSelecionarDocumento, numeroProcessoSEI, numeroDocumentoSEI, pastaDownload, pastaDestino, nomeArquivo);
-			}
+			confereQuantidadeAssinaturasDocumento(numeroProcesso, quantidadeAssinaturas);
+			gerarDocumentoPDF(chkSelecionarDocumento, numeroProcessoSEI, numeroDocumentoSEI, pastaDownload, pastaDestino, nomeArquivo);
 		} else {
-			retorno = "Documento não encontrado ou não habilitado para geração em PDF";
+			throw new MyException("Documento não encontrado ou não habilitado para geração em PDF");
 		}
-		
-		return retorno;
 	}
 	
-	private String confereQuantidadeAssinaturasDocumento(String numeroProcesso, int quantidadeAssinaturas) {
+	private void confereQuantidadeAssinaturasDocumento(String numeroProcesso, int quantidadeAssinaturas) throws Exception {
 		// espera encontrar o fim do documento para verificar se a quantidade de assinaturas está correta
 		encontrarElemento(By.xpath("//p[contains(text(), 'Processo nº " + numeroProcesso + "')]"));
 		List<WebElement> assinaturas = encontrarElementos(By.xpath("//p[contains(text(), 'Documento assinado eletronicamente por')]"));
@@ -416,12 +415,11 @@ public class SEIService extends SeleniumService {
 		driver.switchTo().frame("ifrVisualizacao");
 
 		if (assinaturas.size() != quantidadeAssinaturas) {
-			return "Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.";
+			throw new MyException("Para ser impresso, o documento precisa de " + quantidadeAssinaturas + " assinaturas. Este documento possui " + assinaturas.size() + " assinaturas.");
 		}
-		return null;
 	}
 	
-	private String gerarDocumentoPDF(WebElement checkBoxDocumento, String numeroProcessoSEI, String numeroDocumentoSEI, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
+	private void gerarDocumentoPDF(WebElement checkBoxDocumento, String numeroProcessoSEI, String numeroDocumentoSEI, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
 		moverMouseParaElemento(checkBoxDocumento);
 		checkBoxDocumento.click();
 
@@ -430,7 +428,7 @@ public class SEIService extends SeleniumService {
 		
 		List<WebElement> documentosMarcados = encontrarElementos(5, 1, By.xpath("//tr[contains(@class, 'infraTrMarcada')]/*/input[@class = 'infraCheckbox']"));
 		if (documentosMarcados.size() != 1) {
-			return "A lista de documentos a serem impressos deveria ter apenas 1 documento marcado, mas está com " + documentosMarcados.size() + " marcados. Tente imprimir o documento novamente mais tarde.";
+			throw new MyException("A lista de documentos a serem impressos deveria ter apenas 1 documento marcado, mas está com " + documentosMarcados.size() + " marcados. Tente imprimir o documento novamente mais tarde.");
 		}
 
 		// apaga arquivo com o nome do processo, caso já exista
@@ -445,18 +443,16 @@ public class SEIService extends SeleniumService {
 
 		esperarCarregamento(200, 5, 1, "//div[@id = 'divInfraAvisoFundo' and contains(@style, 'visibility: visible')]//span[@id = 'spnInfraAviso']");
 
-		aguardarCargaListaDocumentos(60, 3, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados());
+		aguardarCargaListaDocumentos(60, 3, "//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(60, 3, By.xpath("//table[@id = 'tblDocumentos']/caption")));
 
 		checkBoxDocumento = encontrarElemento(5, 1, By.xpath("//tr[contains(@class, 'infraTrMarcada') and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
 		checkBoxDocumento.click();
 		
 		// verifica se o documento está mesmo desmcarcado
 		encontrarElemento(5, 1, By.xpath("//tr[not(contains(@class, 'infraTrMarcada')) and ./*/a[text() = '" + numeroDocumentoSEI + "']]/*/input[@class = 'infraCheckbox']"));
-		
-		return null;
 	}
 	
-	public String acessarBlocoAssinatura(String blocoAssinatura) {
+	public void acessarBlocoAssinatura(String blocoAssinatura) throws Exception {
 		driver.switchTo().defaultContent();
 		WebElement btnControleProcessos = encontrarElemento(5, 1, By.id("lnkControleProcessos"));
 		btnControleProcessos.click();
@@ -473,11 +469,35 @@ public class SEIService extends SeleniumService {
 		}
 
 		if (lnkBlocoAssinatura == null) {
-			return "*** Não foi possível encontrar o bloco de assinatura " + blocoAssinatura + ".";
+			throw new MyException("*** Não foi possível encontrar o bloco de assinatura " + blocoAssinatura + ".");
 		}
 
 		lnkBlocoAssinatura.click();
+		
+		aguardarCargaListaDocumentos("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[./td]", obterQuantidadeDocumentosEsperados(5, 1, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/caption")));
+	}
 
-		return null;
+	public void marcarDocumentoParaRetiradaBlocoAssinatura(String numeroDocumentoSEI) throws Exception {
+		WebElement chkSelecaoLinha = null;
+		try {
+			chkSelecaoLinha = encontrarElemento(3, 1, By.xpath("//table[@summary = 'Tabela de Processos/Documentos.']/tbody/tr[.//*[text() = '" + numeroDocumentoSEI + "']]/td/input"));
+		} catch (Exception e) {
+		}
+
+		if (chkSelecaoLinha != null) {
+			chkSelecaoLinha.click();
+		} else {
+			throw new MyException("O documento " + numeroDocumentoSEI + " não foi encontrado no bloco de assinatura.");
+		}
+	}
+	
+	public void confirmarRetiradaDocumentosBlocoAssinatura() throws Exception {
+		WebElement btnExcluir = encontrarElemento(5, 1, By.id("btnExcluir"));
+		btnExcluir.click();
+		TimeUnit.MILLISECONDS.sleep(500);
+		driver.switchTo().alert().accept();
+		TimeUnit.SECONDS.sleep(2);
+
+		encontrarElemento(5, 1, By.id("btnFechar"));
 	}
 }
