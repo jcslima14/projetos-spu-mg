@@ -29,6 +29,7 @@ import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
 
+import framework.MyException;
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
 import framework.services.SEIService;
@@ -191,12 +192,16 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 					}
 				}
 
-				seiServico.pesquisarProcesso(respostaAGerar.getNumeroProcessoSEI());
-				respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
-				seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
-				seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
-				seiServico.salvarFecharDocumentoEditado();
-				
+				try {
+					seiServico.pesquisarProcesso(respostaAGerar.getNumeroProcessoSEI());
+					respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
+					seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
+					seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
+					seiServico.salvarFecharDocumentoEditado();
+				} catch (MyException e) {
+					MyUtils.appendLogArea(logArea, e.getMessage());
+					continue;
+				}
 				// incluir no bloco de assinatura
 				respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
 				seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());

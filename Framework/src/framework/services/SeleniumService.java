@@ -1,14 +1,14 @@
 package framework.services;
 
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -17,8 +17,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
 
@@ -91,13 +90,6 @@ public class SeleniumService {
 		return driver;
 	}
 	
-	public Wait<WebDriver> obterWait(WebDriver driver, int timeout, int pollingEvery) {
-        return new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(timeout))
-        		.pollingEvery(Duration.ofSeconds(pollingEvery))
-        		.ignoring(NoSuchElementException.class);
-	}
-	
 	public void acessarEndereco(String endereco) {
 		driver.get(endereco);
 	}
@@ -116,13 +108,10 @@ public class SeleniumService {
         this.driver.switchTo().window(primeiraJanela);
 	}
 
-	private FluentWait<WebDriver> espera(int timeout, int pollingEvery) {
-		return new FluentWait<WebDriver>(driver)
-				.withTimeout(Duration.ofSeconds(timeout))
-				.pollingEvery(Duration.ofSeconds(pollingEvery))
-				.ignoring(NoSuchElementException.class);
+	private WebDriverWait espera(int timeout, int pollingEvery) {
+		return new WebDriverWait(driver, timeout, pollingEvery * 1000);
 	}
-	
+
 	public WebElement encontrarElemento(int timeout, int pollingEvery, By by) {
 		return espera(timeout, pollingEvery).until(new Function<WebDriver, WebElement>() {
 			@Override
@@ -226,5 +215,29 @@ public class SeleniumService {
         		break;
         	}
         } while (true);
+	}
+
+	public Alert obterAlerta(int timeout, int pollingEvery) {
+	    WebDriverWait wait = new WebDriverWait(driver, timeout, pollingEvery * 1000);
+	    Alert alert = wait.until(new Function<WebDriver, Alert>() {
+	        public Alert apply(WebDriver driver) {
+	            try {
+	                return driver.switchTo().alert();
+	            } catch(NoAlertPresentException e) {
+	                return null;
+	            }
+	        }  
+	    });
+
+	    return alert;
+	}
+
+	protected boolean alertaPresente( ) {
+		try { 
+	        driver.switchTo().alert(); 
+	        return true; 
+	    } catch (NoAlertPresentException Ex) { 
+	        return false; 
+	    }
 	}
 }

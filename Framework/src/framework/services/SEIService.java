@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
@@ -62,6 +63,7 @@ public class SEIService extends SeleniumService {
 	}
 
 	public void pesquisarProcesso(String numeroProcesso) {
+		driver.switchTo().defaultContent();
 		WebElement txtPesquisaRapida = encontrarElemento(By.xpath("//input[@id = 'txtPesquisaRapida']"));
 		txtPesquisaRapida.sendKeys(numeroProcesso);
 		txtPesquisaRapida.sendKeys(Keys.RETURN);
@@ -94,10 +96,16 @@ public class SEIService extends SeleniumService {
 		selecionarVisibilidadeDocumento();
 	}
 
-	private void salvarDocumento() throws InterruptedException {
+	private void salvarDocumento() throws Exception {
 		// clica em confirmar dados
 		WebElement btnConfirmarDados = encontrarElemento(By.xpath("//button[@id = 'btnSalvar']"));
 		btnConfirmarDados.click();
+		Alert alerta = obterAlerta(3, 1);
+		if (alerta != null) {
+			String msg = alerta.getText();
+			alerta.accept();
+			throw new MyException(msg);
+		}
 	}
 
 	private String editarDocumentoNativo() throws Exception {
@@ -344,27 +352,32 @@ public class SEIService extends SeleniumService {
 		btnDesmarcarTudo.click();
 		TimeUnit.SECONDS.sleep(1);
 		btnDesmarcarTudo.click();
-
 	}
-	
-	private void clicarBotaoAcaoProcesso(String botao) throws Exception {
+
+	private WebElement obterBotaoAcaoProcesso(int timeout, int pollingEvery, String botao) throws Exception {
 		String xpath = null;
 		
-		switch (botao) {
-			case "Incluir Documento": xpath = "//img[@alt = 'Incluir Documento']";
-			case "Imprimir Documento": xpath = "//img[@alt = 'Gerar Arquivo PDF do Processo']";
-			case "Incluir em Bloco de Assinatura": xpath = "//img[@alt = 'Incluir em Bloco de Assinatura']";
+		if (botao.equalsIgnoreCase("Incluir Documento")) {
+			xpath = "//img[@alt = 'Incluir Documento']";
+		} else if (botao.equalsIgnoreCase("Imprimir Documento")) {
+			xpath = "//img[@alt = 'Gerar Arquivo PDF do Processo']";
+		} else if (botao.equalsIgnoreCase("Incluir em Bloco de Assinatura")) {
+			xpath = "//img[@alt = 'Incluir em Bloco de Assinatura']";
 		}
 		
 		driver.switchTo().defaultContent();
 		driver.switchTo().frame("ifrVisualizacao");
 		WebElement btnAcao = null;
 		try {
-			btnAcao = encontrarElemento(By.xpath(xpath));
+			btnAcao = encontrarElemento(timeout, pollingEvery, By.xpath(xpath));
 		} catch (Exception e) {
-			throw new Exception("Não foi encontrado o botão '" + botao + "'. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
+			throw new MyException("Não foi encontrado o botão '" + botao + "'. Verifique se este processo está aberto. Se não estiver, reabra-o e processe novamente.");
 		}
-		btnAcao.click();
+		return btnAcao;
+	}
+	
+	private void clicarBotaoAcaoProcesso(String botao) throws Exception {
+		obterBotaoAcaoProcesso(60, 3, botao).click();
 	}
 
 	private int obterQuantidadeDocumentosEsperados(int timeout, int pollingEvery, By by) throws Exception {
