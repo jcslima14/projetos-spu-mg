@@ -342,7 +342,7 @@ public class SEIService extends SeleniumService {
 	
 	public void acessarPaginaImpressaoDocumentos() throws Exception {
 		// clicar em gerar documentos
-		clicarBotaoAcaoProcesso("Incluir Documento");
+		clicarBotaoAcaoProcesso("Imprimir Documento");
 
 		// encontra a quantidade de registros aptos a serem impressos
 		aguardarCargaListaDocumentos("//table[@id = 'tblDocumentos']/tbody/tr[./td[./input[@type = 'checkbox']]]", obterQuantidadeDocumentosEsperados(60, 3, By.xpath("//table[@id = 'tblDocumentos']/caption")));
@@ -410,7 +410,7 @@ public class SEIService extends SeleniumService {
 			lnkDocumento.click();
 
 			mudaFocoParaPopup(1);
-			confereQuantidadeAssinaturasDocumento(numeroProcesso, quantidadeAssinaturas);
+			confereQuantidadeAssinaturasDocumento(numeroProcessoSEI, quantidadeAssinaturas);
 			gerarDocumentoPDF(chkSelecionarDocumento, numeroProcessoSEI, numeroDocumentoSEI, pastaDownload, pastaDestino, nomeArquivo);
 		} else {
 			throw new MyException("Documento não encontrado ou não habilitado para geração em PDF");

@@ -182,7 +182,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 			try {
 				seiServico.acessarBlocoAssinatura(blocoAssinatura);
 			} catch (MyException e) {
-				MyUtils.appendLogArea(logArea, msgValidacao);
+				MyUtils.appendLogArea(logArea, e.getMessage());
 				continue;
 			}
 			
