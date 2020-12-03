@@ -20,6 +20,8 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 
 public class SeleniumService {
 	
@@ -65,7 +67,8 @@ public class SeleniumService {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+			WebDriverManager.getInstance(DriverManagerType.CHROME).setup();
+//			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 	        driver = new ChromeDriver(opcoes);
 		} else {
 			FirefoxOptions opcoes = new FirefoxOptions();
@@ -81,7 +84,8 @@ public class SeleniumService {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
+//			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
+			WebDriverManager.getInstance(DriverManagerType.FIREFOX).setup();
 			driver = new FirefoxDriver(opcoes);
 		}
 		
