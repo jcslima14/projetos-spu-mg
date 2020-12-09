@@ -45,6 +45,7 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import framework.services.SapiensService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import model.Origem;
@@ -159,120 +160,43 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 		}
 		boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
 		receberProcessoSemArquivo = despachoServico.obterConteudoParametro(Parametro.RECEBER_PROCESSO_SEM_ARQUIVO).equalsIgnoreCase("Sim");
-		if (navegador.equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			opcoes.addArguments("start-maximized"); // open Browser in maximized mode
-			opcoes.addArguments("disable-infobars"); // disabling infobars
-			opcoes.addArguments("--disable-extensions"); // disabling extensions
-			opcoes.addArguments("--disable-gpu"); // applicable to windows os only
-			opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-			opcoes.addArguments("--no-sandbox"); // Bypass OS security model
+		SapiensService sapiensService = new SapiensService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
+		sapiensService.login(usuario, senha);
+		sapiensService.clicarAbaOficios();
 
-			opcoes.addArguments("--ignore-certificate-errors");
-
-			opcoes.setExperimentalOption("prefs", new LinkedHashMap<String, Object>() {{ 
-				put("download.prompt_for_download", false); 
-				put("download.default_directory", pastaDeDownload); 
-				put("pdfjs.disabled", true); 
-				put("plugins.always_open_pdf_externally", true);
-				}});
-			opcoes.addArguments("--disable-extensions");
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			// FirefoxProfile perfil = new FirefoxProfile();
-			opcoes.addPreference("browser.download.folderList", 2);
-			opcoes.addPreference("browser.download.dir", pastaDeDownload);
-			opcoes.addPreference("browser.download.useDownloadDir", true);
-			opcoes.addPreference("browser.helperApps.neverAsk.saveToDisk", "application/pdf");
-			opcoes.addPreference("browser.link.open_newwindow", 3);
-			opcoes.addPreference("pdfjs.disabled", true);  // disable the built-in PDF viewer
-			opcoes.addPreference("pdfjs.previousHandler.alwaysAskBeforeHandling", true);
-			opcoes.addPreference("pdfjs.previousHandler.preferredAction", 4);
-			opcoes.addPreference("pdfjs.enabledCache.state", false);
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
-
-        // acessando o endereço
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
-        driver.manage().timeouts().implicitlyWait(Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_LIMITE_ESPERA)), TimeUnit.MINUTES);
-        Actions passarMouse = new Actions(driver);
-
-        Wait<WebDriver> wait60 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        WebDriverWait waitUntil = new WebDriverWait(driver, 10);
-        
-        // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.xpath("//input[@name = 'username']"));
-        waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.name("password"));
-        weSenha.sendKeys(senha);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.xpath("//span[text() = 'Entrar']"));
-        botaoAcessar.click();
-        
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
-
-        // clica na aba de ofícios
-        WebElement abaOficios = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[text() = 'Ofícios']]"));
-        passarMouse.moveToElement(abaOficios).click().build().perform();
-        Thread.sleep(2000);
-        abaOficios.click();
         StringBuilder mensagemNaoEncontrados = new StringBuilder("");
 
         int pagina = 0;
-        
+
         apagaPastaDeDownloads(pastaDeDownload);
 
         while (true) {
-    		MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
-
-    		TimeUnit.SECONDS.sleep(2);
+        	WebElement tabela = sapiensService.obterTabelaProcessos();
+        	List<WebElement> linhas = sapiensService.obterProcessos(tabela);
 
 	        // obtem a lista de processos a ser lida
-	        WebElement tabela = MyUtils.encontrarElemento(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table"));
-	        List<WebElement> linhas = MyUtils.encontrarElementos(wait5, By.xpath("//div[@id = 'comunicacaoGrid-body']//table/tbody/tr[.//*[text() = 'SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'REITERAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS' or text() = 'COMPLEMENTAÇÃO DE SOLICITAÇÃO DE SUBSÍDIOS']]"));
 	        MyUtils.appendLogArea(logArea, "Página: " + ++pagina + " - Processos encontrados: " + linhas.size());
 
 	        int nLinha = 0;
 
 	        for (WebElement linha : linhas) {
+	        	String[] info = sapiensService.obterInformacoesProcesso(linha);
+	        	String nup = info[0];
+	        	String numeroProcessoJudicial = MyUtils.emptyStringIfNull(info[1]);
+	        	String especie = info[2];
+	        	String dataRemessa = info[3];
+
 	        	WebElement txtProcessoJudicial = null;
-	        	String numeroProcessoJudicial = null;
-	        	String chaveBusca = "";
+	        	MyUtils.appendLogArea(logArea, ++nLinha + ") NUP: " + nup + " (" + nup.replaceAll("\\D+", "") + ") - Processo Judicial: " + numeroProcessoJudicial + " (" + numeroProcessoJudicial.replaceAll("\\D+", "") + ")");
+	        	nup = nup.replaceAll("\\D+", "");
+	        	numeroProcessoJudicial = numeroProcessoJudicial.equals("") ? nup : numeroProcessoJudicial.replaceAll("\\D+", "");
+
+	        	if (processoJaRecebido(logArea, numeroProcessoJudicial, dataRemessa)) {
+	        		continue;
+	        	}
+	        	
+	        	sapiensService.baixarProcesso(linha);
 	        	do {
 		        	txtProcessoJudicial = linha.findElement(By.xpath("./td[3]/div"));
 		        	passarMouse.moveToElement(txtProcessoJudicial).perform();
@@ -288,17 +212,6 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 	        	} catch (Exception e) {
 	        		System.out.println("Nº único do processo não encontrado");
 	        	}
-	        	// se o número único de processo judicial não estiver preenchido, usa o NUP como chave
-	        	if (numeroProcessoJudicial.trim().equals("")) {
-	        		numeroProcessoJudicial = chaveBusca;
-	        	}
-        		String especie = linha.findElement(By.xpath("./td[4]/div")).getText().trim();
-        		String dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
-        		numeroProcessoJudicial = numeroProcessoJudicial.split("\\(")[0].trim();
-	        	String numeroSemFormatacao = numeroProcessoJudicial.replaceAll("\\D+", "");
-	        	chaveBusca = chaveBusca.replaceAll("\\D+", "");
-	        	MyUtils.appendLogArea(logArea, ++nLinha + ") Processo: " + numeroProcessoJudicial + " (" + numeroSemFormatacao + ") - " + chaveBusca + " - " + especie);
-	        	// if (!chaveBusca.equals("00476001410201908")) continue;
 
     			// verifica se o processo já foi recepcionado com esta data de movimentação; se já tiver sido, não precisa ser reprocessado
         		if (!processoJaRecebido(logArea, numeroSemFormatacao, dataHora)) {

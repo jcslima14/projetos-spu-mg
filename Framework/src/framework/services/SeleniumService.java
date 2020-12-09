@@ -10,6 +10,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -44,7 +45,6 @@ public class SeleniumService {
 			throw new Exception("A pasta para download dos arquivos não existe");
 		}
 
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -68,7 +68,6 @@ public class SeleniumService {
 				opcoes.setHeadless(true);
 			}
 			WebDriverManager.getInstance(DriverManagerType.CHROME).setup();
-//			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 	        driver = new ChromeDriver(opcoes);
 		} else {
 			FirefoxOptions opcoes = new FirefoxOptions();
@@ -84,7 +83,6 @@ public class SeleniumService {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-//			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
 			WebDriverManager.getInstance(DriverManagerType.FIREFOX).setup();
 			driver = new FirefoxDriver(opcoes);
 		}
@@ -112,7 +110,7 @@ public class SeleniumService {
         this.driver.switchTo().window(primeiraJanela);
 	}
 
-	private WebDriverWait espera(int timeout, int pollingEvery) {
+	protected WebDriverWait espera(int timeout, int pollingEvery) {
 		return new WebDriverWait(driver, timeout, pollingEvery * 1000);
 	}
 
@@ -182,7 +180,15 @@ public class SeleniumService {
 	protected void moverMouseParaElemento(WebElement e) {
 		Actions acoes = new Actions(driver);
 		try {
-			acoes.moveToElement(e).perform();
+			acoes.moveToElement(e).build().perform();
+		} catch (Exception ex) {
+		}
+	}
+
+	protected void moverMouseParaElementoEClicar(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).click().build().perform();
 		} catch (Exception ex) {
 		}
 	}
@@ -223,15 +229,16 @@ public class SeleniumService {
 
 	public Alert obterAlerta(int timeout, int pollingEvery) {
 	    WebDriverWait wait = new WebDriverWait(driver, timeout, pollingEvery * 1000);
-	    Alert alert = wait.until(new Function<WebDriver, Alert>() {
-	        public Alert apply(WebDriver driver) {
-	            try {
+	    Alert alert = null;
+        try {
+		    alert = wait.until(new Function<WebDriver, Alert>() {
+		        public Alert apply(WebDriver driver) {
 	                return driver.switchTo().alert();
-	            } catch(NoAlertPresentException e) {
-	                return null;
-	            }
-	        }  
-	    });
+		        }
+		    });  
+        } catch(NoAlertPresentException | TimeoutException e) {
+        	return null;
+        }
 
 	    return alert;
 	}
