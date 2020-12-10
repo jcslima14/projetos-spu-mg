@@ -251,4 +251,9 @@ public class SeleniumService {
 	        return false; 
 	    }
 	}
+
+	public void fecharJanelaAtual() {
+		driver.close();
+		driver.switchTo().window(janelaAtual);
+	}
 }
