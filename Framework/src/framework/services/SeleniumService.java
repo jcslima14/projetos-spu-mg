@@ -122,7 +122,6 @@ public class SeleniumService {
 				if (element == null) {
 					System.out.println("Elemento não encontrado...");
 				}
-				System.out.println(by.toString() + " --> " + element.getClass().toString());
 				return element;
 			}
 		});
@@ -140,7 +139,6 @@ public class SeleniumService {
 				if (elements == null) {
 					System.out.println("Elemento não encontrado...");
 				}
-				System.out.println(by.toString() + " --> " + elements.getClass().toString());
 				return elements;
 			}
 		});

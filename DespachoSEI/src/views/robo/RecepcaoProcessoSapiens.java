@@ -183,7 +183,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
     			if (resultadoDownload.equals("") || receberProcessoSemArquivo) {
     				receberProcessoSapiens(numeroProcessoJudicial, nup, autor, dataRemessa, resultadoDownload);
     			} else {
-    				MyUtils.appendLogArea(logArea, "O processo não foi recebido porque excedeu o número de tentativas de download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens");
+    				MyUtils.appendLogArea(logArea, resultadoDownload + "\n" + "O processo não foi recebido porque ocorreu um erro no download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens");
     			}
 	        }
 

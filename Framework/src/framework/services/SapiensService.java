@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileDeleteStrategy;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -77,36 +76,12 @@ public class SapiensService extends SeleniumService {
 	}
 
 	public String[] obterInformacoesProcesso(WebElement linha, WebElement tabela) {
-//    	do {
-//        	txtProcessoJudicial = linha.findElement(By.xpath("./td[3]/div"));
-//        	passarMouse.moveToElement(txtProcessoJudicial).perform();
-//        	numeroProcessoJudicial = txtProcessoJudicial.getText();
-//        	if (numeroProcessoJudicial.equals("")) {
-//        		((JavascriptExecutor) tabela).executeScript("window.scrollBy(0,100)", "");
-//        	}
-//    	} while (numeroProcessoJudicial.equals(""));
-
-		List<WebElement> links = null;
-		String nup = null;
-		String processoJudicial = null;
-		String especie = null;
-		String dataHora = null;
-		do {
-			links = linha.findElements(By.xpath(".//a"));
-			moverMouseParaElemento(links.get(links.size()-1));
-			nup = links.get(0).getText();
-			if (links.size() > 1) {
-				processoJudicial = linha.findElement(By.xpath("./td[3]/div")).getText().split("\\(")[0].trim();
-				// processoJudicial = links.get(1).getText().split("\\(")[0].trim();
-			}
-			especie = linha.findElement(By.xpath("./td[4]/div")).getText().trim();
-			dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
-			if (nup.trim().equals("") || (links.size() > 1 && processoJudicial.trim().equals("")) || especie.trim().equals("") || dataHora.trim().equals("")) {
-				((JavascriptExecutor) tabela).executeScript("window.scrollBy(0,100)", "");
-			} else {
-				break;
-			}
-		} while (true);
+		List<WebElement> links = linha.findElements(By.xpath(".//a"));
+		moverMouseParaElemento(links.get(links.size()-1));
+		String nup = links.get(0).getText();
+		String processoJudicial = linha.findElement(By.xpath("./td[3]/div")).getText().split("\\(")[0].trim();
+		String especie = linha.findElement(By.xpath("./td[4]/div")).getText().trim();
+		String dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
 
 		return new String[] { nup, processoJudicial, especie, dataHora };
 	}
