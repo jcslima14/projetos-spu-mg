@@ -96,7 +96,8 @@ public class SapiensService extends SeleniumService {
 			moverMouseParaElemento(links.get(links.size()-1));
 			nup = links.get(0).getText();
 			if (links.size() > 1) {
-				processoJudicial = links.get(1).getText().split("\\(")[0].trim();
+				processoJudicial = linha.findElement(By.xpath("./td[3]/div")).getText().split("\\(")[0].trim();
+				// processoJudicial = links.get(1).getText().split("\\(")[0].trim();
 			}
 			especie = linha.findElement(By.xpath("./td[4]/div")).getText().trim();
 			dataHora = linha.findElement(By.xpath("./td[7]/div")).getText();
