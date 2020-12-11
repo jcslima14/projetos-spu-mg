@@ -3,7 +3,6 @@ package framework.services;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.openqa.selenium.By;
@@ -89,7 +88,7 @@ public class SeleniumService {
 			driver = new FirefoxDriver(opcoes);
 		}
 		
-        driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
+        // driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
 
 		return driver;
 	}
