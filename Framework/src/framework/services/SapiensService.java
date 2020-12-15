@@ -391,4 +391,119 @@ public class SapiensService extends SeleniumService {
 	        return false;
         }
 	}
+
+	public void filtrarProcesso(String tipoFiltro, String chaveBusca) throws Exception {
+        WebElement cbcProcessoJudicial = encontrarElemento(5, 1, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]"));
+    	TimeUnit.SECONDS.sleep(1);
+        executarJavaScript("arguments[0].scrollIntoView(true);", cbcProcessoJudicial);
+        executarJavaScript("arguments[0].click();", cbcProcessoJudicial);
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        WebElement btnExpandirMenu = encontrarElemento(5, 1, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]/div"));
+        executarJavaScript("arguments[0].click();", btnExpandirMenu);
+        TimeUnit.MILLISECONDS.sleep(500);
+
+        WebElement divFiltro = encontrarElemento(5, 1, By.xpath("//div[./a/span[text() = 'Filtros']]"));
+    	esperarCarregamento(1000, 5, 1, "//div[text() = 'Carregando...']");
+
+    	moverMouseParaElemento(divFiltro);
+        WebElement iptPesquisar = encontrarElemento(5, 1, By.xpath("//div[not(contains(@style, 'visibility: hidden')) and contains(@class, 'x-menu-plain')]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
+        TimeUnit.MILLISECONDS.sleep(500);
+        iptPesquisar.clear();
+        iptPesquisar.sendKeys(chaveBusca);
+	}
+
+	public boolean responderProcesso(String tipoFiltro, String chaveBusca, String numeroProcesso, File arquivo) throws Exception {
+        boolean encontrado = false;
+
+        do {
+        	esperarCarregamento(1000, 5, 1, "//div[text() = 'Carregando...']");
+        	TimeUnit.SECONDS.sleep(1);
+
+	        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
+	        List<WebElement> linhasRetornadas = encontrarElementos(5, 1, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
+
+	        // se não encontrou nenhum registro, sai do loop
+			if (linhasRetornadas.size() == 0) {
+				break;
+			}
+
+			encontrado = true;
+
+			validarResultadoPesquisa(linhasRetornadas.iterator().next(), tipoFiltro, chaveBusca, numeroProcesso);
+			clicarResponderProcesso(linhasRetornadas.iterator().next());
+        	realizarUploadArquivo(arquivo);
+        	fecharJanelaUploadArquivo();
+
+        	esperarCarregamento(500, 5, 1, "//div[text() = 'Carregando...']");
+
+			WebElement btnAtualizar = encontrarElemento(5, 1, By.xpath("//a[@data-qtip = 'Atualizar']"));
+			moverMouseParaElementoEClicar(btnAtualizar);
+        } while (true);
+
+    	esperarCarregamento(500, 5, 1, "//div[text() = 'Carregando...']");
+        
+        return encontrado;
+	}
+
+	private void clicarResponderProcesso(WebElement linha) throws Exception {
+		WebElement colID = linha.findElement(By.xpath("./td[1]/div"));
+		moverMouseParaElementoEClicarBotaoDireito(colID);
+
+    	TimeUnit.SECONDS.sleep(1);
+
+		// clicar no botão responder
+		WebElement divResponder = encontrarElemento(5, 1, By.xpath("//div[./a/span[text() = 'Responder']]"));
+		moverMouseParaElementoEClicar(divResponder);
+
+    	TimeUnit.SECONDS.sleep(1);
+
+	}
+
+	private void fecharJanelaUploadArquivo() {
+		WebElement btnFechar = encontrarElemento(5, 1, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
+		moverMouseParaElementoEClicar(btnFechar);
+		
+		try {
+			WebElement btnNao = encontrarElemento(5, 1, By.xpath("//a[.//span[contains(@class, 'x-btn-inner') and text() = 'Não']]"));
+			moverMouseParaElementoEClicar(btnNao);
+		} catch (Exception e) {
+		}
+	}
+
+	private void realizarUploadArquivo(File arquivo) throws Exception {
+		// clicar no botão de upload de arquivos
+		WebElement btnUploadArquivo = encontrarElemento(5, 1, By.id("button_browse-button"));
+		moverMouseParaElemento(btnUploadArquivo);
+
+		WebElement inpUploadArquivo = encontrarElemento(5, 1, By.xpath("//input[@type = 'file']"));
+		inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
+
+		WebElement btnConfirmarUpload = encontrarElemento(5, 1, By.id("button_upload"));
+		moverMouseParaElementoEClicar(btnConfirmarUpload);
+
+		WebElement infUploadCompleto = null;
+
+		do {
+			infUploadCompleto = encontrarElemento(5, 1, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
+		} while (infUploadCompleto == null);
+
+    	TimeUnit.SECONDS.sleep(1);
+	}
+
+	private void validarResultadoPesquisa(WebElement linha, String tipoFiltro, String chaveBusca, String numeroProcesso) throws Exception {
+		WebElement colNUP = linha.findElement(By.xpath("./td[2]/div//a"));
+		WebElement colNumeroProcessoJudicial = linha.findElement(By.xpath("./td[3]/div"));
+		String nup = colNUP.getText().trim().replaceAll("\\D+", "");
+		String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
+
+		// se a linha retornada não corresponde à pesquisa, sai do loop
+		if (tipoFiltro.equalsIgnoreCase("nup") && (!nup.startsWith(chaveBusca) || !colNUP.getAttribute("href").trim().toLowerCase().contains("nup=" + chaveBusca))) {
+			throw new MyException("O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
+		}
+
+		if (!numeroProcessoJudicial.trim().equals("") && !numeroProcessoJudicial.startsWith(numeroProcesso)) {
+			throw new MyException("O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
+		}
+	}
 }

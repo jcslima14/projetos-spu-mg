@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,21 +25,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
+import framework.MyException;
+import framework.services.SapiensService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import model.Origem;
@@ -149,228 +135,64 @@ public class RespostaSapiens extends JInternalFrame {
 	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
 		Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
         String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + sapiens.getDescricao());
-        int tempoEsperaUpload = Integer.parseInt(despachoServico.obterConteudoParametro(Parametro.TEMPO_ESPERA));
-        
+
         if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
         	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem Sapiens (" + Origem.SAPIENS_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
         	return;
         }
 
         MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
-		if (navegador.equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
+        SapiensService sapiensService = new SapiensService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS), exibirNavegador);
 
-        // acessando o endereço
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS));
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        Actions passarMouse = new Actions(driver);
-
-        Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(15))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        WebDriverWait waitUntil = new WebDriverWait(driver, 10);
-        
-        // Find the text input element by its name
-        WebElement weUsuario = driver.findElement(By.xpath("//input[@name = 'username']"));
-        waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = driver.findElement(By.xpath("//input[@name = 'password']"));
-        weSenha.sendKeys(senha);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = driver.findElement(By.xpath("//span[text() = 'Entrar']"));
-        botaoAcessar.click();
-        
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
-
+        sapiensService.login(usuario, senha);
         Map<String, List<Object[]>> mapaArquivos = separarArquivosPorTipoFiltro(MyUtils.obterArquivos(pastaDespachosSalvos));
         
         // inicia o loop para leitura dos arquivos do diretório
         for (String tipoFiltro : mapaArquivos.keySet()) {
         	List<Object[]> listaArquivos = mapaArquivos.get(tipoFiltro);
 
-            // clica na aba de ofícios
-            WebElement abaOficios = MyUtils.encontrarElemento(wait15, By.xpath("//a[.//span[text() = 'Ofícios']]"));
-            js.executeScript("arguments[0].scrollIntoView(true);", abaOficios);
-            TimeUnit.MILLISECONDS.sleep(500);
-            js.executeScript("arguments[0].click();", abaOficios);
+        	sapiensService.clicarAbaOficios();
 
         	for (Object[] objArquivo : listaArquivos) {
-	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+        		sapiensService.esperarCarregamento(1000, 5, 1, "//div[text() = 'Carregando...']");
 
         		String chaveBusca = objArquivo[0].toString();
         		File arquivo = (File) objArquivo[1];
-
 	        	String numeroProcesso = arquivo.getName().toLowerCase().replace(".pdf", "");
+	        	boolean encontrado = false;
 
 	        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + numeroProcesso + " - Arquivo: " + arquivo.getAbsolutePath());
 
 		        // clica no botão de filtro
-		        WebElement cbcProcessoJudicial = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]"));
-	        	TimeUnit.SECONDS.sleep(1);
-	            js.executeScript("arguments[0].scrollIntoView(true);", cbcProcessoJudicial);
-	            js.executeScript("arguments[0].click();", cbcProcessoJudicial);
-	            TimeUnit.MILLISECONDS.sleep(500);
+	        	sapiensService.filtrarProcesso(tipoFiltro, chaveBusca);
+	        	try {
+	        		encontrado = sapiensService.responderProcesso(tipoFiltro, chaveBusca, numeroProcesso, arquivo);
+	        	} catch (MyException e) {
+	        		MyUtils.appendLogArea(logArea, e.getMessage());
+	        		continue;
+	        	}
 
-		        WebElement btnExpandirMenu = MyUtils.encontrarElemento(wait5, By.xpath("//div[./span[text() = '" + tipoFiltro + "']]/div"));
-	            js.executeScript("arguments[0].click();", btnExpandirMenu);
-	            TimeUnit.MILLISECONDS.sleep(500);
+	        	if (!encontrado) {
+					MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
+	        	}
 
-		        WebElement divFiltro = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Filtros']]"));
-	        	MyUtils.esperarCarregamento(1000, wait5, "//div[text() = 'Carregando...']");
+	        	if (encontrado || moverRespostaNaoEncontrada) {
+					// mover o arquivo
+	        		String subpastaDestino = encontrado ? "bkp" : "nao_encontrado";
+		        	TimeUnit.MILLISECONDS.sleep(50);
+			        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, subpastaDestino);
+			        String nomeArquivoBkp = pastaDespachosSalvos + File.separator + subpastaDestino + File.separator + arquivo.getName();
 
-		        passarMouse.moveToElement(divFiltro).build().perform();
-		        WebElement iptPesquisar = MyUtils.encontrarElemento(wait5, By.xpath("//div[not(contains(@style, 'visibility: hidden')) and contains(@class, 'x-menu-plain')]//input[@type = 'text' and @role = 'textbox' and @data-errorqtip = '' and contains(@name, 'textfield')]"));
-		        TimeUnit.MILLISECONDS.sleep(500);
-		        iptPesquisar.clear();
-		        iptPesquisar.sendKeys(chaveBusca);
-
-		        boolean encontrado = false;
-		        boolean inconsistente = false;
-		        int qtOcorrencias = 0;
-
-		        do {
-		        	MyUtils.esperarCarregamento(2000, wait5, "//div[text() = 'Carregando...']");
-		        	TimeUnit.SECONDS.sleep(1);
-
-			        // após retorno da pesquisa, buscar tabela "//table[contains(@id, 'gridview')]"
-			        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait15, By.xpath("//table[contains(@id, 'gridview')]/tbody/tr"));
-
-			        // se não encontrou nenhum registro, sai do loop
-					if (linhasRetornadas.size() == 0) {
-						break;
-					}
-
-					encontrado = true;
-
-					WebElement colID = linhasRetornadas.iterator().next().findElement(By.xpath("./td[1]/div"));
-					WebElement colNUP = linhasRetornadas.iterator().next().findElement(By.xpath("./td[2]/div//a"));
-					WebElement colNumeroProcessoJudicial = linhasRetornadas.iterator().next().findElement(By.xpath("./td[3]/div"));
-					String nup = colNUP.getText().trim().replaceAll("\\D+", "");
-					String numeroProcessoJudicial = colNumeroProcessoJudicial.getText().trim().replaceAll("\\D+", "");
-
-					// se a linha retornada não corresponde à pesquisa, sai do loop
-					if (tipoFiltro.equalsIgnoreCase("nup") && (!nup.startsWith(chaveBusca) || !colNUP.getAttribute("href").trim().toLowerCase().contains("nup=" + chaveBusca))) {
-						MyUtils.appendLogArea(logArea, "O NUP retornado (" + nup + ") não corresponde à chave de busca pesquisada (" + chaveBusca + ")");
-						inconsistente = true;
-						break;
-					}
-
-					if (!numeroProcessoJudicial.trim().equals("") && !numeroProcessoJudicial.startsWith(numeroProcesso)) {
-						MyUtils.appendLogArea(logArea, "O Processo Judicial retornado (" + numeroProcessoJudicial + ") não corresponde ao processo contido no nome do arquivo (" + numeroProcesso + ")");
-						inconsistente = true;
-						break;
-					}
-
-					MyUtils.appendLogArea(logArea, "Respondendo ocorrência " + (++qtOcorrencias));
-
-					passarMouse.moveToElement(colID).contextClick(colID).perform();
-	
-		        	TimeUnit.SECONDS.sleep(1);
-	
-					// clicar no botão responder
-					WebElement divResponder = MyUtils.encontrarElemento(wait5, By.xpath("//div[./a/span[text() = 'Responder']]"));
-					passarMouse.moveToElement(divResponder).click().build().perform();
-		
-		        	TimeUnit.SECONDS.sleep(1);
-		
-					// clicar no botão de upload de arquivos
-					WebElement btnUploadArquivo = MyUtils.encontrarElemento(wait5, By.id("button_browse-button"));
-					passarMouse.moveToElement(btnUploadArquivo).perform();
-			
-					WebElement inpUploadArquivo = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
-					inpUploadArquivo.sendKeys(arquivo.getAbsolutePath());
-	
-		        	TimeUnit.SECONDS.sleep(tempoEsperaUpload);
-	
-					WebElement btnConfirmarUpload = MyUtils.encontrarElemento(wait5, By.id("button_upload"));
-					passarMouse.moveToElement(btnConfirmarUpload).click().build().perform();
-	
-					WebElement infUploadCompleto = null;
-	
-					do {
-						infUploadCompleto = MyUtils.encontrarElemento(wait5, By.xpath("//tbody/tr/td[7]/div[text() = '100%']"));
-					} while (infUploadCompleto == null);
-	
-		        	TimeUnit.SECONDS.sleep(1);
-		
-					WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(text(), 'Fechar')]]"));
-					passarMouse.moveToElement(btnFechar).click().build().perform();
-					
-					try {
-						WebElement btnNao = MyUtils.encontrarElemento(wait5, By.xpath("//a[.//span[contains(@class, 'x-btn-inner') and text() = 'Não']]"));
-						passarMouse.moveToElement(btnNao).click().build().perform();
-					} catch (Exception e) {
-					}
-
-		        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
-		
-					WebElement btnAtualizar = MyUtils.encontrarElemento(wait5, By.xpath("//a[@data-qtip = 'Atualizar']"));
-					passarMouse.moveToElement(btnAtualizar).click().build().perform();
-
-		        	MyUtils.esperarCarregamento(500, wait5, "//div[text() = 'Carregando...']");
-		        } while (true);
-
-		        if (!encontrado || inconsistente) {
-		        	if (!encontrado) {
-						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
-		        	}
-		        }
-
-		        if (!inconsistente) {
-		        	if (encontrado || moverRespostaNaoEncontrada) {
-						// mover o arquivo
-		        		String subpastaDestino = encontrado ? "bkp" : "nao_encontrado";
-			        	TimeUnit.MILLISECONDS.sleep(50);
-				        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, subpastaDestino);
-				        String nomeArquivoBkp = pastaDespachosSalvos + File.separator + subpastaDestino + File.separator + arquivo.getName();
-				        
-				        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
-		        	}
-		        }
+			        MyUtils.renomearArquivo(arquivo.getAbsolutePath(), nomeArquivoBkp, 30, true);
+	        	}
 	        }
 
         	// ao terminar o tipo de filtro, dar um refresh na página para limpar os filtros e reiniciar o processo para o segundo tipo de filtro
-        	driver.navigate().refresh();
+        	sapiensService.atualizarPagina();
         }
 		
         MyUtils.appendLogArea(logArea, "Fim do processamento...");
-        // driver.close();
-        driver.quit();
+    	sapiensService.fechaNavegador();
 	}
 	
 	private Map<String, List<Object[]>> separarArquivosPorTipoFiltro(List<File> arquivos) throws Exception {

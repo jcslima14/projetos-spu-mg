@@ -192,6 +192,14 @@ public class SeleniumService {
 		} catch (Exception ex) {
 		}
 	}
+
+	protected void moverMouseParaElementoEClicarBotaoDireito(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).contextClick(e).build().perform();
+		} catch (Exception ex) {
+		}
+	}
 	
 	protected void mudaFocoParaPopup(int janelasAbertas) throws Exception {
 		janelaAtual = driver.getWindowHandle();
@@ -207,7 +215,7 @@ public class SeleniumService {
 		}
 	}
 
-	protected void esperarCarregamento(int esperaInicialEmMilissegundos, int timeout, int pollingEvery, String xpath) throws Exception {
+	public void esperarCarregamento(int esperaInicialEmMilissegundos, int timeout, int pollingEvery, String xpath) throws Exception {
         TimeUnit.MILLISECONDS.sleep(esperaInicialEmMilissegundos);
 
         WebElement infCarregando = null;
@@ -255,5 +263,9 @@ public class SeleniumService {
 	public void fecharJanelaAtual() {
 		driver.close();
 		driver.switchTo().window(janelaAtual);
+	}
+	
+	public void atualizarPagina() {
+    	driver.navigate().refresh();
 	}
 }
