@@ -3,8 +3,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -101,15 +99,9 @@ public class ImpressaoDespacho extends JInternalFrame {
 							try {
 								imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante), cbbNavegador.getSelectedItem().toString());;
 							} catch (Exception e) {
-								MyUtils.appendLogArea(logArea, "Erro ao imprimir as respostas do SEI: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								MyUtils.appendLogArea(logArea, "Erro ao imprimir as respostas do SEI: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 								e.printStackTrace();
 							}
-						}
-
-						private String stackTraceToString(Exception e) {
-							StringWriter sw = new StringWriter();
-							e.printStackTrace(new PrintWriter(sw));
-							return sw.toString();
 						}
 					}).start();
 				} catch (Exception ex) {

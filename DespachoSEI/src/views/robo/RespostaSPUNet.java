@@ -3,11 +3,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -23,21 +18,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
+import framework.MyException;
+import framework.services.SPUNetService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import model.Origem;
@@ -120,15 +102,9 @@ public class RespostaSPUNet extends JInternalFrame {
 							despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 							incluirDadosSPUNet(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), navegador);
 						} catch (Exception e) {
-							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 							e.printStackTrace();
 						}
-					}
-
-					private String stackTraceToString(Exception e) {
-						StringWriter sw = new StringWriter();
-						e.printStackTrace(new PrintWriter(sw));
-						return sw.toString();
 					}
 				}).start();
 			} 
@@ -151,93 +127,10 @@ public class RespostaSPUNet extends JInternalFrame {
         }
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
-		if (navegador.equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			if (!exibirNavegador) {
-				opcoes.setHeadless(true);
-			}
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
-
-        // acessando o endereço
-		MyUtils.appendLogArea(logArea, "Acessando o SPUNet...");
-        driver.get(despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET));
-        Actions passarMouse = new Actions(driver);
-
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-
-        Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(15))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        WebDriverWait waitUntil = new WebDriverWait(driver, 10);
-
-        TimeUnit.MILLISECONDS.sleep(1000);
-		MyUtils.appendLogArea(logArea, "Informando credenciais...");
-
-        // Find the text input element by its name
-        WebElement weUsuario = MyUtils.encontrarElemento(wait15, By.id("username"));
-        waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = MyUtils.encontrarElemento(wait15, By.id("password"));
-        weSenha.sendKeys(senha);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = MyUtils.encontrarElemento(wait15, By.xpath("//button[contains(text(), 'Acessar')]"));
-        botaoAcessar.click();
-
-        if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
-        	MyUtils.acceptSecurityAlert(driver);
-        }
-
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
-
-        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
-
-        // clica na aba de ofícios
-//        WebElement btnMenuAplicacao = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label='Menu da Aplicação']"));
-//        passarMouse.moveToElement(btnMenuAplicacao).perform();
-//        waitUntil.until(ExpectedConditions.elementToBeClickable(btnMenuAplicacao));
-//        btnMenuAplicacao.click();
-//
-//        WebElement btnServicos = MyUtils.encontrarElemento(wait15, By.xpath("//button[./div[contains(text(), 'SERVIÇOS (PORTAL SPU/MP)')]]"));
-//        passarMouse.moveToElement(btnServicos).click().build().perform();
-//
-//        WebElement btnTriagem = MyUtils.encontrarElemento(wait15, By.xpath("//a[text() = 'Triagem']"));
-//        passarMouse.moveToElement(btnTriagem).perform();
-//        waitUntil.until(ExpectedConditions.elementToBeClickable(btnTriagem));
-//        btnTriagem.click();
-
-        driver.get("http://spunet.planejamento.gov.br/#/servicos/triagem");
-        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
+		SPUNetService spunetService = new SPUNetService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET), exibirNavegador);
+		
+		spunetService.login(usuario, senha);
+		spunetService.acessarPaginaTriagem();
 
         // inicia o loop para leitura dos arquivos do diretório
         for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
@@ -268,80 +161,19 @@ public class RespostaSPUNet extends JInternalFrame {
 	        }
 
         	MyUtils.appendLogArea(logArea, "Nº do Processo: " + solicitacao.getNumeroProcesso() + " (Nº Atendimento: " + numeroAtendimento + ") - Arquivo: " + arquivo.getAbsolutePath());
+        	
+        	try {
+        		spunetService.responderDemanda(numeroAtendimento, resposta.getTipoResposta().getRespostaSPUNet(), resposta.getTipoResposta().getComplementoSPUNet(), arquivo);
+        	} catch (MyException e) {
+        		MyUtils.appendLogArea(logArea, e.getMessage());
+        		continue;
+        	}
 
-	        WebElement txtNumeroAtendimento = MyUtils.encontrarElemento(wait15, By.xpath("//input[@ng-model = 'filtro.nuAtendimento']"));
-	        txtNumeroAtendimento.clear();
-	        txtNumeroAtendimento.sendKeys(numeroAtendimento);
-
-	        WebElement btnPesquisar = MyUtils.encontrarElemento(wait15, By.xpath("//button[@aria-label = 'Pesquisar']"));
-	        btnPesquisar.click();
-
-	        MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
-
-	        List<WebElement> linhasRetornadas = MyUtils.encontrarElementos(wait5, By.xpath("//table/tbody/tr"));
-	        if (linhasRetornadas.size() == 1) {
-	        	WebElement txtSituacao = linhasRetornadas.iterator().next().findElement(By.xpath("./td[6]"));
-	        	if (!txtSituacao.getText().trim().equalsIgnoreCase("Em Análise Técnica")) {
-	        		MyUtils.appendLogArea(logArea, "A solicitação não está em análise técnica e não pode ser respondida automaticamente");
-	        		continue;
-	        	}
-	        	
-	        	WebElement btnExpandirOpcoes = linhasRetornadas.iterator().next().findElement(By.xpath("//md-fab-trigger"));
-		        js.executeScript("arguments[0].click();", btnExpandirOpcoes);
-		        TimeUnit.MILLISECONDS.sleep(500);
-	        	// passarMouse.moveToElement(btnExpandirOpcoes).click().build().perform();
-	        	
-	        	WebElement btnDetalhar = linhasRetornadas.iterator().next().findElement(By.xpath("//a[@ng-click = 'irParaDetalhar(item);']"));
-		        js.executeScript("arguments[0].click();", btnDetalhar);
-		        TimeUnit.MILLISECONDS.sleep(500);
-//	            passarMouse.moveToElement(btnDetalhar).perform();
-//	        	btnDetalhar.click();
-	        	
-	            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]");
-	            
-	            WebElement optResposta = MyUtils.encontrarElemento(wait5, By.xpath("//md-radio-button[@aria-label = '" + resposta.getTipoResposta().getRespostaSPUNet() + "']"));
-	            optResposta.click();
-	            
-	            if (!MyUtils.emptyStringIfNull(resposta.getTipoResposta().getComplementoSPUNet()).equals("")) {
-		            WebElement txtInformacoesComplementares = MyUtils.encontrarElemento(wait5, By.xpath("//textarea[@ng-model = 'analiseRequerimento.justificativa']"));
-		            txtInformacoesComplementares.sendKeys(MyUtils.emptyStringIfNull(resposta.getTipoResposta().getComplementoSPUNet()));
-	            }
-
-	            WebElement txtUpload = MyUtils.encontrarElemento(wait5, By.xpath("//input[@type = 'file']"));
-	            
-	            TimeUnit.MILLISECONDS.sleep(500);
-	
-	            js.executeScript("arguments[0].style.visibility = 'visible'; arguments[0].style.overflow = 'visible'; arguments[0].style.height = '1px'; arguments[0].style.width = '1px'; arguments[0].style.opacity = 1", txtUpload);
-	
-	            TimeUnit.MILLISECONDS.sleep(500);
-	            
-	            txtUpload.sendKeys(arquivo.getAbsolutePath());
-	            
-	            MyUtils.esperarCarregamento(2000, wait5, "//p[contains(text(), 'Carregando')]");
-
-	            // busca o botão de enviar para clicar
-	            WebElement btnEnviar = MyUtils.encontrarElemento(wait5, By.xpath("//button[text() = 'Enviar']"));
-	            passarMouse.moveToElement(btnEnviar);
-	            btnEnviar.click();
-
-	            MyUtils.esperarCarregamento(2000, wait15, "//p[contains(text(), 'Carregando')]");
-
-	            // botao para fechar a janela após clicar em enviar
-	            WebElement btnFechar = MyUtils.encontrarElemento(wait5, By.xpath("//button[@ng-click='fechar()' and ./label[text() = 'fechar']]"));
-	            passarMouse.moveToElement(btnFechar);
-	            btnFechar.click();
-
-				// mover o arquivo
-		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, "bkp");
-				arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
-
-	            MyUtils.esperarCarregamento(2000, wait5, "//p[contains(text(), 'Carregando')]");
-	        } else {
-	        	MyUtils.appendLogArea(logArea, "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.");
-	        }
+	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, "bkp");
+			arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
-        driver.quit();
+        spunetService.fechaNavegador();
 	}
 }

@@ -29,15 +29,17 @@ public class SeleniumService {
 	protected WebDriver driver;
 	protected String janelaPrincipal;
 	protected String janelaAtual;
+	protected String navegador;
 
 	public SeleniumService(String navegador, String endereco, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
+		this.navegador = navegador;
 		this.driver = obterWebDriver(navegador, exibirNavegador, pastaDeDownload, timeoutImplicito);
 		
 		if (!endereco.trim().equals("")) {
 			acessarEndereco(endereco);
 		}
 	}
-	
+
 	@SuppressWarnings("serial")
 	private WebDriver obterWebDriver(String navegador, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
 		// verifica se a pasta de downloads existe
@@ -267,5 +269,20 @@ public class SeleniumService {
 	
 	public void atualizarPagina() {
     	driver.navigate().refresh();
+	}
+	
+	public void acceptSecurityAlert() {
+	    Alert alert = espera(30, 3).until(new Function<WebDriver, Alert>() {       
+
+	        public Alert apply(WebDriver driver) {
+	            try {
+	                return driver.switchTo().alert();
+	            } catch(NoAlertPresentException e) {
+	                return null;
+	            }
+	        }  
+	    });
+
+	    alert.accept();
 	}
 }

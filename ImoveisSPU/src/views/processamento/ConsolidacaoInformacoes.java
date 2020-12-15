@@ -2,8 +2,6 @@ package views.processamento;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -15,6 +13,7 @@ import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 
 import framework.utils.JPAUtils;
+import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 
 @SuppressWarnings("serial")
@@ -58,15 +57,9 @@ public class ConsolidacaoInformacoes extends JInternalFrame {
 							try {
 								consolidarInformacoes();
 							} catch (Exception e) {
-								appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 								e.printStackTrace();
 							}
-						}
-
-						private String stackTraceToString(Exception e) {
-							StringWriter sw = new StringWriter();
-							e.printStackTrace(new PrintWriter(sw));
-							return sw.toString();
 						}
 					}).start();
 				} catch (Exception ex) {

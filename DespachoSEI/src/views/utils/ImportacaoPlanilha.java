@@ -4,8 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
@@ -136,15 +134,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 							try {
 								importarArquivo(lblNomeArquivo.getText(), Integer.parseInt(txtLinhaInicial.getText()), Integer.parseInt(txtLinhaFinal.getText()));;
 							} catch (Exception e) {
-								MyUtils.appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								MyUtils.appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 								e.printStackTrace();
 							}
-						}
-
-						private String stackTraceToString(Exception e) {
-							StringWriter sw = new StringWriter();
-							e.printStackTrace(new PrintWriter(sw));
-							return sw.toString();
 						}
 					}).start();
 				} catch (Exception ex) {

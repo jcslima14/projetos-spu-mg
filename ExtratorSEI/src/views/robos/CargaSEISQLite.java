@@ -2,8 +2,6 @@ package views.robos;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -156,15 +154,9 @@ public class CargaSEISQLite extends JInternalFrame {
 						try {
 							executarCargaInformacoes(CargaSEISQLite.this.conexao, logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), txtDataInicial.getText(), txtDataFinal.getText(), chkCarregarMarcadores.isSelected(), chkExibirNavegador.isSelected());
 						} catch (Exception e) {
-							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 							e.printStackTrace();
 						}
-					}
-
-					private String stackTraceToString(Exception e) {
-						StringWriter sw = new StringWriter();
-						e.printStackTrace(new PrintWriter(sw));
-						return sw.toString();
 					}
 				}).start();
 			} 
