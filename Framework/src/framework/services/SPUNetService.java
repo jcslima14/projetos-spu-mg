@@ -78,7 +78,7 @@ public class SPUNetService extends SeleniumService {
 	}
 
 	private String validarDemandaParaResponder(List<WebElement> linhasRetornadas) {
-		if (linhasRetornadas.size() == 1) {
+		if (linhasRetornadas.size() != 1) {
 			return "Foram retornadas " + linhasRetornadas.size() + " linhas ao pesquisar. Não será possível responder automaticamente.";
 		}
 		
