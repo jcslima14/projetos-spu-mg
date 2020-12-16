@@ -5,8 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,15 +132,9 @@ public class ImportacaoPlanilha extends JInternalFrame {
 							try {
 								importarArquivo(lblNomeArquivo.getText(), ((ComboBoxItem) cbbTipoPlanilha.getSelectedItem()).getCaption());
 							} catch (Exception e) {
-								appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								appendLogArea(logArea, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 								e.printStackTrace();
 							}
-						}
-
-						private String stackTraceToString(Exception e) {
-							StringWriter sw = new StringWriter();
-							e.printStackTrace(new PrintWriter(sw));
-							return sw.toString();
 						}
 					}).start();
 				} catch (Exception ex) {

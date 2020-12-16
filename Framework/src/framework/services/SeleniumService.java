@@ -1,43 +1,44 @@
 package framework.services;
 
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.NoAlertPresentException;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import io.github.bonigarcia.wdm.config.DriverManagerType;
 
 public class SeleniumService {
 	
 	protected WebDriver driver;
-	protected WebDriverWait wait;
 	protected String janelaPrincipal;
+	protected String janelaAtual;
+	protected String navegador;
 
 	public SeleniumService(String navegador, String endereco, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
+		this.navegador = navegador;
 		this.driver = obterWebDriver(navegador, exibirNavegador, pastaDeDownload, timeoutImplicito);
-		this.wait = new WebDriverWait(driver, timeoutImplicito * 60);
-		this.wait.pollingEvery(Duration.ofSeconds(3));
-		this.wait.withTimeout(Duration.ofSeconds(60));
-		this.wait.ignoring(NoSuchElementException.class);
 		
 		if (!endereco.trim().equals("")) {
 			acessarEndereco(endereco);
 		}
 	}
-	
+
 	@SuppressWarnings("serial")
 	private WebDriver obterWebDriver(String navegador, boolean exibirNavegador, String pastaDeDownload, int timeoutImplicito) throws Exception {
 		// verifica se a pasta de downloads existe
@@ -45,7 +46,6 @@ public class SeleniumService {
 			throw new Exception("A pasta para download dos arquivos não existe");
 		}
 
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
 		WebDriver driver = null;
 		if (navegador.equalsIgnoreCase("chrome")) {
 			ChromeOptions opcoes = new ChromeOptions();
@@ -68,7 +68,7 @@ public class SeleniumService {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+			WebDriverManager.getInstance(DriverManagerType.CHROME).setup();
 	        driver = new ChromeDriver(opcoes);
 		} else {
 			FirefoxOptions opcoes = new FirefoxOptions();
@@ -84,20 +84,13 @@ public class SeleniumService {
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
+			WebDriverManager.getInstance(DriverManagerType.FIREFOX).setup();
 			driver = new FirefoxDriver(opcoes);
 		}
 		
         // driver.manage().timeouts().implicitlyWait(timeoutImplicito, TimeUnit.MINUTES);
 
 		return driver;
-	}
-	
-	public Wait<WebDriver> obterWait(WebDriver driver, int timeout, int pollingEvery) {
-        return new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(timeout))
-        		.pollingEvery(Duration.ofSeconds(pollingEvery))
-        		.ignoring(NoSuchElementException.class);
 	}
 	
 	public void acessarEndereco(String endereco) {
@@ -118,8 +111,12 @@ public class SeleniumService {
         this.driver.switchTo().window(primeiraJanela);
 	}
 
-	public WebElement encontrarElemento(By by) {
-		return this.wait.until(new Function<WebDriver, WebElement>() {
+	protected WebDriverWait espera(int timeout, int pollingEvery) {
+		return new WebDriverWait(driver, timeout, pollingEvery * 1000);
+	}
+
+	public WebElement encontrarElemento(int timeout, int pollingEvery, By by) {
+		return espera(timeout, pollingEvery).until(new Function<WebDriver, WebElement>() {
 			@Override
 			public WebElement apply(WebDriver t) {
 				WebElement element = t.findElement(by);
@@ -131,8 +128,12 @@ public class SeleniumService {
 		});
 	}
 
-	public List<WebElement> encontrarElementos(By by) {
-		return this.wait.until(new Function<WebDriver, List<WebElement>>() {
+	public WebElement encontrarElemento(By by) {
+		return encontrarElemento(60, 3, by);
+	}
+
+	public List<WebElement> encontrarElementos(int timeout, int pollingEvery, By by) {
+		return espera(timeout, pollingEvery).until(new Function<WebDriver, List<WebElement>>() {
 			@Override
 			public List<WebElement> apply(WebDriver t) {
 				List<WebElement> elements = t.findElements(by);
@@ -142,6 +143,10 @@ public class SeleniumService {
 				return elements;
 			}
 		});
+	}
+
+	public List<WebElement> encontrarElementos(By by) {
+		return encontrarElementos(60, 3, by);
 	}
 	
 	public void alterarParaFrame(int index) {
@@ -155,5 +160,128 @@ public class SeleniumService {
 	public void fechaNavegador() {
         driver.close();
         driver.quit();
+	}
+
+	protected void aguardarCargaListaDocumentos(String xpath, int quantRegistrosEsperados) throws Exception {
+		aguardarCargaListaDocumentos(60, 3, xpath, quantRegistrosEsperados);
+	}
+
+	protected void aguardarCargaListaDocumentos(int timeout, int pollingEvery, String xpath, int quantRegistrosEsperados) throws InterruptedException {
+		// encontra a quantidade de registros aptos a serem impressos
+		do {
+			List<WebElement> linhasAptas = encontrarElementos(timeout, pollingEvery, By.xpath(xpath));
+			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
+				break;
+			} else {
+				TimeUnit.SECONDS.sleep(1);
+			}
+		} while (true);
+	}
+
+	protected void moverMouseParaElemento(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).build().perform();
+		} catch (Exception ex) {
+		}
+	}
+
+	protected void moverMouseParaElementoEClicar(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).click().build().perform();
+		} catch (Exception ex) {
+		}
+	}
+
+	protected void moverMouseParaElementoEClicarBotaoDireito(WebElement e) {
+		Actions acoes = new Actions(driver);
+		try {
+			acoes.moveToElement(e).contextClick(e).build().perform();
+		} catch (Exception ex) {
+		}
+	}
+	
+	protected void mudaFocoParaPopup(int janelasAbertas) throws Exception {
+		janelaAtual = driver.getWindowHandle();
+		do {
+			if (driver.getWindowHandles().size() > janelasAbertas) {
+				break;
+			}
+			TimeUnit.SECONDS.sleep(1);
+		} while (true);
+		
+		for (String janelaAberta : driver.getWindowHandles()) {
+			driver.switchTo().window(janelaAberta);
+		}
+	}
+
+	public void esperarCarregamento(int esperaInicialEmMilissegundos, int timeout, int pollingEvery, String xpath) throws Exception {
+        TimeUnit.MILLISECONDS.sleep(esperaInicialEmMilissegundos);
+
+        WebElement infCarregando = null;
+        do {
+        	try {
+        		infCarregando = encontrarElemento(timeout, pollingEvery, By.xpath(xpath));
+        	} catch (Exception e) {
+        		infCarregando = null;
+        	}
+        	try {
+	        	if (infCarregando == null || !infCarregando.isDisplayed()) {
+	        		break;
+	        	}
+        	} catch (StaleElementReferenceException e) {
+        		break;
+        	}
+        } while (true);
+	}
+
+	public Alert obterAlerta(int timeout, int pollingEvery) {
+	    WebDriverWait wait = new WebDriverWait(driver, timeout, pollingEvery * 1000);
+	    Alert alert = null;
+        try {
+		    alert = wait.until(new Function<WebDriver, Alert>() {
+		        public Alert apply(WebDriver driver) {
+	                return driver.switchTo().alert();
+		        }
+		    });  
+        } catch(NoAlertPresentException | TimeoutException e) {
+        	return null;
+        }
+
+	    return alert;
+	}
+
+	protected boolean alertaPresente( ) {
+		try { 
+	        driver.switchTo().alert(); 
+	        return true; 
+	    } catch (NoAlertPresentException Ex) { 
+	        return false; 
+	    }
+	}
+
+	public void fecharJanelaAtual() {
+		driver.close();
+		driver.switchTo().window(janelaAtual);
+	}
+	
+	public void atualizarPagina() {
+    	driver.navigate().refresh();
+	}
+	
+	public void acceptSecurityAlert() {
+	    Alert alert = espera(30, 3).until(new Function<WebDriver, Alert>() {       
+
+	        public Alert apply(WebDriver driver) {
+	            try {
+	                return driver.switchTo().alert();
+	            } catch(NoAlertPresentException e) {
+	                return null;
+	            }
+	        }  
+	    });
+
+	    alert.accept();
 	}
 }

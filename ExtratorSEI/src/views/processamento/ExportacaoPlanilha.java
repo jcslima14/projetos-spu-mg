@@ -4,8 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -108,15 +106,9 @@ public class ExportacaoPlanilha extends JInternalFrame {
 								exportarArquivo(lblNomeArquivo.getText(), unidadeSelecionada.getIntId(), chkApenasAbertos.isSelected());
 								JOptionPane.showMessageDialog(null, "Arquivo gerado com sucesso!");
 							} catch (Exception e) {
-								JOptionPane.showMessageDialog(null, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+								JOptionPane.showMessageDialog(null, "Erro ao importar a planilha de dados: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 								e.printStackTrace();
 							}
-						}
-
-						private String stackTraceToString(Exception e) {
-							StringWriter sw = new StringWriter();
-							e.printStackTrace(new PrintWriter(sw));
-							return sw.toString();
 						}
 					}).start();
 				} catch (Exception ex) {

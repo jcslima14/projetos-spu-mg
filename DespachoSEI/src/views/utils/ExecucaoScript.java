@@ -2,8 +2,6 @@ package views.utils;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -65,15 +63,9 @@ public class ExecucaoScript extends JInternalFrame {
 							executarScript(logArea);
 							JOptionPane.showMessageDialog(null, "Script executado com sucesso!");
 						} catch (Exception e) {
-							JOptionPane.showMessageDialog(null, "Erro ao executar o script: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							JOptionPane.showMessageDialog(null, "Erro ao executar o script: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 							e.printStackTrace();
 						}
-					}
-
-					private String stackTraceToString(Exception e) {
-						StringWriter sw = new StringWriter();
-						e.printStackTrace(new PrintWriter(sw));
-						return sw.toString();
 					}
 				}).start();
 			} 

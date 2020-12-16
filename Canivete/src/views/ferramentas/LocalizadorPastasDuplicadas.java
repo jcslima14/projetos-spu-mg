@@ -9,8 +9,6 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -104,14 +102,8 @@ public class LocalizadorPastasDuplicadas extends JInternalFrame {
 							gerarArquivoCSV(tabela);
 						} catch (Exception e) {
 							e.printStackTrace();
-							JOptionPane.showMessageDialog(null, "Erro ao gerar o arquivo CSV: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							JOptionPane.showMessageDialog(null, "Erro ao gerar o arquivo CSV: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 						}
-					}
-
-					private String stackTraceToString(Exception e) {
-						StringWriter sw = new StringWriter();
-						e.printStackTrace(new PrintWriter(sw));
-						return sw.toString();
 					}
 				}).start();
 			} 

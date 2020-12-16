@@ -2,8 +2,6 @@ package views.robos;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.Duration;
 import java.util.Date;
 import java.util.function.Function;
@@ -116,15 +114,9 @@ public class BuscaIDCartografia extends JInternalFrame {
 						try {
 							buscarIDSPUNet(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()));
 						} catch (Exception e) {
-							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + stackTraceToString(e));
+							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
 							e.printStackTrace();
 						}
-					}
-
-					private String stackTraceToString(Exception e) {
-						StringWriter sw = new StringWriter();
-						e.printStackTrace(new PrintWriter(sw));
-						return sw.toString();
 					}
 				}).start();
 			} 
