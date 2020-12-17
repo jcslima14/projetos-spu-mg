@@ -49,12 +49,12 @@ public class ExtracaoInformacoesSEI {
         String descricaoProcesso = "";
     	
         // clicar em consultar processo para buscar a descrição do processo
-        driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
+        driver.switchTo().frame(ExtratorSEIUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
 
         if (ultimoSequencialGravado == 0) {
             WebElement consultarProcesso = null;
             try {
-	            consultarProcesso = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Consultar/Alterar Processo' or @title = 'Consultar Processo']"));
+	            consultarProcesso = ExtratorSEIUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Consultar/Alterar Processo' or @title = 'Consultar Processo']"));
             } catch (Exception e) {
             	e.printStackTrace();
             }
@@ -62,7 +62,7 @@ public class ExtracaoInformacoesSEI {
             if (consultarProcesso != null) {
             	consultarProcesso.click();
 
-	            WebElement weDescricaoProcesso = MyUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtDescricao']"));
+	            WebElement weDescricaoProcesso = ExtratorSEIUtils.encontrarElemento(wait, By.xpath("//input[@id = 'txtDescricao']"));
 	            descricaoProcesso = weDescricaoProcesso.getAttribute("value").replace("'", "");
             }
         }
@@ -71,7 +71,7 @@ public class ExtracaoInformacoesSEI {
         if (carregarMarcadores) {
             WebElement gerenciarMarcador = null;
             try {
-	            gerenciarMarcador = MyUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Gerenciar Marcador']"));
+	            gerenciarMarcador = ExtratorSEIUtils.encontrarElemento(wait, By.xpath("//img[@title = 'Gerenciar Marcador']"));
             } catch (Exception e) {
             	MyUtils.appendLogArea(logArea, "Não foi encontrado o botão de gerenciamento de marcadores...");
             	e.printStackTrace();
@@ -125,16 +125,16 @@ public class ExtracaoInformacoesSEI {
         }
 
         driver.switchTo().defaultContent();
-        driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrArvore")));
+        driver.switchTo().frame(ExtratorSEIUtils.encontrarElemento(wait, By.id("ifrArvore")));
         
         // clicar em consultar andamento
-        WebElement consultarAndamento = MyUtils.encontrarElemento(wait, By.xpath("//a[@onclick = 'consultarAndamento();']"));
+        WebElement consultarAndamento = ExtratorSEIUtils.encontrarElemento(wait, By.xpath("//a[@onclick = 'consultarAndamento();']"));
         
     	consultarAndamento.click();
     	consultarAndamento.click();
 
         driver.switchTo().defaultContent();
-        driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
+        driver.switchTo().frame(ExtratorSEIUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
         
         List<WebElement> verHistoricoCompleto = driver.findElements(By.xpath("//a[contains(text(), 'Ver histórico completo')]"));
         if (verHistoricoCompleto.size() > 0) {
@@ -150,7 +150,7 @@ public class ExtracaoInformacoesSEI {
         while (true) {
         	TimeUnit.SECONDS.sleep(1);
 
-            WebElement tabela = MyUtils.encontrarElemento(wait, By.xpath("//table/tbody"));
+            WebElement tabela = ExtratorSEIUtils.encontrarElemento(wait, By.xpath("//table/tbody"));
 
             // na lista de andamentos, buscar os registros que interessam ao controle
         	if (sequencial == 0) {
@@ -214,7 +214,7 @@ public class ExtracaoInformacoesSEI {
 			            			// retorna para a janela de andamentos
 			    		            driver.close();
 			            			driver.switchTo().window(janelaAndamentos);
-			        	            driver.switchTo().frame(MyUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
+			        	            driver.switchTo().frame(ExtratorSEIUtils.encontrarElemento(wait, By.id("ifrVisualizacao")));
 			            		}
 
 			            		refazerFluxoProcesso = true;

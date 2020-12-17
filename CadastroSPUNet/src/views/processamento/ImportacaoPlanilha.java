@@ -118,19 +118,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			}
 		});
 
-		btnAbrirArquivo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				// detalhes.actionPerformed(null);
-				int retorno = filArquivo.showOpenDialog(ImportacaoPlanilha.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filArquivo.getSelectedFile().exists()) {
-						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-					}
-				}
-			}
-		});
+		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(null, filArquivo, lblNomeArquivo, ImportacaoPlanilha.this, null));
 	}
 
 	public void abrirJanela() {

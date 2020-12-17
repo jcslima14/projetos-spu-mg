@@ -41,6 +41,7 @@ import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import models.ProcessoAndamento;
 import utils.ExtracaoInformacoesSEI;
+import utils.ExtratorSEIUtils;
 
 @SuppressWarnings("serial")
 public class AtribuicaoProcesso extends JInternalFrame {
@@ -129,7 +130,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
 	private void opcoesUnidade() {
 		cbbUnidade.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbUnidade, "select unidadeid, nome from unidade order by nome");
+		ExtratorSEIUtils.insereOpcoesComboBox(conexao, cbbUnidade, "select unidadeid, nome from unidade order by nome");
 	}
 
 	public void abrirJanela() {
@@ -143,7 +144,7 @@ public class AtribuicaoProcesso extends JInternalFrame {
 		List<String> processosNaoAtribuidos = new ArrayList<String>();
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+		System.setProperty("webdriver.chrome.driver", ExtratorSEIUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver();
 
         // And now use this to visit Google
@@ -180,17 +181,17 @@ public class AtribuicaoProcesso extends JInternalFrame {
         driver.switchTo().window(primeiraJanela);
 
         // selecionar a unidade default
-        MyUtils.selecionarUnidade(driver, wait5, unidade);
+        ExtratorSEIUtils.selecionarUnidade(driver, wait5, unidade);
 
     	// clica no botão de controle de processos para abrir a página principal do SEI, onde está o menu de opções
-    	WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
+    	WebElement btnControleProcessos = ExtratorSEIUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
     	btnControleProcessos.click();
     	
         // obtem a unidade selecionada
         String unidadeSelecionada = driver.findElement(By.xpath("//select[@id = 'selInfraUnidades']/option[@selected = 'selected']")).getText();
 
 		// mudar para visualização detalhada, para trazer todos os processos juntos em uma única lista
-		WebElement lnkVisualizacaoDetalhada = MyUtils.encontrarElemento(wait5, By.xpath("//a[contains(text(), 'Visualização detalhada')]"));
+		WebElement lnkVisualizacaoDetalhada = ExtratorSEIUtils.encontrarElemento(wait5, By.xpath("//a[contains(text(), 'Visualização detalhada')]"));
 		lnkVisualizacaoDetalhada.click();
 		processosPorUsuario = new LinkedHashMap<String, Integer>();
 
@@ -263,18 +264,18 @@ public class AtribuicaoProcesso extends JInternalFrame {
 
     		driver.switchTo().defaultContent();
     		driver.switchTo().frame("ifrArvore");
-    		WebElement linkNumeroProcesso = MyUtils.encontrarElemento(wait5, By.xpath("//span[contains(text(), '" + processoNaoAtribuido + "')]"));
+    		WebElement linkNumeroProcesso = ExtratorSEIUtils.encontrarElemento(wait5, By.xpath("//span[contains(text(), '" + processoNaoAtribuido + "')]"));
     		linkNumeroProcesso.click();
 
     		driver.switchTo().defaultContent();
     		driver.switchTo().frame("ifrVisualizacao");
-    		WebElement botaoAtribuir = MyUtils.encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
+    		WebElement botaoAtribuir = ExtratorSEIUtils.encontrarElemento(wait5, By.xpath("//img[@title = 'Atribuir Processo']"));
     		botaoAtribuir.click();
 
     		// encontra a opção correspondente ao usuário a ser atribuído
     		WebElement opcaoUsuario = null;
     		try {
-    			opcaoUsuario = MyUtils.encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
+    			opcaoUsuario = ExtratorSEIUtils.encontrarElemento(wait5, By.xpath("//select[@id = 'selAtribuicao']/option[contains(text(), '" + cpfAtribuicao + "')]"));
     		} catch (Exception e) {
     			MyUtils.appendLogArea(logArea, "Não foi encontrada na lista a opção referente ao CPF " + cpfAtribuicao + ". A atribuição deve ser feita manualmente.");
     			continue;

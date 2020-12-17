@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.util.Date;
 
 import javax.persistence.EntityManager;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
@@ -145,29 +144,15 @@ public class ImportacaoPlanilha extends JInternalFrame {
 			}
 		});
 
-		btnAbrirArquivo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String diretorioPadrao = despachoServico.obterConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO);
-				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
-					File dirPadrao = new File(diretorioPadrao);
-					if (dirPadrao.exists()) {
-						filArquivo.setCurrentDirectory(dirPadrao);
-					}
-				}
-				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				detalhes.actionPerformed(null);
-				int retorno = filArquivo.showOpenDialog(ImportacaoPlanilha.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filArquivo.getSelectedFile().exists()) {
-						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-						if (!diretorioPadrao.equals(filArquivo.getSelectedFile().getParent())) {
+		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(despachoServico.obterConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO),
+				filArquivo, lblNomeArquivo, ImportacaoPlanilha.this, new Runnable() {
+					@Override
+					public void run() {
+						if (!despachoServico.obterConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO).equals(filArquivo.getSelectedFile().getParent())) {
 							despachoServico.salvarConteudoParametro(Parametro.PASTA_PLANILHA_IMPORTACAO, filArquivo.getSelectedFile().getParent());
 						}
 					}
-				}
-			}
-		});
+				}));
 	}
 
 	public void abrirJanela() {

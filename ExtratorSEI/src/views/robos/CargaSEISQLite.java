@@ -44,6 +44,7 @@ import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import models.ProcessoAndamento;
 import utils.ExtracaoInformacoesSEI;
+import utils.ExtratorSEIUtils;
 
 @SuppressWarnings("serial")
 public class CargaSEISQLite extends JInternalFrame {
@@ -199,7 +200,7 @@ public class CargaSEISQLite extends JInternalFrame {
 
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 		System.out.println("Começando aqui...");
-		System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
+		System.setProperty("webdriver.chrome.driver", ExtratorSEIUtils.chromeWebDriverPath());
         WebDriver driver = new ChromeDriver(opcoes);
 
         // And now use this to visit Google
@@ -238,7 +239,7 @@ public class CargaSEISQLite extends JInternalFrame {
 
         driver.switchTo().window(primeiraJanela);
 
-        // TODO: deste ponto em diante, deve existir um loop para buscar todas as unidades disponíveis para o usuário
+        // XXX: deste ponto em diante, deve existir um loop para buscar todas as unidades disponíveis para o usuário
         List<WebElement> unidades = driver.findElements(By.xpath("//select[@id = 'selInfraUnidades']/option"));
         List<String> unidadesValues = new ArrayList<String>();
 
@@ -248,10 +249,10 @@ public class CargaSEISQLite extends JInternalFrame {
 
         for (String unidadeValue : unidadesValues) {
         	// clica no botão de controle de processos para abrir a página principal do SEI, onde está o menu de opções
-        	WebElement btnControleProcessos = MyUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
+        	WebElement btnControleProcessos = ExtratorSEIUtils.encontrarElemento(wait5, By.id("lnkControleProcessos"));
         	btnControleProcessos.click();
         	
-        	Select cbxUnidade = new Select(MyUtils.encontrarElemento(wait5, By.id("selInfraUnidades")));
+        	Select cbxUnidade = new Select(ExtratorSEIUtils.encontrarElemento(wait5, By.id("selInfraUnidades")));
         	cbxUnidade.selectByValue(unidadeValue);
         	
 	        // obtem a unidade selecionada
@@ -298,7 +299,7 @@ public class CargaSEISQLite extends JInternalFrame {
 	        // tenta encontrar a tabela de resultados, se não encontrar, é porque não houve resultados no período pesquisado
 	        WebElement totalProcessosPeriodo = null;
 	        try {
-	        	totalProcessosPeriodo = MyUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos com tramitação no período']/tbody/tr[@class = 'totalEstatisticas']/td[2]/a"));
+	        	totalProcessosPeriodo = ExtratorSEIUtils.encontrarElemento(wait5, By.xpath("//table[@summary = 'Tabela de Processos com tramitação no período']/tbody/tr[@class = 'totalEstatisticas']/td[2]/a"));
 	        } catch (Exception e) {
 	        	MyUtils.appendLogArea(logArea, "Não foram encontrados, na unidade " + unidadeSelecionada + ", dados referentes ao período de " + dataInicial + " a " + dataFinal);
 	        }
@@ -369,7 +370,7 @@ public class CargaSEISQLite extends JInternalFrame {
 	        driver.switchTo().window(tituloJanelaPrincipal);
         }
 
-        // TODO: fim do loop de unidades disponíveis para o usuário
+        // XXX: fim do loop de unidades disponíveis para o usuário
 
         // atualiza a última data de carga na tabela de parâmetros
         atualizaUltimaDataCarga(conexao, dataFinal);

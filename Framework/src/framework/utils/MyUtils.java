@@ -1,4 +1,6 @@
 package framework.utils;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -7,12 +9,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -21,10 +19,12 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
-import javax.sql.rowset.CachedRowSet;
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
@@ -34,18 +34,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.Wait;
-
-import com.sun.rowset.CachedRowSetImpl;
 
 import framework.components.MyComboBox;
 import framework.components.MyTableColumn;
@@ -86,21 +74,6 @@ public class MyUtils {
 		}
 	}
 
-	public static Vector<Vector<Object>>obterDados(ResultSet rs) throws Exception {
-		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
-
-		while (rs.next()) {
-			Vector<Object> linha = new Vector<Object>();
-			linha.add(Boolean.FALSE);
-			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-				linha.add(rs.getObject(i));
-			}
-			retorno.add(linha);
-		}
-
-		return retorno;
-	}
-
 	public static Vector<Vector<Object>>obterDados(List<Object[]> dados) throws Exception {
 		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
 
@@ -136,22 +109,6 @@ public class MyUtils {
 		return retorno;
 	}
 
-//	public static <T> Vector<Vector<Object>>obterDados(List<T> dados, String... campos) throws Exception {
-//		Vector<Vector<Object>> retorno = new Vector<Vector<Object>>();
-//
-//		for (T dado : dados) {
-//			Vector<Object> linha = new Vector<Object>();
-//			linha.add(Boolean.FALSE);
-//			for (int i = 0; i < campos.length; i++) {
-//				Method metodo = dado.getClass().getMethod(campos[i]);
-//				linha.add(metodo.invoke(dado));
-//			}
-//			retorno.add(linha);
-//		}
-//
-//		return retorno;
-//	}
-
 	public static Vector<Object>obterTitulosColunas(List<MyTableColumn> colunas) throws Exception {
 		Vector<Object> retorno = new Vector<Object>();
 
@@ -171,47 +128,6 @@ public class MyUtils {
 				break;
 			}
 		}
-		return retorno;
-	}
-
-	public static WebElement encontrarElemento(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, WebElement>() {
-			@Override
-			public WebElement apply(WebDriver t) {
-				WebElement element = t.findElement(by);
-				if (element == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return element;
-			}
-		});
-	}
-
-	public static List<WebElement> encontrarElementos(Wait<WebDriver> wait, By by) {
-		return wait.until(new Function<WebDriver, List<WebElement>>() {
-			@Override
-			public List<WebElement> apply(WebDriver t) {
-				List<WebElement> elements = t.findElements(by);
-				if (elements == null) {
-					System.out.println("Elemento não encontrado...");
-				}
-				return elements;
-			}
-		});
-	}
-
-	public static boolean tabelaExiste(Connection conexao, String nomeTabela) throws Exception {
-		boolean retorno = false;
-		String sql = "select * from sqlite_master where tbl_name = '" + nomeTabela + "'";
-
-		try {
-			ResultSet rs = MyUtils.executeQuery(conexao, sql);
-			retorno = rs.next();
-		} catch (Exception e) {
-			System.out.println("Erro: " + e.getMessage());
-			e.printStackTrace();
-		}
-		
 		return retorno;
 	}
 
@@ -255,44 +171,6 @@ public class MyUtils {
 	public static String idStringItemSelecionado(MyComboBox comboBox) {
 		return ((ComboBoxItem) comboBox.getSelectedItem()).getStringId();
 	}
-	
-	public static void insereOpcoesComboBox(Connection conexao, MyComboBox comboBox, String sql) {
-		insereOpcoesComboBox(conexao, comboBox, sql, new ArrayList<ComboBoxItem>());
-	}
-	
-	public static void insereOpcoesComboBox(Connection conexao, MyComboBox comboBox, String sql, List<ComboBoxItem> itensInicioLista) {
-		// limpa os itens da lista
-		comboBox.removeAllItems();
-
-		// insere os itens adicionais ao início da lista
-		for (ComboBoxItem itemInicioLista : itensInicioLista) {
-			comboBox.addItem(itemInicioLista);
-		}
-
-		// executa a query para inserir os itens a serem lidos de tabela
-		try {
-			ResultSet rs = MyUtils.executeQuery(conexao, sql);
-			while (rs.next()) {
-				comboBox.addItem(new ComboBoxItem(rs.getInt(1), null, rs.getString(2)));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static ResultSet executeQuery(Connection conexao, String sql) throws Exception {
-		Statement cmd = conexao.createStatement();
-		CachedRowSet rset = new CachedRowSetImpl();
-		rset.populate(cmd.executeQuery(sql));
-		cmd.close();
-		return rset;
-	}
-
-	public static void execute(Connection conexao, String sql) throws Exception {
-		Statement cmd = conexao.createStatement();
-		cmd.execute(sql);
-		cmd.close();
-	}
 
 	public static String verificacaoDeEspacoEmDisco(long espacoMinimo) {
 		File arquivo = new File(".").getAbsoluteFile();
@@ -323,66 +201,10 @@ public class MyUtils {
 		DecimalFormat f = new DecimalFormat(formato);
 		return f.format(numero);
 	}
-
-	public static void fecharPopup(WebDriver driver) {
-		String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
-	}
-
-	public static void selecionarUnidade(WebDriver driver, Wait<WebDriver> wait, String unidade) {
-		driver.switchTo().defaultContent();
-    	Select cbxUnidade = new Select(MyUtils.encontrarElemento(wait, By.id("selInfraUnidades")));
-    	cbxUnidade.selectByVisibleText(unidade);
-	}
-
-	public static boolean isMacOS() {
-		if (System.getProperty("os.name").toLowerCase().startsWith("mac")) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public static boolean isWindows() {
-		if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
 	
 	public static boolean isPostgreSQL(EntityManager conexao) {
 		String driver = (String) conexao.getEntityManagerFactory().getProperties().get("javax.persistence.jdbc.driver");
 		return driver.contains("postgresql");
-	}
-
-	public static String chromeWebDriverPath() {
-		if (isMacOS()) {
-			return "../commons/resources/chromedriver/macos/chromedriver";
-		} else if (isWindows()) {
-			return "../commons/resources/chromedriver/windows/chromedriver.exe";
-		} else {
-			return "../commons/resources/chromedriver/linux/chromedriver";
-		}
-	}
-
-	public static String firefoxWebDriverPath() {
-		if (isMacOS()) {
-			return "../commons/resources/firefoxdriver/macos/geckodriver";
-		} else if (isWindows()) {
-			return "../commons/resources/firefoxdriver/windows/geckodriver.exe";
-		} else {
-			return "../commons/resources/firefoxdriver/linux/geckodriver";
-		}
 	}
 
 	public static <T> void insereOpcoesComboBox(MyComboBox comboBox, List<T> opcoes) {
@@ -454,26 +276,6 @@ public class MyUtils {
 		if (obj == null) return "";
 		else return obj.toString();
 	}
-	
-	public static void esperarCarregamento(int esperaInicialEmMilissegundos, Wait<WebDriver> wait, String xpath) throws Exception {
-        TimeUnit.MILLISECONDS.sleep(esperaInicialEmMilissegundos);
-
-        WebElement infCarregando = null;
-        do {
-        	try {
-        		infCarregando = MyUtils.encontrarElemento(wait, By.xpath(xpath));
-        	} catch (Exception e) {
-        		infCarregando = null;
-        	}
-        	try {
-	        	if (infCarregando == null || !infCarregando.isDisplayed()) {
-	        		break;
-	        	}
-        	} catch (StaleElementReferenceException e) {
-        		break;
-        	}
-        } while (true);
-	}
 
 	public static ArrayList<File> obterArquivos(String nomeDiretorio) {
 		return obterArquivos(nomeDiretorio, false, "pdf");
@@ -495,24 +297,6 @@ public class MyUtils {
 		if (!diretorio.exists()) {
 			diretorio.mkdir();
 		}
-	}
-
-	public static void acceptSecurityAlert(WebDriver driver) {
-	    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(30))          
-	                                                            .pollingEvery(Duration.ofSeconds(3))          
-	                                                            .ignoring(NoSuchElementException.class);    
-	    Alert alert = wait.until(new Function<WebDriver, Alert>() {       
-
-	        public Alert apply(WebDriver driver) {
-	            try {
-	                return driver.switchTo().alert();
-	            } catch(NoAlertPresentException e) {
-	                return null;
-	            }
-	        }  
-	    });
-
-	    alert.accept();
 	}
 
 	public static void apagarArquivo(String nomeArquivo, int numeroTentativas) throws Exception {
@@ -627,40 +411,33 @@ public class MyUtils {
 
 		return (retorno == null ? valorDefault : retorno);
 	}
-	
-	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by) throws InterruptedException {
-		return MyUtils.aguardarAteObterWebElement(webElementSuperior, by, 999); 		
-	}
-	
-	public static WebElement aguardarAteObterWebElement(WebElement webElementSuperior, By by, int maxTentativas) throws InterruptedException {
-		WebElement webElement = null;
-		int tentativas = 0;
-		while(webElement == null && tentativas <= maxTentativas) {
-			tentativas++;
-			try {
-				webElement = webElementSuperior.findElement(by);				        							        				
-			} catch(StaleElementReferenceException e) {
-				TimeUnit.MILLISECONDS.sleep(300);
-			}				        			
-		}
-		return webElement;
-	}
-
-	public static void aguardarCargaListaDocumentos(Wait<WebDriver> wait, String xpath, int quantRegistrosEsperados) throws InterruptedException {
-		// encontra a quantidade de registros aptos a serem impressos
-		do {
-			List<WebElement> linhasAptas = MyUtils.encontrarElementos(wait, By.xpath(xpath));
-			if (linhasAptas != null && linhasAptas.size() == quantRegistrosEsperados) {
-				break;
-			} else {
-				TimeUnit.SECONDS.sleep(1);
-			}
-		} while (true);
-	}
 
 	public static String stackTraceToString(Exception e) {
 		StringWriter sw = new StringWriter();
 		e.printStackTrace(new PrintWriter(sw));
 		return sw.toString();
+	}
+	
+	public static ActionListener openFileDialogWindow(String diretorioPadrao, JFileChooser fileChooser, JLabel labelFileName, JComponent clazz, Runnable extraCode) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
+					File dirPadrao = new File(diretorioPadrao);
+					if (dirPadrao.exists()) {
+						fileChooser.setCurrentDirectory(dirPadrao);
+					}
+				}
+				Action detalhes = fileChooser.getActionMap().get("viewTypeDetails");
+				detalhes.actionPerformed(null);
+				int retorno = fileChooser.showOpenDialog(clazz);
+				if (retorno == JFileChooser.APPROVE_OPTION) {
+					if (fileChooser.getSelectedFile().exists()) {
+						if (labelFileName != null) labelFileName.setText(fileChooser.getSelectedFile().getAbsolutePath());
+						if (extraCode != null) extraCode.run();
+					}
+				}
+			}
+		};
 	}
 }

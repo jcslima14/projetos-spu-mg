@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -117,28 +116,15 @@ public class ExportacaoPlanilha extends JInternalFrame {
 			}
 		});
 
-		btnAbrirArquivo.addActionListener(new ActionListener() {
+		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(propriedades.getProperty("exportacao_planilha_default_path"), filArquivo, lblNomeArquivo, ExportacaoPlanilha.this, new Runnable() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				String diretorioPadrao = propriedades.getProperty("exportacao_planilha_default_path");
-				if (diretorioPadrao != null && !diretorioPadrao.trim().equals("")) {
-					File dirPadrao = new File(diretorioPadrao);
-					if (dirPadrao.exists()) {
-						filArquivo.setCurrentDirectory(dirPadrao);
-					}
-				}
-				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				detalhes.actionPerformed(null);
-				int retorno = filArquivo.showSaveDialog(ExportacaoPlanilha.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-					if (!propriedades.getProperty("exportacao_planilha_default_path").equals(filArquivo.getSelectedFile().getParent())) {
-						propriedades.put("exportacao_planilha_default_path", filArquivo.getSelectedFile().getParent());
-						MyUtils.salvarPropriedades(propriedades, "extratorsei.properties");
-					}
+			public void run() {
+				if (!propriedades.getProperty("exportacao_planilha_default_path").equals(filArquivo.getSelectedFile().getParent())) {
+					propriedades.put("exportacao_planilha_default_path", filArquivo.getSelectedFile().getParent());
+					MyUtils.salvarPropriedades(propriedades, "extratorsei.properties");
 				}
 			}
-		});
+		}));
 	}
 
 	public void abrirJanela() {

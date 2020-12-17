@@ -18,6 +18,7 @@ import framework.components.MyTableColumn;
 import framework.components.MyTableModel;
 import framework.templates.CadastroTemplate;
 import framework.utils.MyUtils;
+import utils.ExtratorSEIUtils;
 
 @SuppressWarnings("serial")
 public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
@@ -55,12 +56,12 @@ public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
 
 	private void opcoesGrupoTematico() {
 		cbbGrupoTematico.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbGrupoTematico, "select grupotematicoid, descricao from grupotematico order by descricao");
+		ExtratorSEIUtils.insereOpcoesComboBox(conexao, cbbGrupoTematico, "select grupotematicoid, descricao from grupotematico order by descricao");
 	}
 
 	private void opcoesUsuario() {
 		cbbUsuario.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbUsuario, "select usuarioid, coalesce(primeironome, nome) as nome from usuario order by nome");
+		ExtratorSEIUtils.insereOpcoesComboBox(conexao, cbbUsuario, "select usuarioid, coalesce(primeironome, nome) as nome from usuario order by nome");
 	}
 
 	public void limparCamposEditaveis() {
@@ -82,13 +83,13 @@ public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
 			sql += "insert into usuariogrupotematico (grupotematicoid, usuarioid, ativo) values (" + MyUtils.idItemSelecionado(cbbGrupoTematico) + ", " + MyUtils.idItemSelecionado(cbbUsuario) + ", " + (chkAtivo.isSelected() ? "true" : "false") + ")";
 		}
 
-		MyUtils.execute(conexao, sql);
+		ExtratorSEIUtils.execute(conexao, sql);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
 		sql += "delete from usuariogrupotematico where usuariogrupotematicoid = " + id;
-		MyUtils.execute(conexao, sql);
+		ExtratorSEIUtils.execute(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -96,7 +97,7 @@ public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
 		try {
 			txtUsuarioGrupoTematicoId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 
-			rs = MyUtils.executeQuery(conexao, "select * from usuariogrupotematico where usuariogrupotematicoid = " + txtUsuarioGrupoTematicoId.getText());
+			rs = ExtratorSEIUtils.executeQuery(conexao, "select * from usuariogrupotematico where usuariogrupotematicoid = " + txtUsuarioGrupoTematicoId.getText());
 			rs.next();
 
 			cbbGrupoTematico.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbGrupoTematico, rs.getInt("grupotematicoid"), null));
@@ -108,14 +109,14 @@ public class UsuarioGrupoTematicoCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, 
+		ResultSet rs = ExtratorSEIUtils.executeQuery(conexao, 
 				"select ugt.usuariogrupotematicoid, un.nome as unidade, gt.descricao as grupotematico, coalesce(us.primeironome, us.nome) as usuario, case when ugt.ativo then 'Sim' else 'Não' end as ativo "
 			  + "  from usuariogrupotematico ugt "
 			  + " inner join grupotematico gt using (grupotematicoid) "
 			  + " inner join usuario us using (usuarioid) "
 			  + " inner join unidade un on gt.unidadeid = un.unidadeid "
 			  + " order by unidade, grupotematico, usuario");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), ExtratorSEIUtils.obterDados(rs));
 		return tm;
 	}
 

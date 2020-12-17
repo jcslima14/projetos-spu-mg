@@ -18,6 +18,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import framework.utils.MyUtils;
@@ -82,6 +83,8 @@ public class SeleniumService {
 			opcoes.addPreference("pdfjs.previousHandler.alwaysAskBeforeHandling", true);
 			opcoes.addPreference("pdfjs.previousHandler.preferredAction", 4);
 			opcoes.addPreference("pdfjs.enabledCache.state", false);
+			opcoes.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+
 			if (!exibirNavegador) {
 				opcoes.setHeadless(true);
 			}

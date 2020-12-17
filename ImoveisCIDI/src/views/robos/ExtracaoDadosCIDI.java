@@ -2,7 +2,6 @@ package views.robos;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.Duration;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -18,17 +17,9 @@ import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
 
+import framework.services.CIDIService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import models.BemTransferidoSPU;
@@ -119,27 +110,7 @@ public class ExtracaoDadosCIDI extends JInternalFrame {
 
 	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
-		if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			opcoes.addArguments("--ignore-certificate-errors");
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			opcoes.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
-
-		// acessando o endereço
-//        driver.get("https://cidi.rffsa.gov.br/iv-login.php");
-        driver.get("file:///C:/Users/90768116600/Downloads/ImoveisTransferidosSPU.html");
-
-        Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(60))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
+		CIDIService cidiService = new CIDIService(cbbNavegador.getSelectedItem().toString(), "file:///C:/Users/90768116600/Downloads/ImoveisTransferidosSPU.html");
 /*
         WebDriverWait waitUntil = new WebDriverWait(driver, 10);
 
@@ -192,14 +163,14 @@ public class ExtracaoDadosCIDI extends JInternalFrame {
 
 		do {
 			try {
-				MyUtils.encontrarElemento(wait15, By.xpath("//input[@type = 'submit' and @value = 'Voltar ']"));
+				cidiService.encontrarElemento(15, 1, By.xpath("//input[@type = 'submit' and @value = 'Voltar ']"));
 				break;
 			} catch (Exception e) {
 				MyUtils.appendLogArea(logArea, "Ainda aguardando a lista de bens...");
 			}
 		} while (true);
 
-		List<WebElement> linhas = MyUtils.encontrarElementos(wait15, By.xpath("//table[@border = '1']/tbody/tr[./td]"));
+		List<WebElement> linhas = cidiService.encontrarElementos(15, 1, By.xpath("//table[@border = '1']/tbody/tr[./td]"));
 		int cont = 1;
 
 		for (WebElement linha : linhas) {
@@ -245,6 +216,6 @@ public class ExtracaoDadosCIDI extends JInternalFrame {
 		}
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
-        driver.quit();
+        cidiService.fechaNavegador();;
 	}
 }

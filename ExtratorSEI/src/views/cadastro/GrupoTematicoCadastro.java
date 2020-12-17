@@ -18,6 +18,7 @@ import framework.components.MyTableModel;
 import framework.components.MyTextField;
 import framework.templates.CadastroTemplate;
 import framework.utils.MyUtils;
+import utils.ExtratorSEIUtils;
 
 @SuppressWarnings("serial")
 public class GrupoTematicoCadastro extends CadastroTemplate {
@@ -51,7 +52,7 @@ public class GrupoTematicoCadastro extends CadastroTemplate {
 
 	private void opcoesUnidade() {
 		cbbUnidade.setModel(new MyComboBoxModel());
-		MyUtils.insereOpcoesComboBox(conexao, cbbUnidade, "select unidadeid, nome from unidade order by nome");
+		ExtratorSEIUtils.insereOpcoesComboBox(conexao, cbbUnidade, "select unidadeid, nome from unidade order by nome");
 	}
 
 	public void limparCamposEditaveis() {
@@ -71,13 +72,13 @@ public class GrupoTematicoCadastro extends CadastroTemplate {
 			sql += "insert into grupotematico (unidadeid, descricao) values (" + MyUtils.idItemSelecionado(cbbUnidade) + ", '" + txtDescricao.getText().trim() + "')";
 		}
 
-		MyUtils.execute(conexao, sql);
+		ExtratorSEIUtils.execute(conexao, sql);
 	}
 
 	public void excluirRegistro(Integer id) throws Exception {
 		String sql = "";
 		sql += "delete from grupotematico where grupotematicoid = " + id;
-		MyUtils.execute(conexao, sql);
+		ExtratorSEIUtils.execute(conexao, sql);
 	}
 
 	public void prepararParaEdicao() {
@@ -85,7 +86,7 @@ public class GrupoTematicoCadastro extends CadastroTemplate {
 		try {
 			txtGrupoTematicoId.setText(this.getTabela().getValueAt(this.getTabela().getSelectedRow(), 1).toString());
 
-			rs = MyUtils.executeQuery(conexao, "select * from grupotematico where grupotematicoid = " + txtGrupoTematicoId.getText());
+			rs = ExtratorSEIUtils.executeQuery(conexao, "select * from grupotematico where grupotematicoid = " + txtGrupoTematicoId.getText());
 			rs.next();
 
 			cbbUnidade.setSelectedIndex(MyUtils.comboBoxItemIndex(cbbUnidade, rs.getInt("unidadeid"), null));
@@ -96,8 +97,8 @@ public class GrupoTematicoCadastro extends CadastroTemplate {
 	}
 
 	public TableModel obterDados() throws Exception {
-		ResultSet rs = MyUtils.executeQuery(conexao, "select gt.grupotematicoid, u.nome as unidade, gt.descricao from grupotematico gt inner join unidade u using (unidadeid) order by u.nome, gt.descricao");
-		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), MyUtils.obterDados(rs));
+		ResultSet rs = ExtratorSEIUtils.executeQuery(conexao, "select gt.grupotematicoid, u.nome as unidade, gt.descricao from grupotematico gt inner join unidade u using (unidadeid) order by u.nome, gt.descricao");
+		TableModel tm = new MyTableModel(MyUtils.obterTitulosColunas(getColunas()), ExtratorSEIUtils.obterDados(rs));
 		return tm;
 	}
 

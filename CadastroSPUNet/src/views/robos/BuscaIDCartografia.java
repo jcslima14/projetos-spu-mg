@@ -2,9 +2,7 @@ package views.robos;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.time.Duration;
 import java.util.Date;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.swing.JButton;
@@ -18,22 +16,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
+import framework.MyException;
+import framework.services.SPUNetService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import models.Geoinformacao;
@@ -132,95 +116,28 @@ public class BuscaIDCartografia extends JInternalFrame {
 
 	private void buscarIDSPUNet(JTextArea logArea, String usuario, String senha) throws Exception {
 		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		WebDriver driver = null;
-		if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("chrome")) {
-			ChromeOptions opcoes = new ChromeOptions();
-			System.setProperty("webdriver.chrome.driver", MyUtils.chromeWebDriverPath());
-	        driver = new ChromeDriver(opcoes);
-		} else {
-			FirefoxOptions opcoes = new FirefoxOptions();
-			opcoes.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
-			System.setProperty("webdriver.gecko.driver", MyUtils.firefoxWebDriverPath());
-			driver = new FirefoxDriver(opcoes);
-		}
-
-        // acessando o endereço
-        driver.get("http://spunet.planejamento.gov.br");
-        // Actions passarMouse = new Actions(driver);
-
-        Wait<WebDriver> wait15 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(15))
-        		.pollingEvery(Duration.ofSeconds(3))
-        		.ignoring(NoSuchElementException.class);
-
-        Wait<WebDriver> wait5 = new FluentWait<WebDriver>(driver)
-        		.withTimeout(Duration.ofSeconds(5))
-        		.pollingEvery(Duration.ofSeconds(1))
-        		.ignoring(NoSuchElementException.class);
-
-        WebDriverWait waitUntil = new WebDriverWait(driver, 10);
-
-        // Find the text input element by its name
-        WebElement weUsuario = MyUtils.encontrarElemento(wait15, By.id("username"));
-        waitUntil.until(ExpectedConditions.elementToBeClickable(weUsuario));
-        weUsuario.sendKeys(usuario);
-
-        // Find the text input element by its name
-        WebElement weSenha = MyUtils.encontrarElemento(wait15, By.id("password"));
-        weSenha.sendKeys(senha);
-
-        // Find the text input element by its name
-        WebElement botaoAcessar = MyUtils.encontrarElemento(wait15, By.xpath("//button[contains(text(), 'Acessar')]"));
-        botaoAcessar.click();
-
-        if (cbbNavegador.getSelectedItem().toString().equalsIgnoreCase("firefox")) {
-        	acceptSecurityAlert(driver);
-        }
-        
-        // verifica se foi aberto popup indesejado (fechar o popup)
-        String primeiraJanela = "";
-        for (String tituloJanela : driver.getWindowHandles()) {
-        	if (!primeiraJanela.equalsIgnoreCase("")) {
-        		driver.switchTo().window(tituloJanela);
-        		driver.close();
-        	} else {
-        		primeiraJanela = tituloJanela;
-        	}
-        }
-
-        driver.switchTo().window(primeiraJanela);
+		SPUNetService spunetService = new SPUNetService(cbbNavegador.getSelectedItem().toString(), "http://spunet.planejamento.gov.br", true);
+		spunetService.login(usuario, senha);
 
         int idInicial = Integer.parseInt(txtIdInicial.getText());
         int idFinal = Integer.parseInt(txtIdFinal.getText());
 
         // inicia o loop para leitura dos arquivos do diretório
         for (int idPesquisar = idInicial; idPesquisar <= idFinal; idPesquisar++) {
-            MyUtils.esperarCarregamento(500, wait5, "//p[contains(text(), 'Carregando')]"); 
+            spunetService.esperarCarregamento(500, 5, 1, "//p[contains(text(), 'Carregando')]"); 
 
 	        MyUtils.appendLogArea(logArea, MyUtils.formatarData(new Date(),  "dd/MM/yyyy HH:mm:ss") + " - Processando id " + idPesquisar + " de " + idFinal);
 
             // clica no menu da aplicação
-            driver.get("http://spunet.planejamento.gov.br/#/geometadados/" + idPesquisar);
-
-	        MyUtils.esperarCarregamento(1000, wait5, "//p[contains(text(), 'Carregando')]");
-
-	        WebElement txtTituloProdutoCartografico = null;
-
-	        // encontrar o título do produto cartográfico
+	        spunetService.navegarPaginaMetadadoPorId(idPesquisar);
+	        String tituloProdutoCartografico = null;
 	        try {
-	        	txtTituloProdutoCartografico = MyUtils.encontrarElemento(wait5, By.xpath("//td[./span[text() = ' - Título do Produto Cartográfico']]/following-sibling::td/label"));
-	        } catch (Exception e) {
-	        	MyUtils.appendLogArea(logArea, "A página não possui o elemento com o título do produto cartográfico");
+	        	tituloProdutoCartografico = spunetService.retornarTituloProdutoCartografico();
+	        } catch (MyException e) {
+	        	MyUtils.appendLogArea(logArea, e.getMessage());
 	        	continue;
 	        }
 
-	        String tituloProdutoCartografico = txtTituloProdutoCartografico.getText().trim();
-
-	        if (tituloProdutoCartografico.equals("")) {
-	        	MyUtils.appendLogArea(logArea, "O ID pesquisado não foi encontrado");
-	        	continue;
-	        }
-	        
 	        Geoinformacao geo = MyUtils.entidade(cadastroServico.obterGeoinformacao(null, null, tituloProdutoCartografico));
 	        
 	        if (geo == null) {
@@ -240,24 +157,6 @@ public class BuscaIDCartografia extends JInternalFrame {
         }
 
 		MyUtils.appendLogArea(logArea, "Fim do processamento...");
-        driver.quit();
-	}
-
-	private void acceptSecurityAlert(WebDriver driver) {
-	    Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(30))          
-	                                                            .pollingEvery(Duration.ofSeconds(3))          
-	                                                            .ignoring(NoSuchElementException.class);    
-	    Alert alert = wait.until(new Function<WebDriver, Alert>() {       
-
-	        public Alert apply(WebDriver driver) {
-	            try {
-	                return driver.switchTo().alert();
-	            } catch(NoAlertPresentException e) {
-	                return null;
-	            }
-	        }  
-	    });
-
-	    alert.accept();
+        spunetService.fechaNavegador();;
 	}
 }

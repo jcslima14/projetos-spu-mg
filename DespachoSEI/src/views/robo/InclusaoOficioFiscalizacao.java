@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
@@ -114,19 +113,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			}
 		});
 
-		btnAbrirArquivo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				detalhes.actionPerformed(null);
-				int retorno = filArquivo.showOpenDialog(InclusaoOficioFiscalizacao.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filArquivo.getSelectedFile().exists()) {
-						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-					}
-				}
-			}
-		});
+		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(null, filArquivo, lblNomeArquivo, InclusaoOficioFiscalizacao.this, null));
 	}
 
 	public void abrirJanela() {

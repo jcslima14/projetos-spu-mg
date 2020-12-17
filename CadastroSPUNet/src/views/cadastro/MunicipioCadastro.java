@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -107,19 +106,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 			}
 		});
 
-		btnAbrirArquivo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Action detalhes = filArquivo.getActionMap().get("viewTypeDetails");
-				detalhes.actionPerformed(null);
-				int retorno = filArquivo.showOpenDialog(MunicipioCadastro.this);
-				if (retorno == JFileChooser.APPROVE_OPTION) {
-					if (filArquivo.getSelectedFile().exists()) {
-						lblNomeArquivo.setText(filArquivo.getSelectedFile().getAbsolutePath());
-					}
-				}
-			}
-		});
+		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(null, filArquivo, lblNomeArquivo, MunicipioCadastro.this, null));
 
 		this.setPnlCamposEditaveis(pnlCamposEditaveis);
 		this.setBtnBotoesAcimaPosteriores(new MyButton[] { btnImportarPlanilha });
