@@ -1,7 +1,5 @@
 package views.robo;
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -87,30 +85,14 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 
 		add(painelDados, BorderLayout.WEST);
 		add(areaDeRolagem, BorderLayout.SOUTH);
-
-		btnProcessar.addActionListener(new ActionListener() {
+		
+		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					logArea.setText("");
-					new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							try {
-								gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));
-							} catch (Exception e) {
-								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
-								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
-								e.printStackTrace();
-							}
-						}
-					}).start();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+			public void run() {
+				gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));
 			}
-		});
+		}));
 	}
 
 	public void abrirJanela() {
@@ -120,92 +102,96 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarRespostaSEI(String usuario, String senha, Integer assinanteId) throws Exception {
-		String msgVldPastaAssinante = validarPastaProcessoIndividual(assinanteId);
-        if (!msgVldPastaAssinante.equals("")) {
-        	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
-        	return;
-        }
-        
-		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-
-        // obter os dados do superior assinante
-		Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
-		
-		if(!assinanteIterator.hasNext()) {
-			throw new Exception("Nenhum assinante superior cadastrado.");
-		}
-		
-		superior = assinanteIterator.next();
-
-        SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-        seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
-
-		Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
-		for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
-			List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
-
-			if (!unidadeAberturaProcesso.trim().equals("")) {
-				seiServico.selecionarUnidadePadrao(unidadeAberturaProcesso);
+	private void gerarRespostaSEI(String usuario, String senha, Integer assinanteId) throws RuntimeException {
+		try {
+			String msgVldPastaAssinante = validarPastaProcessoIndividual(assinanteId);
+	        if (!msgVldPastaAssinante.equals("")) {
+	        	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
+	        	return;
+	        }
+	        
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+	
+	        // obter os dados do superior assinante
+			Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
+			
+			if(!assinanteIterator.hasNext()) {
+				throw new Exception("Nenhum assinante superior cadastrado.");
 			}
-
-			for (SolicitacaoResposta respostaAGerar : respostasDaUnidade) {
-				// processamento....
-				MyUtils.appendLogArea(logArea, "Processo: " + respostaAGerar.getSolicitacao().getNumeroProcesso());
-
-				// verifica se há pendências
-				if (!respostaAGerar.getPendenciasParaGeracao().trim().equals("")) {
-					MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: \n" + respostaAGerar.getPendenciasParaGeracao());
-					continue;
+			
+			superior = assinanteIterator.next();
+	
+	        SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
+	        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+	        seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
+	
+			Map<String, List<SolicitacaoResposta>> respostasAGerar = obterRespostasACadastrar(assinanteId);
+			for (String unidadeAberturaProcesso : respostasAGerar.keySet()) {
+				List<SolicitacaoResposta> respostasDaUnidade = respostasAGerar.get(unidadeAberturaProcesso);
+	
+				if (!unidadeAberturaProcesso.trim().equals("")) {
+					seiServico.selecionarUnidadePadrao(unidadeAberturaProcesso);
 				}
-
-				if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
-					List<File> anexos = obterArquivos(respostaAGerar.getAssinante().getPastaArquivoProcesso(), respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
-					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
-						if (anexos == null || anexos.size() == 0) {
-							MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
-							continue;
+	
+				for (SolicitacaoResposta respostaAGerar : respostasDaUnidade) {
+					// processamento....
+					MyUtils.appendLogArea(logArea, "Processo: " + respostaAGerar.getSolicitacao().getNumeroProcesso());
+	
+					// verifica se há pendências
+					if (!respostaAGerar.getPendenciasParaGeracao().trim().equals("")) {
+						MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: \n" + respostaAGerar.getPendenciasParaGeracao());
+						continue;
+					}
+	
+					if (respostaAGerar.getTipoResposta().getGerarProcessoIndividual()) {
+						List<File> anexos = obterArquivos(respostaAGerar.getAssinante().getPastaArquivoProcesso(), respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
+						if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
+							if (anexos == null || anexos.size() == 0) {
+								MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
+								continue;
+							}
+		
+							gerarProcessoIndividual(seiServico, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
 						}
 	
-						gerarProcessoIndividual(seiServico, respostaAGerar, respostaAGerar.getAssinante().getPastaArquivoProcesso());
-					}
-
-					if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
-						anexarArquivosProcesso(seiServico, respostaAGerar, anexos);
-					}
-
-					respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
-				} else {
-					if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).equals("")) {
-						respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcessoSEI());
-					} else {
+						if (!respostaAGerar.getSolicitacao().getArquivosAnexados()) {
+							anexarArquivosProcesso(seiServico, respostaAGerar, anexos);
+						}
+	
 						respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
+					} else {
+						if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).equals("")) {
+							respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getAssinante().getNumeroProcessoSEI());
+						} else {
+							respostaAGerar.setNumeroProcessoSEI(respostaAGerar.getSolicitacao().getNumeroProcessoSEI());
+						}
 					}
-				}
-
-				try {
-					seiServico.pesquisarProcesso(respostaAGerar.getNumeroProcessoSEI());
-					respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
-					seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
-					seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
-					seiServico.salvarFecharDocumentoEditado();
-				} catch (MyException e) {
-					MyUtils.appendLogArea(logArea, e.getMessage());
-					continue;
-				}
-				// incluir no bloco de assinatura
-				respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
-				seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());
-				
-				// atualiza o número do documento gerado no SEI
-				atualizarDocumentoGerado(respostaAGerar, superior);
-			} // fim do loop de respostas a gerar por unidade
-		} // fim do loop de todas as respostas a gerar
-
-		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
-
-		seiServico.fechaNavegador();
+	
+					try {
+						seiServico.pesquisarProcesso(respostaAGerar.getNumeroProcessoSEI());
+						respostaAGerar.setNumeroDocumentoSEI(seiServico.inserirDocumentoNoProcesso(respostaAGerar.getNumeroProcessoSEI(), respostaAGerar.getTipoResposta().getTipoDocumento(), respostaAGerar.getTipoResposta().getNumeroDocumentoModelo()));
+						seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
+						seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
+						seiServico.salvarFecharDocumentoEditado();
+					} catch (MyException e) {
+						MyUtils.appendLogArea(logArea, e.getMessage());
+						continue;
+					}
+					// incluir no bloco de assinatura
+					respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
+					seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());
+					
+					// atualiza o número do documento gerado no SEI
+					atualizarDocumentoGerado(respostaAGerar, superior);
+				} // fim do loop de respostas a gerar por unidade
+			} // fim do loop de todas as respostas a gerar
+	
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+	
+			seiServico.fechaNavegador();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private String obterBlocoAssinatura(Assinante assinante, TipoResposta tipoResposta) throws Exception {

@@ -440,4 +440,30 @@ public class MyUtils {
 			}
 		};
 	}
+
+	public static ActionListener executarProcessoComLog(JTextArea logArea, Runnable processo) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					logArea.setText("");
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							try {
+								processo.run();
+							} catch (Exception e) {
+								JOptionPane.showMessageDialog(null, "Erro ao executar o processo: \n \n" + e.getMessage());
+								MyUtils.appendLogArea(logArea, "Erro ao executar o processo: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
+								e.printStackTrace();
+							}
+						}
+					}).start();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		};
+	}
 }
