@@ -1,7 +1,5 @@
 package views.robo;
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,7 +12,6 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -89,30 +86,14 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		add(painelDados, BorderLayout.WEST);
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
-		btnProcessar.addActionListener(new ActionListener() {
+		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					logArea.setText("");
-					new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							try {
-								gerarOficios(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText(), txtBlocoAssinatura.getText());
-							} catch (Exception e) {
-								JOptionPane.showMessageDialog(null, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage());
-								MyUtils.appendLogArea(logArea, "Erro ao gerar as respostas no SEI: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
-								e.printStackTrace();
-							}
-						}
-					}).start();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+			public void run() {
+				gerarOficios(txtUsuario.getText(), new String(txtSenha.getPassword()), txtNumeroProcesso.getText(), txtNumeroDocumentoModelo.getText(), txtBlocoAssinatura.getText());
 			}
-		});
-
+		}));
+		
 		btnAbrirArquivo.addActionListener(MyUtils.openFileDialogWindow(null, filArquivo, lblNomeArquivo, InclusaoOficioFiscalizacao.this, null));
 	}
 
@@ -123,68 +104,72 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 		this.show();
 	}
 
-	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws Exception {
-		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		
-		SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
-		
-        // acessa o SEI, realiza o login e seleciona unidade padrão
-        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-
-		// pesquisa o processo onde deverão ser incluídos os ofícios
-        seiServico.pesquisarProcesso(numeroProcesso);
-
-		Map<String, Oficio> oficiosAGerar = obterDadosOficios(lblNomeArquivo.getText());
-		for (Oficio oficio : oficiosAGerar.values()) {
-			MyUtils.appendLogArea(logArea, "Gerando ofício para UG: " + oficio.ugResponsavel);
-
-			// insere um novo documento
-			String numeroDocumentoSEIGerado = seiServico.inserirDocumentoNoProcesso(numeroProcesso, "Ofício", numeroDocumentoModelo);
-			MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
-
-			// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
-			TimeUnit.SECONDS.sleep(1);
-			seiServico.alterarParaFrame(3);
-			seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
-			TimeUnit.SECONDS.sleep(1);
-
-			seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCabecalho());
-
-			// alterna para o frame do corpo do documento para promover as substituições e clica no primeiro elemento p para mudar o foco
-			seiServico.alterarParaFrame(4);
-			seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
-			TimeUnit.SECONDS.sleep(1);
+	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws RuntimeException {
+		try {
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
 			
-			// obtem a linha da tabela que possui os marcadores a serem substituídos e armazena em string para servir de template para novas linhas a serem adicionadas
-			String imovelTemplate = seiServico.encontrarElemento(By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("outerHTML");
-
-			// exclui a linha de template para, em seguida, adicionar as linhas com os dados reais
-			seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
-			TimeUnit.MILLISECONDS.sleep(500);
+			SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 			
-			String novosImoveis = "";
-			
-			// adicionar linhas à tabela de imóveis a vistoriar
-			for (Imovel imovel : oficio.listaImoveis) {
-				novosImoveis += imovel.substituirMarcadores(imovelTemplate);
+	        // acessa o SEI, realiza o login e seleciona unidade padrão
+	        seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+	
+			// pesquisa o processo onde deverão ser incluídos os ofícios
+	        seiServico.pesquisarProcesso(numeroProcesso);
+	
+			Map<String, Oficio> oficiosAGerar = obterDadosOficios(lblNomeArquivo.getText());
+			for (Oficio oficio : oficiosAGerar.values()) {
+				MyUtils.appendLogArea(logArea, "Gerando ofício para UG: " + oficio.ugResponsavel);
+	
+				// insere um novo documento
+				String numeroDocumentoSEIGerado = seiServico.inserirDocumentoNoProcesso(numeroProcesso, "Ofício", numeroDocumentoModelo);
+				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
+	
+				// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
+				TimeUnit.SECONDS.sleep(1);
+				seiServico.alterarParaFrame(3);
+				seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
+				TimeUnit.SECONDS.sleep(1);
+	
+				seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCabecalho());
+	
+				// alterna para o frame do corpo do documento para promover as substituições e clica no primeiro elemento p para mudar o foco
+				seiServico.alterarParaFrame(4);
+				seiServico.encontrarElemento(By.xpath("(//p)[1]")).click();
+				TimeUnit.SECONDS.sleep(1);
+				
+				// obtem a linha da tabela que possui os marcadores a serem substituídos e armazena em string para servir de template para novas linhas a serem adicionadas
+				String imovelTemplate = seiServico.encontrarElemento(By.xpath("//table[@id = 'tabela-imoveis-vistoria']/tbody/tr[./td]")).getAttribute("outerHTML");
+	
+				// exclui a linha de template para, em seguida, adicionar as linhas com os dados reais
+				seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').removeChild(document.querySelector('#tabela-imoveis-vistoria > tbody').lastChild)");
 				TimeUnit.MILLISECONDS.sleep(500);
-			}
-
-			// adiciona os novos imóveis à tabela
-			seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').innerHTML += '" + novosImoveis + "'");
-			TimeUnit.MILLISECONDS.sleep(500);
-
-			// substitui os marcadores do corpo
-			seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCorpo());
-
-			// salvar documento
-			seiServico.salvarFecharDocumentoEditado();
-			seiServico.incluirDocumentoBlocoAssinatura(numeroDocumentoSEIGerado, blocoAssinatura);
-		} // fim do loop de todas as respostas a gerar
-
-		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
-
-		seiServico.fechaNavegador();
+				
+				String novosImoveis = "";
+				
+				// adicionar linhas à tabela de imóveis a vistoriar
+				for (Imovel imovel : oficio.listaImoveis) {
+					novosImoveis += imovel.substituirMarcadores(imovelTemplate);
+					TimeUnit.MILLISECONDS.sleep(500);
+				}
+	
+				// adiciona os novos imóveis à tabela
+				seiServico.executarJavaScript("document.querySelector('#tabela-imoveis-vistoria > tbody').innerHTML += '" + novosImoveis + "'");
+				TimeUnit.MILLISECONDS.sleep(500);
+	
+				// substitui os marcadores do corpo
+				seiServico.substituirMarcacaoDocumento(oficio.mapaSubstituicoesCorpo());
+	
+				// salvar documento
+				seiServico.salvarFecharDocumentoEditado();
+				seiServico.incluirDocumentoBlocoAssinatura(numeroDocumentoSEIGerado, blocoAssinatura);
+			} // fim do loop de todas as respostas a gerar
+	
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+	
+			seiServico.fechaNavegador();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private class Imovel {

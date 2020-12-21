@@ -15,7 +15,6 @@ import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
@@ -87,7 +86,6 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		add(areaDeRolagem, BorderLayout.SOUTH);
 		
 		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
-			
 			@Override
 			public void run() {
 				gerarRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante));
@@ -106,8 +104,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		try {
 			String msgVldPastaAssinante = validarPastaProcessoIndividual(assinanteId);
 	        if (!msgVldPastaAssinante.equals("")) {
-	        	JOptionPane.showMessageDialog(null, msgVldPastaAssinante);
-	        	return;
+	        	throw new Exception(msgVldPastaAssinante);
 	        }
 	        
 			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");

@@ -1,7 +1,5 @@
 package views.robo;
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.persistence.EntityManager;
@@ -90,25 +88,13 @@ public class RespostaSPUNet extends JInternalFrame {
 		JScrollPane areaDeRolagem = new JScrollPane(logArea);
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
-		botaoProcessar.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent e) {
-				logArea.setText("");
-				new Thread(new Runnable() {
-					
-					@Override
-					public void run() {
-						try {
-							String navegador = cbbNavegador.getSelectedItem().toString();
-							despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
-							incluirDadosSPUNet(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), navegador);
-						} catch (Exception e) {
-							MyUtils.appendLogArea(logArea, "Erro ao processar a carga: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			} 
-		}); 
+		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
+			
+			@Override
+			public void run() {
+				incluirDadosSPUNet(logArea, txtUsuario.getText(), new String(txtSenha.getPassword()), chkExibirNavegador.isSelected(), cbbNavegador.getSelectedItem().toString());
+			}
+		}));
     }
 
 	public void abrirJanela() {
@@ -118,62 +104,67 @@ public class RespostaSPUNet extends JInternalFrame {
 		this.show();
 	}
 
-	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws Exception {
-		Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
-        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + spunet.getDescricao());
-        if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
-        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem SPUNet (" + Origem.SPUNET_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
-        	return;
-        }
-
-		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		SPUNetService spunetService = new SPUNetService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET), exibirNavegador);
-		
-		spunetService.login(usuario, senha);
-		spunetService.acessarPaginaTriagem();
-
-        // inicia o loop para leitura dos arquivos do diretório
-        for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
-	        String nomeArquivo = arquivo.getName().split("\\.")[0];
-	        String[] dadosResposta = nomeArquivo.split("\\-");
-        	String numeroAtendimento = dadosResposta[0];
-        	String numeroDocumentoSEI = "0";
-        	if (dadosResposta.length > 1) numeroDocumentoSEI = dadosResposta[1];
-
-	        Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SPUNET, TipoProcesso.ELETRONICO, null, numeroAtendimento));
-	        SolicitacaoResposta resposta = null;
-	        if (solicitacao == null) {
-	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrada a solicitação para o nº de atendimento " + numeroAtendimento + ". A resposta não poderá ser feita automaticamente");
-	        	continue;
-	        } else {
-	        	// busca a resposta referente ao arquivo lido
-	        	resposta = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(null, solicitacao, null, null, null, null, numeroDocumentoSEI, false, false, false));
+	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
+		try {
+			Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
+	        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + spunet.getDescricao());
+	        if (pastaDespachosSalvos.equals("") || !MyUtils.arquivoExiste(pastaDespachosSalvos)) {
+	        	JOptionPane.showMessageDialog(null, "A pasta onde devem estar gravados os arquivos PDF de resposta não está configurada ou não existe: " + pastaDespachosSalvos + ". \nConfigure a origem SPUNet (" + Origem.SPUNET_ID + ") com o caminho para a pasta onde os arquivos PDF deve estar gravados.");
+	        	return;
 	        }
-
-	        if (resposta == null) {
-	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrado o número do documento de resposta na base de dados. A resposta não poderá ser feita automaticamente");
-	        	continue;
+	
+	        despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			SPUNetService spunetService = new SPUNetService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET), exibirNavegador);
+			
+			spunetService.login(usuario, senha);
+			spunetService.acessarPaginaTriagem();
+	
+	        // inicia o loop para leitura dos arquivos do diretório
+	        for (File arquivo : MyUtils.obterArquivos(pastaDespachosSalvos)) {
+		        String nomeArquivo = arquivo.getName().split("\\.")[0];
+		        String[] dadosResposta = nomeArquivo.split("\\-");
+	        	String numeroAtendimento = dadosResposta[0];
+	        	String numeroDocumentoSEI = "0";
+	        	if (dadosResposta.length > 1) numeroDocumentoSEI = dadosResposta[1];
+	
+		        Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SPUNET, TipoProcesso.ELETRONICO, null, numeroAtendimento));
+		        SolicitacaoResposta resposta = null;
+		        if (solicitacao == null) {
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrada a solicitação para o nº de atendimento " + numeroAtendimento + ". A resposta não poderá ser feita automaticamente");
+		        	continue;
+		        } else {
+		        	// busca a resposta referente ao arquivo lido
+		        	resposta = MyUtils.entidade(despachoServico.obterSolicitacaoResposta(null, solicitacao, null, null, null, null, numeroDocumentoSEI, false, false, false));
+		        }
+	
+		        if (resposta == null) {
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrado o número do documento de resposta na base de dados. A resposta não poderá ser feita automaticamente");
+		        	continue;
+		        }
+	
+		        if (MyUtils.emptyStringIfNull(resposta.getTipoResposta().getRespostaSPUNet()).trim().equals("")) {
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + "(" + solicitacao.getNumeroProcesso() + " / " + numeroAtendimento + "): o tipo de resposta não está configurado para qual tipo de resposta deve ser data no SPUNet. Configure a resposta para o SPUNet e tente novamente.");
+		        	continue;
+		        }
+	
+	        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + solicitacao.getNumeroProcesso() + " (Nº Atendimento: " + numeroAtendimento + ") - Arquivo: " + arquivo.getAbsolutePath());
+	        	
+	        	try {
+	        		spunetService.responderDemanda(numeroAtendimento, resposta.getTipoResposta().getRespostaSPUNet(), resposta.getTipoResposta().getComplementoSPUNet(), arquivo);
+	        	} catch (MyException e) {
+	        		MyUtils.appendLogArea(logArea, e.getMessage());
+	        		continue;
+	        	}
+	
+		        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, "bkp");
+				arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
 	        }
-
-	        if (MyUtils.emptyStringIfNull(resposta.getTipoResposta().getRespostaSPUNet()).trim().equals("")) {
-	        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + "(" + solicitacao.getNumeroProcesso() + " / " + numeroAtendimento + "): o tipo de resposta não está configurado para qual tipo de resposta deve ser data no SPUNet. Configure a resposta para o SPUNet e tente novamente.");
-	        	continue;
-	        }
-
-        	MyUtils.appendLogArea(logArea, "Nº do Processo: " + solicitacao.getNumeroProcesso() + " (Nº Atendimento: " + numeroAtendimento + ") - Arquivo: " + arquivo.getAbsolutePath());
-        	
-        	try {
-        		spunetService.responderDemanda(numeroAtendimento, resposta.getTipoResposta().getRespostaSPUNet(), resposta.getTipoResposta().getComplementoSPUNet(), arquivo);
-        	} catch (MyException e) {
-        		MyUtils.appendLogArea(logArea, e.getMessage());
-        		continue;
-        	}
-
-	        MyUtils.criarDiretorioBackup(pastaDespachosSalvos, "bkp");
-			arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
-        }
-
-		MyUtils.appendLogArea(logArea, "Fim do processamento...");
-        spunetService.fechaNavegador();
+	
+			MyUtils.appendLogArea(logArea, "Fim do processamento...");
+	        spunetService.fechaNavegador();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

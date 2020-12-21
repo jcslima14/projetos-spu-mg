@@ -1,7 +1,5 @@
 package views.robo;
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -87,28 +85,12 @@ public class ImpressaoDespacho extends JInternalFrame {
 		add(painelDados, BorderLayout.WEST);
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
-		btnProcessar.addActionListener(new ActionListener() {
+		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					logArea.setText("");
-					new Thread(new Runnable() {
-						
-						@Override
-						public void run() {
-							try {
-								imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante), cbbNavegador.getSelectedItem().toString());;
-							} catch (Exception e) {
-								MyUtils.appendLogArea(logArea, "Erro ao imprimir as respostas do SEI: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
-								e.printStackTrace();
-							}
-						}
-					}).start();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+			public void run() {
+				imprimirRespostaSEI(txtUsuario.getText(), new String(txtSenha.getPassword()), MyUtils.idItemSelecionado(cbbAssinante), cbbNavegador.getSelectedItem().toString());;
 			}
-		});
+		}));
 	}
 
 	public void abrirJanela() {
@@ -118,92 +100,96 @@ public class ImpressaoDespacho extends JInternalFrame {
 		this.show();
 	}
 
-	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId, String navegador) throws Exception {
-        String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
-        String msgValidacao = validarPastas(pastaRespostasImpressas);
-        if (!msgValidacao.equals("")) {
-        	JOptionPane.showMessageDialog(null, msgValidacao);
-        	return;
-        }
-
-		MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
-		
-		SEIService seiServico = new SEIService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI), true, pastaRespostasImpressas);
-		seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
-		seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
-
-		Map<String, List<SolicitacaoResposta>> respostasAImprimir = obterRespostasAProcessar(1, assinanteId);
-		for (String numeroProcessoSEI : respostasAImprimir.keySet()) {
-			// pesquisa o número do processo
-			seiServico.pesquisarProcesso(numeroProcessoSEI);
-			seiServico.acessarPaginaImpressaoDocumentos();
-
-			for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
-				String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
-				String nomeArquivo;
-				if (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("")) {
-					nomeArquivo = respostaAImprimir.getSolicitacao().getChaveBusca() + "-" + respostaAImprimir.getNumeroDocumentoSEI();
-				} else {
-					nomeArquivo = numeroProcesso;
-				}
-				String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
-
-				MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
-
-				String pastaDestino = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao();
+	private void imprimirRespostaSEI(String usuario, String senha, Integer assinanteId, String navegador) throws RuntimeException {
+		try {
+	        String pastaRespostasImpressas = despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS);
+	        String msgValidacao = validarPastas(pastaRespostasImpressas);
+	        if (!msgValidacao.equals("")) {
+	        	JOptionPane.showMessageDialog(null, msgValidacao);
+	        	return;
+	        }
+	
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			
+			SEIService seiServico = new SEIService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI), true, pastaRespostasImpressas);
+			seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
+			seiServico.selecionarUnidadePadrao(despachoServico.obterConteudoParametro(Parametro.UNIDADE_PADRAO_SEI));
+	
+			Map<String, List<SolicitacaoResposta>> respostasAImprimir = obterRespostasAProcessar(1, assinanteId);
+			for (String numeroProcessoSEI : respostasAImprimir.keySet()) {
+				// pesquisa o número do processo
+				seiServico.pesquisarProcesso(numeroProcessoSEI);
+				seiServico.acessarPaginaImpressaoDocumentos();
+	
+				for (SolicitacaoResposta respostaAImprimir : respostasAImprimir.get(numeroProcessoSEI)) {
+					String numeroProcesso = respostaAImprimir.getSolicitacao().getNumeroProcesso();
+					String nomeArquivo;
+					if (respostaAImprimir.getSolicitacao().getOrigem().getOrigemId().equals(Origem.SPUNET_ID) && !respostaAImprimir.getSolicitacao().getChaveBusca().equals("")) {
+						nomeArquivo = respostaAImprimir.getSolicitacao().getChaveBusca() + "-" + respostaAImprimir.getNumeroDocumentoSEI();
+					} else {
+						nomeArquivo = numeroProcesso;
+					}
+					String numeroDocumentoSEI = respostaAImprimir.getNumeroDocumentoSEI();
+	
+					MyUtils.appendLogArea(logArea, "Processo: " + numeroProcesso + " - Nº Documento SEI: " + numeroDocumentoSEI);
+	
+					String pastaDestino = pastaRespostasImpressas + File.separator + respostaAImprimir.getSolicitacao().getOrigem().getDescricao();
+					try {
+						seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
+					} catch (MyException e) {
+						MyUtils.appendLogArea(logArea, e.getMessage());
+						continue;
+					}
+	
+					// atualiza o indicativo de que o documento foi impresso
+					atualizarRespostaImpressa(respostaAImprimir, pastaDestino + File.separator + nomeArquivo + ".pdf");
+				} // fim do loop de leitura das respostas de cada processo
+			} // fim do loop de diferentes processos com documentos a serem impressos
+	
+			// início da retirada dos documentos do bloco de assinatura
+			MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...");
+	
+			Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
+			for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
+				List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
+				MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
+				
 				try {
-					seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
+					seiServico.acessarBlocoAssinatura(blocoAssinatura);
 				} catch (MyException e) {
 					MyUtils.appendLogArea(logArea, e.getMessage());
 					continue;
 				}
-
-				// atualiza o indicativo de que o documento foi impresso
-				atualizarRespostaImpressa(respostaAImprimir, pastaDestino + File.separator + nomeArquivo + ".pdf");
-			} // fim do loop de leitura das respostas de cada processo
-		} // fim do loop de diferentes processos com documentos a serem impressos
-
-		// início da retirada dos documentos do bloco de assinatura
-		MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...");
-
-		Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
-		for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
-			List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
-			MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
-			
-			try {
-				seiServico.acessarBlocoAssinatura(blocoAssinatura);
-			} catch (MyException e) {
-				MyUtils.appendLogArea(logArea, e.getMessage());
-				continue;
-			}
-			
-			for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
-				try {
-					MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
-					seiServico.marcarDocumentoParaRetiradaBlocoAssinatura(respostaARetirar.getNumeroDocumentoSEI());
-				} catch (MyException e) {
-					MyUtils.appendLogArea(logArea, e.getMessage());
-					continue;
+				
+				for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
+					try {
+						MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
+						seiServico.marcarDocumentoParaRetiradaBlocoAssinatura(respostaARetirar.getNumeroDocumentoSEI());
+					} catch (MyException e) {
+						MyUtils.appendLogArea(logArea, e.getMessage());
+						continue;
+					}
+	
+					respostasRetiradas.add(respostaARetirar);
 				}
-
-				respostasRetiradas.add(respostaARetirar);
-			}
-
-			if (respostasRetiradas.size() > 0) {
-				MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
-				seiServico.confirmarRetiradaDocumentosBlocoAssinatura();
-
-				MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
-				for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
-					atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
+	
+				if (respostasRetiradas.size() > 0) {
+					MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
+					seiServico.confirmarRetiradaDocumentosBlocoAssinatura();
+	
+					MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
+					for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
+						atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
+					}
 				}
 			}
+			
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+	
+	        seiServico.fechaNavegador();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
-		
-		MyUtils.appendLogArea(logArea, "Fim do Processamento...");
-
-        seiServico.fechaNavegador();
 	}
 	
 	private void atualizarRespostaImpressa(SolicitacaoResposta resposta, String nomeArquivo) throws Exception {

@@ -149,6 +149,20 @@ public class MyUtils {
 		return retorno;
 	}
 
+	public static void appendLogArea(JLabel logArea, String msg, boolean adicionarDataHora, boolean logarNoConsole, String fontStyle) {
+		if (adicionarDataHora) {
+			msg = formatarData(new Date(), "dd/MM/yyyy HH:mm:ss.SSS") + " - " + msg;
+		}
+		if (logarNoConsole) {
+			System.out.println(msg);
+		}
+		logArea.setText(logArea.getText() + "</br><span>" + msg + "</span>");
+	}
+
+	public static void appendLogArea(JLabel logArea, String msg) {
+		appendLogArea(logArea, msg, false, true, null);
+	}
+
 	public static void appendLogArea(JTextArea logArea, String msg, boolean adicionarDataHora, boolean logarNoConsole) {
 		if (adicionarDataHora) {
 			msg = formatarData(new Date(), "dd/MM/yyyy HH:mm:ss.SSS") + " - " + msg;
@@ -447,6 +461,32 @@ public class MyUtils {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					logArea.setText("");
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							try {
+								processo.run();
+							} catch (Exception e) {
+								JOptionPane.showMessageDialog(null, "Erro ao executar o processo: \n \n" + e.getMessage());
+								MyUtils.appendLogArea(logArea, "Erro ao executar o processo: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
+								e.printStackTrace();
+							}
+						}
+					}).start();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		};
+	}
+
+	public static ActionListener executarProcessoComLog(JLabel logArea, Runnable processo) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+//					logArea.setText("");
 					new Thread(new Runnable() {
 						
 						@Override
