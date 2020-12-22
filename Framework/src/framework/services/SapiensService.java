@@ -14,7 +14,7 @@ import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import framework.MyException;
+import framework.exceptions.MyException;
 import framework.utils.MyUtils;
 
 public class SapiensService extends SeleniumService {

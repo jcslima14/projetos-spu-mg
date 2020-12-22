@@ -1,5 +1,6 @@
 package views.robo;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -18,15 +19,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.By;
 
-import framework.MyException;
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyException;
 import framework.services.SEIService;
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
@@ -51,8 +53,8 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private JButton btnProcessar = new JButton("Processar"); 
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
-	private JTextArea logArea = new JTextArea(30, 100);
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
+	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 	private DespachoServico despachoServico;
 	private Assinante superior;
 
@@ -107,7 +109,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	        	throw new Exception(msgVldPastaAssinante);
 	        }
 	        
-			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 	
 	        // obter os dados do superior assinante
 			Iterator<Assinante> assinanteIterator = despachoServico.obterAssinante(null, null, true, true).iterator();
@@ -136,7 +138,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	
 					// verifica se há pendências
 					if (!respostaAGerar.getPendenciasParaGeracao().trim().equals("")) {
-						MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: \n" + respostaAGerar.getPendenciasParaGeracao());
+						MyUtils.appendLogArea(logArea, "A resposta possui pendências de informação e não pode ser gerada automaticamente até que sejam resolvidas: \n" + respostaAGerar.getPendenciasParaGeracao(), NivelMensagem.ALERTA);
 						continue;
 					}
 	
@@ -144,7 +146,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						List<File> anexos = obterArquivos(respostaAGerar.getAssinante().getPastaArquivoProcesso(), respostaAGerar.getSolicitacao().getNumeroProcesso(), null);
 						if (MyUtils.emptyStringIfNull(respostaAGerar.getSolicitacao().getNumeroProcessoSEI()).trim().equalsIgnoreCase("")) {
 							if (anexos == null || anexos.size() == 0) {
-								MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.");
+								MyUtils.appendLogArea(logArea, "Não foi possível gerar o processo individual, pois não foi encontrado nenhum arquivo referente ao processo.", NivelMensagem.ALERTA);
 								continue;
 							}
 		
@@ -170,20 +172,20 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 						seiServico.acessarFramePorConteudo(By.xpath("//*[contains(text(), '<autor>')]"));
 						seiServico.substituirMarcacaoDocumento(obterMapaSubstituicoes(respostaAGerar, superior));
 						seiServico.salvarFecharDocumentoEditado();
+						// incluir no bloco de assinatura
+						respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
+						seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());
 					} catch (MyException e) {
-						MyUtils.appendLogArea(logArea, e.getMessage());
+						MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
 						continue;
 					}
-					// incluir no bloco de assinatura
-					respostaAGerar.setBlocoAssinatura(obterBlocoAssinatura(respostaAGerar.getAssinante(), respostaAGerar.getTipoResposta()));
-					seiServico.incluirDocumentoBlocoAssinatura(respostaAGerar.getNumeroDocumentoSEI(), respostaAGerar.getBlocoAssinatura());
 					
 					// atualiza o número do documento gerado no SEI
 					atualizarDocumentoGerado(respostaAGerar, superior);
 				} // fim do loop de respostas a gerar por unidade
 			} // fim do loop de todas as respostas a gerar
 	
-			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...", NivelMensagem.OK);
 	
 			seiServico.fechaNavegador();
 		} catch (Exception e) {
@@ -201,16 +203,16 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	}
 
 	private void gerarProcessoIndividual(SEIService seiServico, SolicitacaoResposta resposta, String pastaArquivosProcessosIndividuais) throws Exception {
-		MyUtils.appendLogArea(logArea, "Gerando processo individual...");
+		MyUtils.appendLogArea(logArea, "Gerando processo individual...", NivelMensagem.DESTAQUE_ITALICO);
 		String numeroProcesso = seiServico.gerarProcessoIndividual(resposta.getTipoResposta().getTipoProcesso(), resposta.getSolicitacao().getNumeroProcesso());
-		MyUtils.appendLogArea(logArea, "Gerado o processo individual nº " + numeroProcesso);
+		MyUtils.appendLogArea(logArea, "Gerado o processo individual nº " + numeroProcesso, NivelMensagem.DESTAQUE_NEGRITO_ITALICO);
 
 		resposta.getSolicitacao().setNumeroProcessoSEI(numeroProcesso);
 		atualizarProcessoGerado(resposta);
 	}
 	
 	public void anexarArquivosProcesso(SEIService seiServico, SolicitacaoResposta resposta, List<File> anexos) throws Exception {
-		MyUtils.appendLogArea(logArea, "Anexando os arquivos ao processo...");
+		MyUtils.appendLogArea(logArea, "Anexando os arquivos ao processo...", NivelMensagem.DESTAQUE_ITALICO);
 		seiServico.anexarArquivosProcesso(resposta.getSolicitacao().getNumeroProcessoSEI(), anexos);
 		
 		resposta.getSolicitacao().setArquivosAnexados(true);

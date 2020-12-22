@@ -15,8 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
@@ -26,6 +26,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.openqa.selenium.By;
 
+import framework.enums.NivelMensagem;
 import framework.services.SEIService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -51,7 +52,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
-	private JTextArea logArea = new JTextArea(30, 100);
+	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
 	private DespachoServico despachoServico;
 
@@ -106,7 +107,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
 	private void gerarOficios(String usuario, String senha, String numeroProcesso, String numeroDocumentoModelo, String blocoAssinatura) throws RuntimeException {
 		try {
-			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 			
 			SEIService seiServico = new SEIService("chrome", despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI));
 			
@@ -122,7 +123,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 	
 				// insere um novo documento
 				String numeroDocumentoSEIGerado = seiServico.inserirDocumentoNoProcesso(numeroProcesso, "Ofício", numeroDocumentoModelo);
-				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado);
+				MyUtils.appendLogArea(logArea, "Nº Documento Gerado: " + numeroDocumentoSEIGerado, NivelMensagem.DESTAQUE_ITALICO);
 	
 				// alterna para o frame de destinatário para substituir os dados e clica no primeiro elemento p para mudar o foco
 				TimeUnit.SECONDS.sleep(1);
@@ -164,7 +165,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 				seiServico.incluirDocumentoBlocoAssinatura(numeroDocumentoSEIGerado, blocoAssinatura);
 			} // fim do loop de todas as respostas a gerar
 	
-			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...", NivelMensagem.OK);
 	
 			seiServico.fechaNavegador();
 		} catch (Exception e) {
@@ -298,7 +299,7 @@ public class InclusaoOficioFiscalizacao extends JInternalFrame {
 			MyUtils.appendLogArea(logArea, "Lendo a linha " + (l+1) + "/" + (planilha.getLastRowNum()+1) + "...");
 			chaveAnterior = chaveAtual;
 		}
-		MyUtils.appendLogArea(logArea, "Fim de leitura da planilha!");
+		MyUtils.appendLogArea(logArea, "Fim de leitura da planilha!", NivelMensagem.OK);
 		wb.close();
 
 		return retorno;

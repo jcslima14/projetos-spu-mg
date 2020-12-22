@@ -1,5 +1,6 @@
 package views.utils;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Date;
@@ -11,8 +12,8 @@ import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,6 +26,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
+import framework.enums.NivelMensagem;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
 import model.Assinante;
@@ -56,8 +58,8 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
-	private JTextArea logArea = new JTextArea(30, 100);
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
+	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 	private DespachoServico despachoServico;
 
 	public ImportacaoPlanilha(String tituloJanela, EntityManager conexao) {
@@ -200,7 +202,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do atendimento parece estar errado (tamanho diferente de 11 caracteres)";
 				}
 	
-				MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1));
+				MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1), NivelMensagem.DESTAQUE_NEGRITO);
 				MyUtils.appendLogArea(logArea, "Nº Processo: " + numeroProcesso + " (" + numeroProcessoOriginal + ")");
 				MyUtils.appendLogArea(logArea, "Autor......: " + autor);
 	
@@ -326,7 +328,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				MyUtils.appendLogArea(logArea, "------------------------------------------------------------------------------------");
 				linha.createCell(18).setCellValue(msgRetorno);
 			}
-			MyUtils.appendLogArea(logArea, "Fim de leitura do arquivo!");
+			MyUtils.appendLogArea(logArea, "Fim de leitura do arquivo!", NivelMensagem.OK);
 			File fileOutput = new File(filArquivo.getSelectedFile().getAbsolutePath() + "_temp");
 			FileOutputStream fos = new FileOutputStream(fileOutput);
 			wb.write(fos);

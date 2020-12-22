@@ -16,7 +16,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 
-import framework.MyException;
+import framework.exceptions.MyException;
 import framework.services.SPUNetService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;

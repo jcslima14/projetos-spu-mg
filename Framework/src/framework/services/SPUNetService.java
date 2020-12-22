@@ -10,7 +10,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import framework.MyException;
+import framework.exceptions.MyException;
 import framework.utils.MyUtils;
 
 public class SPUNetService extends SeleniumService {

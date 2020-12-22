@@ -1,5 +1,6 @@
 package views.robo;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -15,13 +16,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 
-import framework.MyException;
 import framework.components.MyComboBox;
 import framework.components.MyLabel;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyException;
 import framework.services.SEIService;
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
@@ -46,8 +48,8 @@ public class ImpressaoDespacho extends JInternalFrame {
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
-	private JTextArea logArea = new JTextArea(30, 100);
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea);
+	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 	private DespachoServico despachoServico;
 
 	public ImpressaoDespacho(String tituloJanela, EntityManager conexao) {
@@ -109,7 +111,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 	        	return;
 	        }
 	
-			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 			
 			SEIService seiServico = new SEIService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SEI), true, pastaRespostasImpressas);
 			seiServico.login(usuario, senha, despachoServico.obterConteudoParametro(Parametro.ORGAO_LOGIN_SEI));
@@ -137,7 +139,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 					try {
 						seiServico.imprimirDocumento(numeroProcesso, numeroProcessoSEI, numeroDocumentoSEI, respostaAImprimir.getTipoResposta().getQuantidadeAssinaturas(), pastaRespostasImpressas, pastaDestino, nomeArquivo);
 					} catch (MyException e) {
-						MyUtils.appendLogArea(logArea, e.getMessage());
+						MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ALERTA);
 						continue;
 					}
 	
@@ -147,26 +149,26 @@ public class ImpressaoDespacho extends JInternalFrame {
 			} // fim do loop de diferentes processos com documentos a serem impressos
 	
 			// início da retirada dos documentos do bloco de assinatura
-			MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...");
+			MyUtils.appendLogArea(logArea, "Preparando para retirar os documentos dos blocos de assinatura...", NivelMensagem.DESTAQUE_NEGRITO_ITALICO);
 	
 			Map<String, List<SolicitacaoResposta>> blocosDeAssinatura = obterRespostasAProcessar(2, assinanteId);
 			for (String blocoAssinatura : blocosDeAssinatura.keySet()) {
 				List<SolicitacaoResposta> respostasRetiradas = new ArrayList<SolicitacaoResposta>();
-				MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura);
+				MyUtils.appendLogArea(logArea, "Preparando para retirar "  + blocosDeAssinatura.get(blocoAssinatura).size() + " documentos do bloco de assinatura " + blocoAssinatura, NivelMensagem.DESTAQUE_ITALICO);
 				
 				try {
 					seiServico.acessarBlocoAssinatura(blocoAssinatura);
 				} catch (MyException e) {
-					MyUtils.appendLogArea(logArea, e.getMessage());
+					MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
 					continue;
 				}
 				
 				for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
 					try {
-						MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
+						MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI(), NivelMensagem.DESTAQUE_ITALICO);
 						seiServico.marcarDocumentoParaRetiradaBlocoAssinatura(respostaARetirar.getNumeroDocumentoSEI());
 					} catch (MyException e) {
-						MyUtils.appendLogArea(logArea, e.getMessage());
+						MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
 						continue;
 					}
 	
@@ -174,17 +176,17 @@ public class ImpressaoDespacho extends JInternalFrame {
 				}
 	
 				if (respostasRetiradas.size() > 0) {
-					MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...");
+					MyUtils.appendLogArea(logArea, "Retirando os documentos marcados...", NivelMensagem.DESTAQUE_ITALICO);
 					seiServico.confirmarRetiradaDocumentosBlocoAssinatura();
 	
-					MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...");
+					MyUtils.appendLogArea(logArea, "Atualizando a situação dos documentos retirados...", NivelMensagem.DESTAQUE_ITALICO);
 					for (SolicitacaoResposta respostaRetirada : respostasRetiradas) {
 						atualizarRespostaRetiradaBlocoAssinatura(respostaRetirada);
 					}
 				}
 			}
 			
-			MyUtils.appendLogArea(logArea, "Fim do Processamento...");
+			MyUtils.appendLogArea(logArea, "Fim do Processamento...", NivelMensagem.OK);
 	
 	        seiServico.fechaNavegador();
 		} catch (Exception e) {

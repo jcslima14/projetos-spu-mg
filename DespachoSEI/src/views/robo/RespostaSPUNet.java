@@ -1,5 +1,6 @@
 package views.robo;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.File;
 
 import javax.persistence.EntityManager;
@@ -12,11 +13,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 
-import framework.MyException;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyException;
 import framework.services.SPUNetService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -84,8 +86,8 @@ public class RespostaSPUNet extends JInternalFrame {
                 6, 6); //xPad, yPad
 		
 		add(painelDados, BorderLayout.WEST);
-		JTextArea logArea = new JTextArea(30, 100);
-		JScrollPane areaDeRolagem = new JScrollPane(logArea);
+		JTextPane logArea = MyUtils.obterPainelNotificacoes();
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
@@ -104,7 +106,7 @@ public class RespostaSPUNet extends JInternalFrame {
 		this.show();
 	}
 
-	private void incluirDadosSPUNet(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
+	private void incluirDadosSPUNet(JTextPane logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
 		try {
 			Origem spunet = MyUtils.entidade(despachoServico.obterOrigem(Origem.SPUNET_ID, null));
 	        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + spunet.getDescricao());
@@ -114,7 +116,7 @@ public class RespostaSPUNet extends JInternalFrame {
 	        }
 	
 	        despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
-			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 			SPUNetService spunetService = new SPUNetService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SPUNET), exibirNavegador);
 			
 			spunetService.login(usuario, senha);
@@ -131,7 +133,7 @@ public class RespostaSPUNet extends JInternalFrame {
 		        Solicitacao solicitacao = MyUtils.entidade(despachoServico.obterSolicitacao(null, Origem.SPUNET, TipoProcesso.ELETRONICO, null, numeroAtendimento));
 		        SolicitacaoResposta resposta = null;
 		        if (solicitacao == null) {
-		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrada a solicitação para o nº de atendimento " + numeroAtendimento + ". A resposta não poderá ser feita automaticamente");
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrada a solicitação para o nº de atendimento " + numeroAtendimento + ". A resposta não poderá ser feita automaticamente", NivelMensagem.ALERTA);
 		        	continue;
 		        } else {
 		        	// busca a resposta referente ao arquivo lido
@@ -139,12 +141,12 @@ public class RespostaSPUNet extends JInternalFrame {
 		        }
 	
 		        if (resposta == null) {
-		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrado o número do documento de resposta na base de dados. A resposta não poderá ser feita automaticamente");
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + ": não foi encontrado o número do documento de resposta na base de dados. A resposta não poderá ser feita automaticamente", NivelMensagem.ALERTA);
 		        	continue;
 		        }
 	
 		        if (MyUtils.emptyStringIfNull(resposta.getTipoResposta().getRespostaSPUNet()).trim().equals("")) {
-		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + "(" + solicitacao.getNumeroProcesso() + " / " + numeroAtendimento + "): o tipo de resposta não está configurado para qual tipo de resposta deve ser data no SPUNet. Configure a resposta para o SPUNet e tente novamente.");
+		        	MyUtils.appendLogArea(logArea, "Arquivo " + arquivo.getName() + "(" + solicitacao.getNumeroProcesso() + " / " + numeroAtendimento + "): o tipo de resposta não está configurado para qual tipo de resposta deve ser data no SPUNet. Configure a resposta para o SPUNet e tente novamente.", NivelMensagem.ERRO);
 		        	continue;
 		        }
 	
@@ -153,7 +155,7 @@ public class RespostaSPUNet extends JInternalFrame {
 	        	try {
 	        		spunetService.responderDemanda(numeroAtendimento, resposta.getTipoResposta().getRespostaSPUNet(), resposta.getTipoResposta().getComplementoSPUNet(), arquivo);
 	        	} catch (MyException e) {
-	        		MyUtils.appendLogArea(logArea, e.getMessage());
+	        		MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
 	        		continue;
 	        	}
 	
@@ -161,7 +163,7 @@ public class RespostaSPUNet extends JInternalFrame {
 				arquivo.renameTo(new File(pastaDespachosSalvos + File.separator + "bkp" + File.separator + arquivo.getName()));
 	        }
 	
-			MyUtils.appendLogArea(logArea, "Fim do processamento...");
+			MyUtils.appendLogArea(logArea, "Fim do processamento...", NivelMensagem.OK);
 	        spunetService.fechaNavegador();
 		} catch (Exception e) {
 			throw new RuntimeException(e);

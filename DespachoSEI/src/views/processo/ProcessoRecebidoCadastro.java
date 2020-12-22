@@ -16,8 +16,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.table.TableModel;
 
 import com.google.common.io.Files;
@@ -30,6 +30,7 @@ import framework.components.MyLabel;
 import framework.components.MyTableColumn;
 import framework.components.MyTableModel;
 import framework.components.MyTextField;
+import framework.enums.NivelMensagem;
 import framework.models.ComboBoxItem;
 import framework.templates.CadastroTemplate;
 import framework.templates.DialogTemplate;
@@ -49,7 +50,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private MyButton btnProcessarArquivos = new MyButton("Processar Arquivos");
 	private MyButton btnMostrarResultadoDownload = new MyButton("Resultado do download") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 	private MyButton btnMostrarResultadoProcessamento = new MyButton("Resultado do Processamento") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
-	private JTextArea txtTexto = new JTextArea(30, 100);
+	private JTextPane txtTexto = MyUtils.obterPainelNotificacoes();
 	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
 	private JButton btnCopiarAreaTransferencia = new JButton("Copiar");
 	private JButton btnIniciarProcessamentoArquivos = new JButton("Iniciar Processamento");
@@ -384,7 +385,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 					boolean isComplementacao = arquivoOrigem.getName().contains("COMPLEMENTAÇÃO");
 					String nomeArquivo = arquivoOrigem.getName().substring(0, arquivoOrigem.getName().lastIndexOf(".")) + " " + envio.getSolicitacao().getMunicipio().getNome();
 					String extensaoArquivo = arquivoOrigem.getName().substring(arquivoOrigem.getName().lastIndexOf(".") + 1);
-					MyUtils.appendLogArea(txtTexto, "Copiando o arquivo '" + arquivoOrigem.getName() + "'");
+					MyUtils.appendLogArea(txtTexto, "Copiando o arquivo '" + arquivoOrigem.getName() + "'", NivelMensagem.DESTAQUE_NEGRITO);
 					String novoNome = nomeArquivo + "." + extensaoArquivo;
 
 					// troca o nome do arquivo, caso já exista no destino

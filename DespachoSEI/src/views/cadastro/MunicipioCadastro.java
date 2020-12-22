@@ -16,7 +16,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
@@ -32,6 +32,7 @@ import framework.components.MyLabel;
 import framework.components.MyTableColumn;
 import framework.components.MyTableModel;
 import framework.components.MyTextField;
+import framework.enums.NivelMensagem;
 import framework.templates.CadastroTemplate;
 import framework.templates.DialogTemplate;
 import framework.utils.JPAUtils;
@@ -54,7 +55,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
 	private JPanel pnlArquivo = new JPanel();
 	private JPanel pnlDialogo = new JPanel();
-	private JTextArea txtTexto = new JTextArea(30, 100);
+	private JTextPane txtTexto = MyUtils.obterPainelNotificacoes();
 	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
 	private JButton btnIniciarImportacaoPlanillha = new JButton("Iniciar Importação da Planilha");
 	
@@ -146,7 +147,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 		
 		Map<String, String[]> municipiosLidos = new LinkedHashMap<String, String[]>();
 
-		MyUtils.appendLogArea(txtTexto, "Lendo as informações da planilha...");
+		MyUtils.appendLogArea(txtTexto, "Lendo as informações da planilha...", NivelMensagem.DESTAQUE_NEGRITO);
 
 		for (int l = 1; l <= planilha.getLastRowNum(); l++) {
 			Row linha = planilha.getRow(l);
@@ -159,7 +160,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 
 		wb.close();
 		
-		MyUtils.appendLogArea(txtTexto, "Incluindo os municípios novos...");
+		MyUtils.appendLogArea(txtTexto, "Incluindo os municípios novos...", NivelMensagem.DESTAQUE_ITALICO);
 		
 		// percorre a lista de municípios lidos, inserindo os que não existirem
 		for (String nome : municipiosLidos.keySet()) {
@@ -169,11 +170,11 @@ public class MunicipioCadastro extends CadastroTemplate {
 				salvarMunicipio(municipio);
 				MyUtils.appendLogArea(txtTexto, "Município de " + nome + " incluído com sucesso");
 			} else {
-				MyUtils.appendLogArea(txtTexto, "Município de " + nome + " já estava na base de dados");
+				MyUtils.appendLogArea(txtTexto, "Município de " + nome + " já estava na base de dados", NivelMensagem.ALERTA);
 			}
 		}
 
-		MyUtils.appendLogArea(txtTexto, "Atualizando as informações de comarca e destino das respostas judiciais...");
+		MyUtils.appendLogArea(txtTexto, "Atualizando as informações de comarca e destino das respostas judiciais...", NivelMensagem.DESTAQUE_ITALICO);
 
 		// percorre novamente a lista, atualizando comarca e destino, se tiverem sido informado
 		for (String nome : municipiosLidos.keySet()) {
@@ -204,12 +205,12 @@ public class MunicipioCadastro extends CadastroTemplate {
 				MyUtils.appendLogArea(txtTexto, "O município de " + nome + " foi atualizado na base de dados: " + (msgErro.equals("") ? "Todas as informações adicionais foram atualizadas" : msgErro));
 			} else {
 				if (!msgErro.equals("")) {
-					MyUtils.appendLogArea(txtTexto, "O município de " + nome + " não teve nenhuma informação atualizada: " + msgErro);
+					MyUtils.appendLogArea(txtTexto, "O município de " + nome + " não teve nenhuma informação atualizada: " + msgErro, NivelMensagem.ERRO);
 				}
 			}
 		}
 
-		MyUtils.appendLogArea(txtTexto, "Fim do Processamento");
+		MyUtils.appendLogArea(txtTexto, "Fim do Processamento", NivelMensagem.OK);
 		executarAtualizar();
 	}
 

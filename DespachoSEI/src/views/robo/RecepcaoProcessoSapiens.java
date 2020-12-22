@@ -13,11 +13,14 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 
 import org.openqa.selenium.WebElement;
 
-import framework.MyException;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyException;
+import framework.exceptions.MyValidationException;
 import framework.services.SapiensService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -34,7 +37,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
 	private DespachoServico despachoServico;
-	private JLabel logArea = new JLabel() {{ setText("<h1>Olá mundo!</h1>"); }};
+	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
 	private boolean receberProcessoSemArquivo = false;
 
 	public RecepcaoProcessoSapiens(String tituloJanela, EntityManager conexao) {
@@ -88,8 +91,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
                 6, 6); //xPad, yPad
 		
 		add(painelDados, BorderLayout.WEST);
-		JScrollPane areaDeRolagem = new JScrollPane(logArea);
-		areaDeRolagem.getViewport().setPreferredSize(new Dimension(1500, 700));
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
@@ -107,16 +109,22 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 		this.setVisible(true);
 		this.show();
 	}
-	
-	private void recepcionarProcessosSapiens(JLabel logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
+
+	private void recepcionarProcessosSapiens(JTextPane logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
+		String pastaDeDownload;
 		try {
-			String pastaDeDownload = MyUtils.entidade(despachoServico.obterParametro(Parametro.PASTA_DOWNLOAD_SAPIENS, null)).getConteudo();
-			if (!MyUtils.arquivoExiste(pastaDeDownload)) {
-				throw new Exception("A pasta para download dos arquivos não existe: " + pastaDeDownload);
-			}
+			pastaDeDownload = MyUtils.entidade(despachoServico.obterParametro(Parametro.PASTA_DOWNLOAD_SAPIENS, null)).getConteudo();
+		} catch (Exception e1) {
+			throw new RuntimeException(e1.getMessage());
+		}
+		if (!MyUtils.arquivoExiste(pastaDeDownload)) {
+			throw new MyValidationException("A pasta para download dos arquivos não existe: " + pastaDeDownload);
+		}
+
+		try {
 			despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 			boolean baixarTodoProcessoSapiens = despachoServico.obterConteudoParametro(Parametro.BAIXAR_TODO_PROCESSO_SAPIENS, "Não").trim().equalsIgnoreCase("sim");
-			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+			MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 			receberProcessoSemArquivo = despachoServico.obterConteudoParametro(Parametro.RECEBER_PROCESSO_SEM_ARQUIVO).equalsIgnoreCase("Sim");
 			SapiensService sapiensService = new SapiensService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS), exibirNavegador, pastaDeDownload);
 			sapiensService.login(usuario, senha);
@@ -129,7 +137,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 	        	List<WebElement> linhas = sapiensService.obterProcessos(tabela);
 	
 		        // obtem a lista de processos a ser lida
-		        MyUtils.appendLogArea(logArea, "Página: " + ++pagina + " - Processos encontrados: " + linhas.size());
+		        MyUtils.appendLogArea(logArea, "Página: " + ++pagina + " - Processos encontrados: " + linhas.size(), NivelMensagem.DESTAQUE_NEGRITO);
 	
 		        int nLinha = 0;
 	
@@ -162,7 +170,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 	    			if (resultadoDownload.equals("") || receberProcessoSemArquivo) {
 	    				receberProcessoSapiens(numeroProcessoJudicial, nup, autor, dataRemessa, resultadoDownload);
 	    			} else {
-	    				MyUtils.appendLogArea(logArea, resultadoDownload + "\n" + "O processo não foi recebido porque ocorreu um erro no download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens");
+	    				MyUtils.appendLogArea(logArea, resultadoDownload + "\n" + "O processo não foi recebido porque ocorreu um erro no download do arquivo. O processo será avaliado novamente na próxima recepção de processos do Sapiens", NivelMensagem.ERRO);
 	    			}
 		        }
 	
@@ -171,17 +179,17 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 		        }
 	        }
 	
-			MyUtils.appendLogArea(logArea, "Fim do processamento...");
+			MyUtils.appendLogArea(logArea, "Fim do processamento...", NivelMensagem.OK);
 			sapiensService.fechaNavegador();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	private boolean processoJaRecebido(JLabel logArea, String numeroProcesso, String dataHoraMovimentacao) throws Exception {
+	private boolean processoJaRecebido(JTextPane logArea, String numeroProcesso, String dataHoraMovimentacao) throws Exception {
 		List<SolicitacaoEnvio> processos = despachoServico.obterSolicitacaoEnvio(null, null, Origem.SAPIENS, numeroProcesso, MyUtils.formatarData(MyUtils.obterData(dataHoraMovimentacao, "dd-MM-yyyy HH:mm"), "yyyy-MM-dd HH:mm:ss"), null, false);
 		if (processos == null || processos.isEmpty()) {
-			MyUtils.appendLogArea(logArea, "Processo ainda não recebido...");
+			MyUtils.appendLogArea(logArea, "Processo ainda não recebido...", NivelMensagem.DESTAQUE_ITALICO);
 			return false;
 		} else {
 			return true;

@@ -1,5 +1,6 @@
 package views.robo;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,11 +18,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
 
-import framework.MyException;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyException;
 import framework.services.SapiensService;
 import framework.utils.MyUtils;
 import framework.utils.SpringUtilities;
@@ -90,8 +92,8 @@ public class RespostaSapiens extends JInternalFrame {
                 6, 6); //xPad, yPad
 		
 		add(painelDados, BorderLayout.WEST);
-		JTextArea logArea = new JTextArea(30, 100);
-		JScrollPane areaDeRolagem = new JScrollPane(logArea);
+		JTextPane logArea = MyUtils.obterPainelNotificacoes();
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
@@ -109,7 +111,7 @@ public class RespostaSapiens extends JInternalFrame {
 		this.show();
 	}
 
-	private void responderProcessosSapiens(JTextArea logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
+	private void responderProcessosSapiens(JTextPane logArea, String usuario, String senha, boolean exibirNavegador, String navegador) throws RuntimeException {
 		try {
 			Origem sapiens = MyUtils.entidade(despachoServico.obterOrigem(Origem.SAPIENS_ID, null));
 	        String pastaDespachosSalvos = MyUtils.emptyStringIfNull(despachoServico.obterConteudoParametro(Parametro.PASTA_DESPACHOS_SALVOS) + File.separator + sapiens.getDescricao());
@@ -121,7 +123,7 @@ public class RespostaSapiens extends JInternalFrame {
 	
 	        despachoServico.salvarConteudoParametro(Parametro.DEFAULT_BROWSER, navegador);
 	
-	        MyUtils.appendLogArea(logArea, "Iniciando o navegador web...");
+	        MyUtils.appendLogArea(logArea, "Iniciando o navegador web...", NivelMensagem.DESTAQUE_NEGRITO);
 	        SapiensService sapiensService = new SapiensService(navegador, despachoServico.obterConteudoParametro(Parametro.ENDERECO_SAPIENS), exibirNavegador);
 	
 	        sapiensService.login(usuario, senha);
@@ -148,12 +150,12 @@ public class RespostaSapiens extends JInternalFrame {
 		        	try {
 		        		encontrado = sapiensService.responderProcesso(tipoFiltro, chaveBusca, numeroProcesso, arquivo);
 		        	} catch (MyException e) {
-		        		MyUtils.appendLogArea(logArea, e.getMessage());
+		        		MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
 		        		continue;
 		        	}
 	
 		        	if (!encontrado) {
-						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca);
+						MyUtils.appendLogArea(logArea, "O processo " + numeroProcesso + " não foi encontrado. Pesquisa pelo " + tipoFiltro + ": " + chaveBusca, NivelMensagem.ALERTA);
 		        	}
 	
 		        	if (encontrado || moverRespostaNaoEncontrada) {
@@ -171,7 +173,7 @@ public class RespostaSapiens extends JInternalFrame {
 	        	sapiensService.atualizarPagina();
 	        }
 			
-	        MyUtils.appendLogArea(logArea, "Fim do processamento...");
+	        MyUtils.appendLogArea(logArea, "Fim do processamento...", NivelMensagem.ERRO);
 	    	sapiensService.fechaNavegador();
 		} catch (Exception e) {
 			throw new RuntimeException(e);

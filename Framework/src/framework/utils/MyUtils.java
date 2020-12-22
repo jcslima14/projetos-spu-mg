@@ -4,6 +4,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -27,6 +28,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTMLDocument;
 
 import org.apache.commons.beanutils.NestedNullException;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -37,6 +41,8 @@ import org.apache.poi.ss.usermodel.Row;
 
 import framework.components.MyComboBox;
 import framework.components.MyTableColumn;
+import framework.enums.NivelMensagem;
+import framework.exceptions.MyValidationException;
 import framework.models.ComboBoxItem;
 import framework.models.ItemComboBox;
 
@@ -149,18 +155,48 @@ public class MyUtils {
 		return retorno;
 	}
 
-	public static void appendLogArea(JLabel logArea, String msg, boolean adicionarDataHora, boolean logarNoConsole, String fontStyle) {
-		if (adicionarDataHora) {
+	public static JTextPane obterPainelNotificacoes() {
+		JTextPane painel = new JTextPane();
+		painel.setContentType("text/html");
+		return painel;
+	}
+
+	public static void appendLogArea(JTextPane logArea, String msg, NivelMensagem estilo, boolean adicionarDataHora, boolean logarNoConsole, String fontStyle) {
+		String tag = "span";
+		String style = "display: block; ";
+
+		if (estilo.equals(NivelMensagem.DESTAQUE_NEGRITO) || estilo.equals(NivelMensagem.DESTAQUE_NEGRITO_ITALICO)) style += "font-weight: bold;";
+		if (estilo.equals(NivelMensagem.DESTAQUE_ITALICO) || estilo.equals(NivelMensagem.DESTAQUE_NEGRITO_ITALICO)) style += "font-style: italic;";
+		if (estilo.equals(NivelMensagem.EXCECAO)) tag = "pre";
+		if (estilo.equals(NivelMensagem.ERRO)) style += "color: white; background-color: red; padding: 5px; border-radius: 5px;";
+		if (estilo.equals(NivelMensagem.ALERTA)) style += "background-color: yellow; padding: 5px; border-radius: 5px;";
+		if (estilo.equals(NivelMensagem.OK)) style += "color: white; background-color: green; padding: 5px; border-radius: 5px;";
+
+		if (!estilo.equals(NivelMensagem.EXCECAO)) style += "font-family: Tahoma; ";
+		
+		if (adicionarDataHora || estilo.equals(NivelMensagem.ERRO)) {
 			msg = formatarData(new Date(), "dd/MM/yyyy HH:mm:ss.SSS") + " - " + msg;
 		}
 		if (logarNoConsole) {
 			System.out.println(msg);
 		}
-		logArea.setText(logArea.getText() + "</br><span>" + msg + "</span>");
+		HTMLDocument doc = (HTMLDocument) logArea.getStyledDocument();
+		try {
+			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), "<" + tag + " style='" + style + "'>" + msg + "</" + tag + "><br/>");
+		} catch (BadLocationException | IOException e) {
+			e.printStackTrace();
+		}
+		logArea.setStyledDocument(doc);
+		logArea.setCaretPosition(logArea.getDocument().getLength());
+		System.out.println("Depois:\n" + logArea.getText());
 	}
 
-	public static void appendLogArea(JLabel logArea, String msg) {
-		appendLogArea(logArea, msg, false, true, null);
+	public static void appendLogArea(JTextPane logArea, String msg, NivelMensagem estilo) {
+		appendLogArea(logArea, msg, estilo, false, true, null);
+	}
+	
+	public static void appendLogArea(JTextPane logArea, String msg) {
+		appendLogArea(logArea, msg, NivelMensagem.NORMAL);
 	}
 
 	public static void appendLogArea(JTextArea logArea, String msg, boolean adicionarDataHora, boolean logarNoConsole) {
@@ -481,21 +517,22 @@ public class MyUtils {
 		};
 	}
 
-	public static ActionListener executarProcessoComLog(JLabel logArea, Runnable processo) {
+	public static ActionListener executarProcessoComLog(JTextPane logArea, Runnable processo) {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-//					logArea.setText("");
 					new Thread(new Runnable() {
 						
 						@Override
 						public void run() {
 							try {
+								logArea.setText("");
 								processo.run();
+							} catch (MyValidationException e) {
+								JOptionPane.showMessageDialog(null, e.getMessage());
 							} catch (Exception e) {
-								JOptionPane.showMessageDialog(null, "Erro ao executar o processo: \n \n" + e.getMessage());
-								MyUtils.appendLogArea(logArea, "Erro ao executar o processo: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e));
+								MyUtils.appendLogArea(logArea, "Erro ao executar o processo: \n \n" + e.getMessage() + "\n" + MyUtils.stackTraceToString(e), NivelMensagem.EXCECAO);
 								e.printStackTrace();
 							}
 						}

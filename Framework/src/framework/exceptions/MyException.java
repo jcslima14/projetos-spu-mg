@@ -1,4 +1,4 @@
-package framework;
+package framework.exceptions;
 
 public class MyException extends Exception {
     /**
