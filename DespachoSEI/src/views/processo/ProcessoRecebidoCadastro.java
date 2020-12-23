@@ -1,4 +1,5 @@
 package views.processo;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -51,7 +52,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	private MyButton btnMostrarResultadoDownload = new MyButton("Resultado do download") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 	private MyButton btnMostrarResultadoProcessamento = new MyButton("Resultado do Processamento") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 	private JTextPane txtTexto = MyUtils.obterPainelNotificacoes();
-	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
+	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto) {{ getViewport().setPreferredSize(new Dimension(800, 400)); }};
 	private JButton btnCopiarAreaTransferencia = new JButton("Copiar");
 	private JButton btnIniciarProcessamentoArquivos = new JButton("Iniciar Processamento");
 

@@ -54,7 +54,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;
 	private Assinante superior;
 

@@ -1,5 +1,6 @@
 package views.cadastro;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,7 +57,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	private JPanel pnlArquivo = new JPanel();
 	private JPanel pnlDialogo = new JPanel();
 	private JTextPane txtTexto = MyUtils.obterPainelNotificacoes();
-	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
+	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto) {{ getViewport().setPreferredSize(new Dimension(800, 400)); }};
 	private JButton btnIniciarImportacaoPlanillha = new JButton("Iniciar Importação da Planilha");
 	
 	private MyTextField txtMunicipioId = new MyTextField() {{ setEnabled(false); }};
@@ -107,6 +108,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 		btnImportarPlanilha.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				txtTexto.setText("");
 				mostrarTelaImportacaoPlanilha();
 			}
 		});

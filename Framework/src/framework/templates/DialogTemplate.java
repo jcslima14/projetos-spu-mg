@@ -1,7 +1,6 @@
 package framework.templates;
 import java.awt.BorderLayout;
 import java.awt.Dialog;
-import java.awt.Dimension;
 
 import javax.swing.JDialog;
 import javax.swing.JPanel;
@@ -33,7 +32,7 @@ public class DialogTemplate extends JDialog {
 	}
 
 	public void inicializar() {
-		JScrollPane areaRolavel = new JScrollPane(pnlAreaCentral) {{ getViewport().setPreferredSize(new Dimension(800, 400)); }};
+		JScrollPane areaRolavel = new JScrollPane(pnlAreaCentral);
 		areaRolavel.setVisible(true);
 		add(areaRolavel, BorderLayout.CENTER);
 

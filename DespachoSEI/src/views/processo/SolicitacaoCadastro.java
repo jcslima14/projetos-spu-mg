@@ -1,4 +1,5 @@
 package views.processo;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -553,7 +554,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		private MyButton btnMostrarResultadoDownload = new MyButton("Resultado do download") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 		private MyButton btnMostrarResultadoProcessamento = new MyButton("Resultado do Processamento") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 		private JTextArea txtTexto = new JTextArea(30, 100);
-		private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto);
+		private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto) {{ getViewport().setPreferredSize(new Dimension(800, 400)); }};
 		private JButton btnCopiarAreaTransferencia = new JButton("Copiar");
 		private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(3, 2));
 		private List<MyTableColumn> colunas;
@@ -598,7 +599,7 @@ public class SolicitacaoCadastro extends CadastroController {
 			btnCopiarAreaTransferencia.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					StringSelection stringSelection = new StringSelection(mensagem);
+					StringSelection stringSelection = new StringSelection(txtTexto.getText());
 					Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 					clipboard.setContents(stringSelection, null);
 				}

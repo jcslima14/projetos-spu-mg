@@ -168,13 +168,13 @@ public class MyUtils {
 		if (estilo.equals(NivelMensagem.DESTAQUE_NEGRITO) || estilo.equals(NivelMensagem.DESTAQUE_NEGRITO_ITALICO)) style += "font-weight: bold;";
 		if (estilo.equals(NivelMensagem.DESTAQUE_ITALICO) || estilo.equals(NivelMensagem.DESTAQUE_NEGRITO_ITALICO)) style += "font-style: italic;";
 		if (estilo.equals(NivelMensagem.EXCECAO)) tag = "pre";
-		if (estilo.equals(NivelMensagem.ERRO)) style += "color: white; background-color: red; padding: 5px; border-radius: 5px;";
-		if (estilo.equals(NivelMensagem.ALERTA)) style += "background-color: yellow; padding: 5px; border-radius: 5px;";
-		if (estilo.equals(NivelMensagem.OK)) style += "color: white; background-color: green; padding: 5px; border-radius: 5px;";
+		if (estilo.equals(NivelMensagem.ERRO)) style += "color: white; background-color: red; padding: 5; border-radius: 5px;";
+		if (estilo.equals(NivelMensagem.ALERTA)) style += "background-color: yellow; padding: 5; border-radius: 5px;";
+		if (estilo.equals(NivelMensagem.OK)) style += "color: white; background-color: green; padding: 5; border-radius: 5px;";
 
 		if (!estilo.equals(NivelMensagem.EXCECAO)) style += "font-family: Tahoma; ";
 		
-		if (adicionarDataHora || estilo.equals(NivelMensagem.ERRO)) {
+		if (adicionarDataHora) {
 			msg = formatarData(new Date(), "dd/MM/yyyy HH:mm:ss.SSS") + " - " + msg;
 		}
 		if (logarNoConsole) {
@@ -188,7 +188,6 @@ public class MyUtils {
 		}
 		logArea.setStyledDocument(doc);
 		logArea.setCaretPosition(logArea.getDocument().getLength());
-		System.out.println("Depois:\n" + logArea.getText());
 	}
 
 	public static void appendLogArea(JTextPane logArea, String msg, NivelMensagem estilo) {

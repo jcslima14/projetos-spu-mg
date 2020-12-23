@@ -91,7 +91,7 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
                 6, 6); //xPad, yPad
 		
 		add(painelDados, BorderLayout.WEST);
-		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {

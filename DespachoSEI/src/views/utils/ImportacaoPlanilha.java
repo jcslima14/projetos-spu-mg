@@ -59,7 +59,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;
 
 	public ImportacaoPlanilha(String tituloJanela, EntityManager conexao) {
@@ -168,6 +168,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 				String observacao = MyUtils.emptyStringIfNull(MyUtils.obterValorCelula(linha.getCell(17))).trim();
 				observacao = (observacao.trim().length() <= 1 ? "" : observacao);
 				String statusAtual = "";
+				NivelMensagem nivelMensagem = NivelMensagem.DESTAQUE_NEGRITO;
 				if (linha.getCell(18) != null) {
 					statusAtual = (new DataFormatter()).formatCellValue(linha.getCell(18));
 				}
@@ -202,7 +203,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 					msgRetorno += (msgRetorno.equalsIgnoreCase("") ? "" : " / ") + "O número do atendimento parece estar errado (tamanho diferente de 11 caracteres)";
 				}
 	
-				MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1), NivelMensagem.DESTAQUE_NEGRITO);
+				MyUtils.appendLogArea(logArea, "Linha Processada: " + (l+1));
 				MyUtils.appendLogArea(logArea, "Nº Processo: " + numeroProcesso + " (" + numeroProcessoOriginal + ")");
 				MyUtils.appendLogArea(logArea, "Autor......: " + autor);
 	
@@ -320,11 +321,13 @@ public class ImportacaoPlanilha extends JInternalFrame {
 						msgRetorno = "Automático pelo sistema";
 					} else {
 						msgRetorno = "Manual: " + msgRetorno;
+						nivelMensagem = NivelMensagem.ERRO;
 					}
 				} else {
 					msgRetorno = "Linha parece já ter sido processada: " + statusAtual.replace("Linha parece já ter sido processada: ", "");
+					nivelMensagem = NivelMensagem.ALERTA;
 				}
-				MyUtils.appendLogArea(logArea, msgRetorno);
+				MyUtils.appendLogArea(logArea, msgRetorno, nivelMensagem);
 				MyUtils.appendLogArea(logArea, "------------------------------------------------------------------------------------");
 				linha.createCell(18).setCellValue(msgRetorno);
 			}

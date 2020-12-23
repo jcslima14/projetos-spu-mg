@@ -49,7 +49,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
-	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
+	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;
 
 	public ImpressaoDespacho(String tituloJanela, EntityManager conexao) {
@@ -165,10 +165,10 @@ public class ImpressaoDespacho extends JInternalFrame {
 				
 				for (SolicitacaoResposta respostaARetirar : blocosDeAssinatura.get(blocoAssinatura)) {
 					try {
-						MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI(), NivelMensagem.DESTAQUE_ITALICO);
+						MyUtils.appendLogArea(logArea, "Marcando para retirada o documento " + respostaARetirar.getNumeroDocumentoSEI());
 						seiServico.marcarDocumentoParaRetiradaBlocoAssinatura(respostaARetirar.getNumeroDocumentoSEI());
 					} catch (MyException e) {
-						MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ERRO);
+						MyUtils.appendLogArea(logArea, e.getMessage(), NivelMensagem.ALERTA);
 						continue;
 					}
 	

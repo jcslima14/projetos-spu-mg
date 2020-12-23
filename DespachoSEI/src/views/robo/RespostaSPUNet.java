@@ -87,7 +87,7 @@ public class RespostaSPUNet extends JInternalFrame {
 		
 		add(painelDados, BorderLayout.WEST);
 		JTextPane logArea = MyUtils.obterPainelNotificacoes();
-		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1500, 700)); }};
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 		add(areaDeRolagem, BorderLayout.SOUTH);
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
