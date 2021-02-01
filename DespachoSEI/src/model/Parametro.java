@@ -30,7 +30,7 @@ public class Parametro {
 	public static Map<Integer, String[]> DESCRICOES = new LinkedHashMap<Integer, String[]>() {{ 
 		put(PASTA_DOWNLOAD_SAPIENS, new String[] { "Pasta de download dos arquivos do Sapiens", "" });
 		put(PASTA_DESTINO_PROCESSOS_SAPIENS, new String[] { "Pasta de destino dos processos do Sapiens (após identificação dos municípios)", "" });
-		put(ENDERECO_SEI, new String[] { "Endereço do SEI", "https://sei.fazenda.gov.br/sei/inicializar.php" });
+		put(ENDERECO_SEI, new String[] { "Endereço do SEI", "https://sei.economia.gov.br/sei/inicializar.php" });
 		put(ENDERECO_SAPIENS, new String[] { "Endereço do Sapiens", "https://sapiens.agu.gov.br/login" });
 		put(PASTA_DESPACHOS_SALVOS, new String[] { "Pasta de respostas impressas em PDF", "" });
 		put(PASTA_PLANILHA_IMPORTACAO, new String[] { "Pasta da planilha de importação", "" });
