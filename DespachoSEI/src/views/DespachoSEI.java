@@ -369,6 +369,7 @@ public class DespachoSEI extends JFrame {
 		criarTabelaMunicipioTipoResposta(conexao);
 		criarTabelaParametro(conexao);
 		criarTabelaOrigem(conexao);
+		criarTabelaProcessoRestrito(conexao);
 	}
 
 	private void criarTabelaAssinante(EntityManager conexao) throws Exception {
@@ -570,7 +571,7 @@ public class DespachoSEI extends JFrame {
 						 "(" +
 						 "  solicitacaoenvioid integer primary key autoincrement not null," +
 						 "  solicitacaoid integer not null," +
-						 "  datahoramovimentacao integer NOT NULL," +
+						 "  datahoramovimentacao datetime NOT NULL," +
 						 "  resultadodownload varchar," + 
 						 "  arquivosprocessados boolean," +
 						 "  resultadoprocessamento varchar" + 
@@ -578,6 +579,21 @@ public class DespachoSEI extends JFrame {
 
 			JPAUtils.executeUpdate(conexao, sql);
 			JPAUtils.executeUpdate(conexao, "CREATE INDEX ix_solicitacaoenvio_001 ON solicitacaoenvio (solicitacaoid)");
+		}
+	}
+
+	private void criarTabelaProcessoRestrito(EntityManager conexao) throws Exception {
+		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
+			String sql = "CREATE TABLE processorestrito " + 
+						 "(" +
+						 "  processorestritoid integer primary key autoincrement not null," +
+						 "  processojudicial varchar not null," +
+						 "  processosei varchar NULL," +
+						 "  datahoraprocessamento datetime NULL," + 
+						 "  resultado varchar NULL" + 
+						 ")";
+
+			JPAUtils.executeUpdate(conexao, sql);
 		}
 	}
 

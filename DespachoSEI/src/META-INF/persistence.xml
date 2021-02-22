@@ -10,6 +10,7 @@
 		<class>model.MunicipioTipoResposta</class>
 		<class>model.Origem</class>
 		<class>model.Parametro</class>
+		<class>model.ProcessoRestrito</class>
 		<class>model.Solicitacao</class>
 		<class>model.SolicitacaoEnvio</class>
 		<class>model.SolicitacaoResposta</class>
