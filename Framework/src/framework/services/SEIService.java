@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchFrameException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
@@ -207,17 +208,8 @@ public class SEIService extends SeleniumService {
 		WebElement txtDescricaoProcesso = encontrarElemento(By.id("txtDescricao"));
 		txtDescricaoProcesso.sendKeys(descricaoProcesso);
 
-		WebElement optNivelAcessoProcesso = encontrarElemento(By.id("optRestrito"));
-		optNivelAcessoProcesso.click();
-		TimeUnit.MILLISECONDS.sleep(200);
-
-		Select cbxHipoteseLegal = new Select(encontrarElemento(By.id("selHipoteseLegal")));
-		TimeUnit.MILLISECONDS.sleep(200);
-		cbxHipoteseLegal.selectByValue("34");
-		TimeUnit.MILLISECONDS.sleep(200);
-
-		WebElement btnSalvarProcesso = encontrarElemento(By.id("btnSalvar"));
-		btnSalvarProcesso.click();
+		marcarProcessoComoRestrito();
+		salvarProcesso();
 
 		TimeUnit.SECONDS.sleep(2);
 		driver.switchTo().defaultContent();
@@ -230,6 +222,22 @@ public class SEIService extends SeleniumService {
 		driver.switchTo().defaultContent();
 		
 		return numeroProcessoGerado;
+	}
+
+	private void salvarProcesso() {
+		WebElement btnSalvarProcesso = encontrarElemento(By.id("btnSalvar"));
+		btnSalvarProcesso.click();
+	}
+
+	private void marcarProcessoComoRestrito() throws Exception {
+		WebElement optNivelAcessoProcesso = encontrarElemento(By.id("optRestrito"));
+		optNivelAcessoProcesso.click();
+		TimeUnit.MILLISECONDS.sleep(200);
+
+		Select cbxHipoteseLegal = new Select(encontrarElemento(By.id("selHipoteseLegal")));
+		TimeUnit.MILLISECONDS.sleep(200);
+		cbxHipoteseLegal.selectByValue("34");
+		TimeUnit.MILLISECONDS.sleep(200);
 	}
 
 	public String inserirDocumentoNativo(String tipoDocumento, String documentoModelo) throws Exception {
@@ -512,5 +520,74 @@ public class SEIService extends SeleniumService {
 		TimeUnit.SECONDS.sleep(2);
 
 		encontrarElemento(5, 1, By.id("btnFechar"));
+	}
+
+	public boolean processoEncontrado(String processoSEI) throws Exception {
+		// //form[@id = 'frmPesquisaProtocolo']
+		TimeUnit.MILLISECONDS.sleep(500);
+		driver.switchTo().defaultContent();
+		try {
+			driver.switchTo().frame("ifrArvore");
+		} catch (NoSuchFrameException e) {
+			return false;
+		}
+		WebElement lnkNumeroProcesso = null;
+		try {
+			lnkNumeroProcesso = encontrarElemento(10, 1, By.xpath("//a/span[contains(text(), '" + processoSEI + "')]"));
+		} catch (Exception e) {
+		}
+		driver.switchTo().defaultContent();
+		return lnkNumeroProcesso != null;
+	}
+
+	public boolean processoEstaRestrito() {
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrArvore");
+		WebElement imgProcessoRestrito = null;
+		try {
+			imgProcessoRestrito = encontrarElemento(5, 1, By.xpath("//div[@class = 'infraArvore']/a/img[@src = 'imagens/sei_chave_restrito.gif']"));
+		} catch (Exception e) {
+		}
+		driver.switchTo().defaultContent();
+		return imgProcessoRestrito != null;
+	}
+
+	public boolean processoEstaAberto() {
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+		WebElement lnkReabrirProcesso = null;
+		try {
+			lnkReabrirProcesso = encontrarElemento(5, 1, By.xpath("//a[@onclick = 'reabrirProcesso();']"));
+		} catch (Exception e) {
+		}
+		
+		return lnkReabrirProcesso == null;
+	}
+
+	public void reabrirProcesso() {
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+		WebElement lnkReabrirProcesso = encontrarElemento(5, 1, By.xpath("//a[@onclick = 'reabrirProcesso();']"));
+		lnkReabrirProcesso.click();
+	}
+
+	public void concluirProcesso() {
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+		WebElement lnkConcluirProcesso = encontrarElemento(5, 1, By.xpath("//a[@onclick = 'concluirProcesso();']"));
+		lnkConcluirProcesso.click();
+	}
+
+	private void clicarConsultarAlterarProcesso() {
+		driver.switchTo().defaultContent();
+		driver.switchTo().frame("ifrVisualizacao");
+		WebElement lnkAlterarProcesso = encontrarElemento(5, 1, By.xpath("//a[./img[@title = 'Consultar/Alterar Processo']]"));
+		lnkAlterarProcesso.click();
+	}
+
+	public void alterarProcessoParaRestrito() throws Exception {
+		clicarConsultarAlterarProcesso();
+		marcarProcessoComoRestrito();
+		salvarProcesso();		
 	}
 }

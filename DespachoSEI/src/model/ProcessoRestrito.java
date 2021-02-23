@@ -6,26 +6,30 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "processorestricao")
+@Table(name = "processorestrito")
 public class ProcessoRestrito {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer processoRestricaoId;
+	private Integer processoRestritoId;
 	
 	private String processoJudicial;
 	
 	private String processoSEI;
 	
+	private Boolean processoReaberto;
+	
+	private Boolean processoAlterado;
+	
 	private String dataHoraProcessamento;
 	
 	private String resultadoProcessamento;
 
-	public Integer getProcessoRestricaoId() {
-		return processoRestricaoId;
+	public Integer getProcessoRestritoId() {
+		return processoRestritoId;
 	}
 
-	public void setProcessoRestricaoId(Integer processoRestricaoId) {
-		this.processoRestricaoId = processoRestricaoId;
+	public void setProcessoRestritoId(Integer processoRestricaoId) {
+		this.processoRestritoId = processoRestricaoId;
 	}
 
 	public String getProcessoJudicial() {
@@ -42,6 +46,22 @@ public class ProcessoRestrito {
 
 	public void setProcessoSEI(String processoSEI) {
 		this.processoSEI = processoSEI;
+	}
+
+	public Boolean getProcessoReaberto() {
+		return processoReaberto;
+	}
+
+	public void setProcessoReaberto(Boolean processoReaberto) {
+		this.processoReaberto = processoReaberto;
+	}
+
+	public Boolean getProcessoAlterado() {
+		return processoAlterado;
+	}
+
+	public void setProcessoAlterado(Boolean processoAlterado) {
+		this.processoAlterado = processoAlterado;
 	}
 
 	public String getDataHoraProcessamento() {

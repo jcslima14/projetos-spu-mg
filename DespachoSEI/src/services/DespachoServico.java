@@ -18,6 +18,7 @@ import model.Municipio;
 import model.MunicipioTipoResposta;
 import model.Origem;
 import model.Parametro;
+import model.ProcessoRestrito;
 import model.Solicitacao;
 import model.SolicitacaoEnvio;
 import model.SolicitacaoResposta;
@@ -229,6 +230,18 @@ public class DespachoServico {
 				sql.append(" and coalesce(sr.numeroProcessoSEI, '') <> '' ");
 				sql.append(" and sr.dataHoraImpressao is not null ");
 			}
+		}
+
+		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);
+	}
+
+	public List<ProcessoRestrito> obterProcessoRestrito(boolean filtrarNaoProcessado) {
+		Map<String, Object> parametros = new LinkedHashMap<String, Object>();
+		StringBuilder sql = new StringBuilder("");
+		sql.append("select pr from ProcessoRestrito pr ");
+		sql.append(" where 1 = 1 ");
+		if (filtrarNaoProcessado) {
+			sql.append(" and pr.dataHoraProcessamento is null ");
 		}
 
 		return JPAUtils.executeQuery(conexao, sql.toString(), parametros);

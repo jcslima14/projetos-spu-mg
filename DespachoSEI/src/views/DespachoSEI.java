@@ -47,6 +47,7 @@ import views.robo.InclusaoDespachoSEI;
 import views.robo.InclusaoOficioFiscalizacao;
 import views.robo.RecepcaoProcessoSapiens;
 import views.robo.RespostaSapiens;
+import views.robo.RestricaoProcessoSEI;
 import views.utils.ExecucaoScript;
 import views.utils.ImportacaoPlanilha;
 import views.robo.RespostaSPUNet;
@@ -93,6 +94,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmParametro = new JMenuItem("Parâmetros");
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
 		JMenuItem sbmInclusaoOficioVistoria = new JMenuItem("Inclusão de Ofícios de Vistoria");
+		JMenuItem sbmRestricaoProcesso = new JMenuItem("Restrição de Processos Individuais de Usucapião");
 		JMenuItem sbmRespostaProcesso = new JMenu("Resposta a Processos") {{ add(sbmRespostaSapiens); add(sbmRespostaSPUNet); }};
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
@@ -101,7 +103,7 @@ public class DespachoSEI extends JFrame {
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 															}};
-		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmInclusaoOficioVistoria); addSeparator(); add(sbmExecucaoScript); }};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmInclusaoOficioVistoria); add(sbmRestricaoProcesso); addSeparator(); add(sbmExecucaoScript); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
 
 		sbmExecucaoScript.addActionListener(new ActionListener() {
@@ -189,6 +191,15 @@ public class DespachoSEI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				InclusaoOficioFiscalizacao janela = new InclusaoOficioFiscalizacao("Inclusão de Ofícios de Vistoria", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmRestricaoProcesso.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				RestricaoProcessoSEI janela = new RestricaoProcessoSEI("Restrição de Processo Individual de Usucapião", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}
@@ -583,14 +594,16 @@ public class DespachoSEI extends JFrame {
 	}
 
 	private void criarTabelaProcessoRestrito(EntityManager conexao) throws Exception {
-		if (!MyUtils.tabelaExiste(conexao, "solicitacaoenvio")) {
+		if (!MyUtils.tabelaExiste(conexao, "processorestrito")) {
 			String sql = "CREATE TABLE processorestrito " + 
 						 "(" +
 						 "  processorestritoid integer primary key autoincrement not null," +
 						 "  processojudicial varchar not null," +
 						 "  processosei varchar NULL," +
+						 "  processoreaberto boolean NOT NULL DEFAULT false," +
+						 "  processoalterado boolean NOT NULL DEFAULT false," +
 						 "  datahoraprocessamento datetime NULL," + 
-						 "  resultado varchar NULL" + 
+						 "  resultadoprocessamento varchar NULL" + 
 						 ")";
 
 			JPAUtils.executeUpdate(conexao, sql);
