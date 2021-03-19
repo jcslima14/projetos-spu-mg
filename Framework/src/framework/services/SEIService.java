@@ -1,6 +1,7 @@
 package framework.services;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -388,17 +389,17 @@ public class SEIService extends SeleniumService {
 		obterBotaoAcaoProcesso(60, 3, botao).click();
 	}
 
-	private int obterQuantidadeDocumentosEsperados(int timeout, int pollingEvery, By by) throws Exception {
+	private int obterQuantidadeDocumentosEsperados(int timeout, int pollingEvery, By by, String... regexes) throws Exception {
 		WebElement capQuantidadeRegistros = null;
 		try {
 			capQuantidadeRegistros = encontrarElemento(timeout, pollingEvery, by);
 		} catch (Exception e) {
 			throw new MyException("A tabela pesquisada não possui nenhum documento.");
 		}
-		String quantidadeRegistros = capQuantidadeRegistros.getText();
-		quantidadeRegistros = quantidadeRegistros.split("\\(")[1];
-		quantidadeRegistros = quantidadeRegistros.replaceAll("\\D+", "");
-		return Integer.parseInt(quantidadeRegistros);
+		if (regexes == null) {
+			regexes = new String[] { "\\((\\d+) registro" };
+		}
+		return obterQuantidadeRegistrosEsperados(capQuantidadeRegistros.getText(), regexes);
 	}
 
 	public void imprimirDocumento(String numeroProcesso, String numeroProcessoSEI, String numeroDocumentoSEI, int quantidadeAssinaturas, String pastaDownload, String pastaDestino, String nomeArquivo) throws Exception {
@@ -589,5 +590,66 @@ public class SEIService extends SeleniumService {
 		clicarConsultarAlterarProcesso();
 		marcarProcessoComoRestrito();
 		salvarProcesso();		
+	}
+
+	public List<String> obterUnidadesDisponiveis() throws Exception {
+		List<String> retorno = new ArrayList<String>();
+		driver.switchTo().defaultContent();
+		encontrarElemento(5, 1, By.xpath("//select[@id = 'selInfraUnidades']"));
+    	List<WebElement> optUnidades = encontrarElementos(5, 1, By.xpath("//select[@id = 'selInfraUnidades']/option"));
+
+    	for (WebElement optUnidade : optUnidades) {
+    		retorno.add(optUnidade.getText());
+    	}
+
+		return retorno;
+	}
+
+	public void clicarVisualizacaoDetalhada() {
+		WebElement lnkVisualizacaoDetalhada = null;
+		try {
+			lnkVisualizacaoDetalhada = encontrarElemento(5, 1, By.xpath("//a[text() = 'Visualização detalhada']"));
+		} catch (Exception e) {
+		}
+
+		if (lnkVisualizacaoDetalhada != null) {
+			lnkVisualizacaoDetalhada.click();
+		}
+	}
+
+	public List<WebElement> obterListaProcessoDetalhado() throws Exception {
+		// aguardar o carregamento da lista de processos
+		int quantRegistroTabela = obterQuantidadeDocumentosEsperados(5, 1, By.xpath("//table[@id = 'tblProcessosDetalhado']/caption"), " - (\\d+) a (\\d+)", "\\((\\d+) registro");
+		aguardarCargaListaDocumentos("//table[@id = 'tblProcessosDetalhado']/tbody/tr[./td]", quantRegistroTabela);
+
+		List<WebElement> linhas = encontrarElementos(By.xpath("//table[@id = 'tblProcessosDetalhado']/tbody/tr[./td]"));
+		return linhas;
+	}
+
+	public boolean clicouProximaPagina() {
+		WebElement lnkProximaPagina = null;
+		try {
+			lnkProximaPagina = encontrarElemento(5, 1, By.xpath("//a[@id = 'lnkInfraProximaPaginaSuperior']"));
+		} catch (Exception e) {
+		}
+		
+		if (lnkProximaPagina != null) {
+			lnkProximaPagina.click();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public void expandirInteressadosListaDetalhadaProcesso() throws Exception {
+		int quantRegistroTabela = obterQuantidadeDocumentosEsperados(5, 1, By.xpath("//table[@id = 'tblProcessosDetalhado']/caption"), " - (\\d+) a (\\d+)", "\\((\\d+) registro");
+		aguardarCargaListaDocumentos("//table[@id = 'tblProcessosDetalhado']/tbody/tr[./td]", quantRegistroTabela);
+
+		List<WebElement> lnkExpandirInteressados = encontrarElementos(By.xpath("//table[@id = 'tblProcessosDetalhado']/tbody//img[@title = 'Ver Resumo']"));
+		
+		for (WebElement lnkExpandir : lnkExpandirInteressados) {
+			executarJavaScript("arguments[0].click();", lnkExpandir);
+			TimeUnit.MILLISECONDS.sleep(100);
+		}
 	}
 }

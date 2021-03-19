@@ -42,6 +42,7 @@ import views.cadastro.TipoRespostaCadastro;
 import views.processo.DespachoCadastro;
 import views.processo.ProcessoRecebidoCadastro;
 import views.processo.SolicitacaoAnaliseConsulta;
+import views.robo.ExtratorProcessoSEI;
 import views.robo.ImpressaoDespacho;
 import views.robo.InclusaoDespachoSEI;
 import views.robo.InclusaoOficioFiscalizacao;
@@ -95,6 +96,7 @@ public class DespachoSEI extends JFrame {
 		JMenuItem sbmExecucaoScript = new JMenuItem("Execução de Scripts");
 		JMenuItem sbmInclusaoOficioVistoria = new JMenuItem("Inclusão de Ofícios de Vistoria");
 		JMenuItem sbmRestricaoProcesso = new JMenuItem("Restrição de Processos Individuais de Usucapião");
+		JMenuItem sbmExtratorProcessoSEI = new JMenuItem("Extrator de Processos do SEI");
 		JMenuItem sbmRespostaProcesso = new JMenu("Resposta a Processos") {{ add(sbmRespostaSapiens); add(sbmRespostaSPUNet); }};
 		JMenu mnuCadastro = new JMenu("Cadastro") {{ add(sbmSolicitacaoAnaliseMenu); addSeparator();
 													 add(sbmDestino); add(sbmAssinanteMenu); add(sbmMunicipioMenu); addSeparator(); 
@@ -103,7 +105,7 @@ public class DespachoSEI extends JFrame {
 		JMenu mnuProcessamento = new JMenu("Processamento") {{ add(sbmImportacaoPlanilha); addSeparator(); 
 															   add(sbmRecepcaoProcessos); add(sbmInclusaoRespostaSEI); add(sbmImpressaoRespostas); add(sbmRespostaProcesso); 
 															}};
-		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmInclusaoOficioVistoria); add(sbmRestricaoProcesso); addSeparator(); add(sbmExecucaoScript); }};
+		JMenu mnuFerramenta = new JMenu("Ferramentas") {{ add(sbmInclusaoOficioVistoria); add(sbmRestricaoProcesso); add(sbmExtratorProcessoSEI); addSeparator(); add(sbmExecucaoScript); }};
 		JMenuBar barraMenu = new JMenuBar() {{ add(mnuCadastro); add(mnuProcessamento); add(mnuFerramenta); }};
 
 		sbmExecucaoScript.addActionListener(new ActionListener() {
@@ -200,6 +202,15 @@ public class DespachoSEI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				RestricaoProcessoSEI janela = new RestricaoProcessoSEI("Restrição de Processo Individual de Usucapião", conexao);
+				desktop.add(janela);
+				janela.abrirJanela();
+			}
+		});
+
+		sbmExtratorProcessoSEI.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				ExtratorProcessoSEI janela = new ExtratorProcessoSEI("Extrator de Processos do SEI", conexao);
 				desktop.add(janela);
 				janela.abrirJanela();
 			}

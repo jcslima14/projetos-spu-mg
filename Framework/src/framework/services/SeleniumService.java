@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -287,5 +289,25 @@ public class SeleniumService {
 	    });
 
 	    alert.accept();
+	}
+	
+	public int obterQuantidadeRegistrosEsperados(String texto, String[] regexes) {
+		int qtd = 0;
+		Pattern pattern = null;
+		Matcher matcher = null;
+		for (String regex : regexes) {
+			pattern = Pattern.compile(regex);
+			matcher = pattern.matcher(texto);
+			if (matcher.find()) {
+				if (matcher.groupCount() == 2) {
+					qtd = Integer.parseInt(matcher.group(2)) - Integer.parseInt(matcher.group(1)) + 1;
+					break;
+				} else {
+					qtd = Integer.parseInt(matcher.group(1));
+					break;
+				}
+			}
+		}
+		return qtd;
 	}
 }
