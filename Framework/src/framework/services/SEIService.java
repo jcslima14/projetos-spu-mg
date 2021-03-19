@@ -396,7 +396,7 @@ public class SEIService extends SeleniumService {
 		} catch (Exception e) {
 			throw new MyException("A tabela pesquisada não possui nenhum documento.");
 		}
-		if (regexes == null) {
+		if (regexes == null || regexes.length == 0) {
 			regexes = new String[] { "\\((\\d+) registro" };
 		}
 		return obterQuantidadeRegistrosEsperados(capQuantidadeRegistros.getText(), regexes);
