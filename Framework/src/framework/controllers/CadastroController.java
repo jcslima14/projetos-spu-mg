@@ -20,16 +20,17 @@ import framework.components.MyButton;
 import framework.components.MyTable;
 import framework.components.MyTableColumn;
 import framework.models.PropriedadesEdicao;
+import framework.utils.MyUtils;
 
 @SuppressWarnings("serial")
 public abstract class CadastroController extends JPanel {
 
 	private MyTable tabela = new MyTable();
-	private MyButton btnAtualizar = new MyButton("Atualizar") {{ setExclusao(true); }};
-	private MyButton btnIncluir = new MyButton("Incluir") {{ setExclusao(true); }};
-	private MyButton btnExcluir = new MyButton("Excluir") {{ setExclusao(true); }};
-	private MyButton btnSalvar = new MyButton("Salvar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
-	private MyButton btnCancelar = new MyButton("Cancelar") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyButton btnAtualizar = new MyButton("Atualizar", MyUtils.obterIcone("resources/icons/008-sync.png")) {{ setExclusao(true); }};
+	private MyButton btnIncluir = new MyButton("Incluir", MyUtils.obterIcone("resources/icons/056-add.png")) {{ setExclusao(true); }};
+	private MyButton btnExcluir = new MyButton("Excluir", MyUtils.obterIcone("resources/icons/006-trash.png")) {{ setExclusao(true); }};
+	private MyButton btnSalvar = new MyButton("Salvar", MyUtils.obterIcone("resources/icons/057-check.png")) {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
+	private MyButton btnCancelar = new MyButton("Cancelar", MyUtils.obterIcone("resources/icons/047-cancel-1.png")) {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyButton[] btnBotoesPosteriores = null;
 	private JPanel pnlCamposEditaveis = null;
 	private JPanel pnlFiltros = null;

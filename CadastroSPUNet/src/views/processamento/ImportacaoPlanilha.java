@@ -37,7 +37,7 @@ import services.SPUNetServico;
 public class ImportacaoPlanilha extends JInternalFrame {
 
 	private EntityManager conexao;
-	private JFileChooser filArquivo = new JFileChooser();
+	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel", "xls", "xlsx");
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};

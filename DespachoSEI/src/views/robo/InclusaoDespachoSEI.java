@@ -1,6 +1,8 @@
 package views.robo;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -16,12 +18,11 @@ import javax.persistence.EntityManager;
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
-import javax.swing.SpringLayout;
+import javax.swing.SwingConstants;
 
 import org.openqa.selenium.By;
 
@@ -32,7 +33,6 @@ import framework.exceptions.MyException;
 import framework.services.SEIService;
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
-import framework.utils.SpringUtilities;
 import model.Assinante;
 import model.AssinanteTipoResposta;
 import model.Origem;
@@ -45,12 +45,11 @@ import services.DespachoServico;
 public class InclusaoDespachoSEI extends JInternalFrame {
 
 	private EntityManager conexao;
-	private JTextField txtUsuario = new JTextField(15);
+	private JTextField txtUsuario = new JTextField(15) {{ setMinimumSize(new Dimension(192, 26)); }};
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
-	private JPasswordField txtSenha = new JPasswordField(15);
+	private JPasswordField txtSenha = new JPasswordField(15) {{ setMinimumSize(new Dimension(192, 26)); }};
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
-	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
-	private JButton btnProcessar = new JButton("Processar"); 
+	private JButton btnProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
@@ -70,22 +69,15 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 		despachoServico.preencherOpcoesAssinante(cbbAssinante, new ArrayList<Assinante>() {{ add(new Assinante(0, "(Todos)")); }}, false, true);
 		despachoServico.selecionarAssinantePadrao(cbbAssinante);
 
-		painelDados.add(lblUsuario);
-		painelDados.add(txtUsuario);
-		painelDados.add(lblSenha);
-		painelDados.add(txtSenha);
-		painelDados.add(lblAssinante);
-		painelDados.add(cbbAssinante);
-		painelDados.add(btnProcessar); 
-		painelDados.add(new JPanel()); 
-
-		SpringUtilities.makeGrid(painelDados,
-	            4, 2, //rows, cols
-	            6, 6, //initX, initY
-	            6, 6); //xPad, yPad
-
-		add(painelDados, BorderLayout.WEST);
-		add(areaDeRolagem, BorderLayout.SOUTH);
+		setLayout(new GridBagLayout());
+		add(lblUsuario, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(txtUsuario, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		add(lblSenha, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(txtSenha, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		add(lblAssinante, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(cbbAssinante, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 1; anchor = GridBagConstraints.LINE_START; fill = GridBagConstraints.HORIZONTAL; }});
+		add(btnProcessar, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 3; gridx = 0; anchor = GridBagConstraints.LINE_START; }});
+		add(areaDeRolagem, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 4; gridx = 0; anchor = GridBagConstraints.FIRST_LINE_START; gridwidth = 2; fill = GridBagConstraints.BOTH; weightx = 1; weighty = 1; }});
 		
 		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
 			@Override

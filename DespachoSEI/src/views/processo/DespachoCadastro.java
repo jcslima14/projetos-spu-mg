@@ -356,7 +356,7 @@ public class DespachoCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 40, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Origem", 80, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Tipo Processo", 75, JLabel.CENTER));

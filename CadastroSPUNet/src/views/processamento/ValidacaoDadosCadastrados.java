@@ -36,7 +36,7 @@ public class ValidacaoDadosCadastrados extends JInternalFrame {
 
 	private Process proc;
 	private EntityManager conexao;
-	private JFileChooser filPasta = new JFileChooser();
+	private JFileChooser filPasta = MyUtils.obterJFileChooser(null, "");
 	private JButton btnAbrirPasta = new JButton("Selecionar pasta");
 	private JLabel lblNomePasta = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblPasta = new JLabel("Pasta:", JLabel.TRAILING) {{ setLabelFor(filPasta); }};

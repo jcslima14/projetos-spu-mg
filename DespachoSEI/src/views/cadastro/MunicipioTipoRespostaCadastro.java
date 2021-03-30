@@ -121,7 +121,7 @@ public class MunicipioTipoRespostaCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Município", 400));
 			colunas.add(new MyTableColumn("Origem", 100, JLabel.CENTER));

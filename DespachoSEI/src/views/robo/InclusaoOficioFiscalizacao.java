@@ -36,19 +36,19 @@ import services.DespachoServico;
 @SuppressWarnings("serial")
 public class InclusaoOficioFiscalizacao extends JInternalFrame {
 
-	private JFileChooser filArquivo = new JFileChooser();
+	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel (xlsx, xls)", "xls", "xlsx");
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
-	private JLabel lblNomeArquivo = new JLabel("C:\\Users\\90768116600\\Documents\\planilha_oficios.xlsx") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
+	private JLabel lblNomeArquivo = new JLabel() {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
-	private JTextField txtNumeroProcesso = new JTextField("10154.138675/2019-49", 15);
+	private JTextField txtNumeroProcesso = new JTextField(15);
 	private JLabel lblNumeroProcesso = new JLabel("Nº Processo SEI:") {{ setLabelFor(txtNumeroProcesso); }};
-	private JTextField txtNumeroDocumentoModelo = new JTextField("11047332", 15);
+	private JTextField txtNumeroDocumentoModelo = new JTextField(15);
 	private JLabel lblNumeroDocumentoModelo = new JLabel("Nº Documento Modelo:") {{ setLabelFor(txtNumeroDocumentoModelo); }};
-	private JTextField txtBlocoAssinatura = new JTextField("157322", 15);
+	private JTextField txtBlocoAssinatura = new JTextField(15);
 	private JLabel lblBlocoAssinatura = new JLabel("Nº Bloco Assinatura:") {{ setLabelFor(txtBlocoAssinatura); }};
-	private JTextField txtUsuario = new JTextField("julio.lima", 15);
+	private JTextField txtUsuario = new JTextField(15);
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
-	private JPasswordField txtSenha = new JPasswordField("astpuf.00", 15);
+	private JPasswordField txtSenha = new JPasswordField(15);
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
 	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
 	private JButton btnProcessar = new JButton("Processar"); 

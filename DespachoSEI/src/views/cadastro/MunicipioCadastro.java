@@ -48,9 +48,9 @@ import services.DespachoServico;
 public class MunicipioCadastro extends CadastroTemplate {
 
 	private EntityManager conexao;
-	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha");
+	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha", MyUtils.obterIcone("resources/icons/029-list.png"));
 
-	private JFileChooser filArquivo = new JFileChooser();
+	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel", "xls", "xlsx");
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
@@ -273,7 +273,7 @@ public class MunicipioCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Nome", 300));
 			colunas.add(new MyTableColumn("Comarca", 300));

@@ -1,4 +1,7 @@
 package framework.components;
+import java.awt.Insets;
+
+import javax.swing.Icon;
 import javax.swing.JButton;
 
 import framework.models.PropriedadesEdicao;
@@ -14,9 +17,14 @@ public class MyButton extends JButton implements PropriedadesEdicao {
 	public MyButton() {
 		super();
 	}
-	
+
 	public MyButton(String caption) {
 		super(caption);
+	}
+
+	public MyButton(String caption, Icon icon) {
+		super(caption, icon);
+		this.setMargin(new Insets(5, 5, 5, 5));
 	}
 	
 	public boolean isInclusao() {

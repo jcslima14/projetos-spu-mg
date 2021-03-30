@@ -48,13 +48,13 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 
 	private EntityManager conexao;
 
-	private MyButton btnProcessarArquivos = new MyButton("Processar Arquivos");
+	private MyButton btnProcessarArquivos = new MyButton("Processar Arquivos", MyUtils.obterIcone("resources/icons/011-settings-1.png"));
 	private MyButton btnMostrarResultadoDownload = new MyButton("Resultado do download") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 	private MyButton btnMostrarResultadoProcessamento = new MyButton("Resultado do Processamento") {{ setEnabled(false); setEdicao(true); setInclusao(false); setExclusao(false); }};
 	private JTextPane txtTexto = MyUtils.obterPainelNotificacoes();
 	private JScrollPane scpAreaRolavel = new JScrollPane(txtTexto) {{ getViewport().setPreferredSize(new Dimension(800, 400)); }};
 	private JButton btnCopiarAreaTransferencia = new JButton("Copiar");
-	private JButton btnIniciarProcessamentoArquivos = new JButton("Iniciar Processamento");
+	private MyButton btnIniciarProcessamentoArquivos = new MyButton("Iniciar Processamento", MyUtils.obterIcone("resources/icons/011-settings-1.png"));
 
 	private JTextField txtSolicitacaoEnvioId = new JTextField() {{ setEnabled(false); }};
 	private MyLabel lblSolicitacaoEnvioId = new MyLabel("Id") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
@@ -317,7 +317,7 @@ public class ProcessoRecebidoCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Origem", 60, JLabel.CENTER));
 			colunas.add(new MyTableColumn("Número Processo", 200, JLabel.CENTER));

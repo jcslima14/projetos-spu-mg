@@ -6,12 +6,14 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -21,6 +23,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatIntelliJLaf;
 
 import framework.utils.JPAUtils;
 import framework.utils.MyUtils;
@@ -369,10 +374,19 @@ public class DespachoSEI extends JFrame {
 	}
 
 	public static void main(String args[]) {
+	    try {
+	        UIManager.setLookAndFeel(new FlatIntelliJLaf()); 
+	    } catch(Exception ignored) {
+	    	ignored.printStackTrace();
+	    }
 		DespachoSEI app = new DespachoSEI();
 		app.setSize(1000, 500);
 		app.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		// app.pack(); 
+		try {
+			app.setIconImage(ImageIO.read(new File("resources/icons/robot.png")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		app.setVisible(true);
 		app.setExtendedState(app.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	} 

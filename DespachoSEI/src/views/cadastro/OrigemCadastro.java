@@ -78,7 +78,7 @@ public class OrigemCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Descrição", 200, true));
 		}

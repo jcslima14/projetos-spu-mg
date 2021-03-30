@@ -43,7 +43,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyTextField txtPastaArquivoProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblPastaArquivoProcesso = new MyLabel("Pasta de arquivos para processos individuais") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(8, 2));
-	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão") {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
+	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão", MyUtils.obterIcone("resources/icons/013-review.png")) {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 
@@ -145,7 +145,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Nome", 300, true));
 			colunas.add(new MyTableColumn("Cargo", 200, true));

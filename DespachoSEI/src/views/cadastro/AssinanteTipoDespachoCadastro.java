@@ -99,7 +99,7 @@ public class AssinanteTipoDespachoCadastro extends CadastroTemplate {
 	public List<MyTableColumn> getColunas() {
 		if (this.colunas == null) {
 			colunas = new ArrayList<MyTableColumn>();
-			colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+			colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 			colunas.add(new MyTableColumn("Id", 30, JLabel.RIGHT));
 			colunas.add(new MyTableColumn("Assinante", 300, true));
 			colunas.add(new MyTableColumn("Tipo de Despacho", 300, true));

@@ -1,4 +1,9 @@
 package framework.utils;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -21,14 +26,19 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
+import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 
@@ -541,5 +551,66 @@ public class MyUtils {
 				}
 			}
 		};
+	}
+	
+	public static JFileChooser obterJFileChooser(String descricao, String... extensoes) {
+		JFileChooser jfc = new JFileChooser()  {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void updateUI() {
+				putClientProperty("FileChooser.useShellFolder", Boolean.FALSE);
+				super.updateUI();
+			}
+		};
+
+		if (descricao != null && extensoes != null) {
+			jfc.setFileFilter(new FileNameExtensionFilter(descricao, extensoes));
+		}
+
+		return jfc;
+	}
+
+	public static JButton obterBotao(String titulo, String arquivoIcone, Integer alignment, Integer padding) {
+		JButton botao = new JButton();
+		if (titulo != null) botao.setText(titulo);
+		if (arquivoIcone != null) {
+			botao.setIcon(obterIcone(arquivoIcone));
+		}
+		if (padding != null) {
+			botao.setMargin(new Insets(padding, padding, padding, padding));
+		}
+		if (alignment != null) botao.setHorizontalAlignment(alignment);
+		if (titulo != null && arquivoIcone != null) botao.setIconTextGap(12);
+		return botao;
+	}
+
+	public static Icon obterIcone(String arquivo) {
+		return obterIcone(arquivo, 20);
+	}
+
+	public static Icon obterIcone(String arquivo, int tamanho) {
+        Image img = null;
+		try {
+			img = ImageIO.read(new File(arquivo));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		Image newimg = img.getScaledInstance(tamanho, tamanho, Image.SCALE_SMOOTH ) ;  
+		return new ImageIcon(newimg);
+	}
+
+	public static void adicionarElemento(Container container, Component componente, int y, int x, int gridWidth, int anchor, int fill, double weightx, double weighty) {
+		GridBagConstraints c = new GridBagConstraints();
+		c.weightx = weightx;
+		c.weighty = weighty;
+		c.insets = new Insets(5, 5, 5, 5);
+		c.gridx = x;
+		c.gridy = y;
+		c.gridwidth = gridWidth;
+		c.anchor = anchor;
+		c.fill = fill;
+		container.add(componente, c);
 	}
 }

@@ -1,6 +1,8 @@
 package views.utils;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Date;
@@ -10,13 +12,10 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
-import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -28,7 +27,6 @@ import framework.components.MyComboBox;
 import framework.components.MyLabel;
 import framework.enums.NivelMensagem;
 import framework.utils.MyUtils;
-import framework.utils.SpringUtilities;
 import model.Assinante;
 import model.Destino;
 import model.Municipio;
@@ -46,18 +44,16 @@ import services.DespachoServico;
 public class ImportacaoPlanilha extends JInternalFrame {
 
 	private EntityManager conexao;
-	private JFileChooser filArquivo = new JFileChooser();
-	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");
+	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel (xlsx, xls)", "xls", "xlsx");
+	private JButton btnAbrirArquivo = MyUtils.obterBotao("Escolher Arquivo", "resources/icons/040-folder.png", SwingConstants.LEFT, null);
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
-	private JLabel lblArquivo = new JLabel("Arquivo:", JLabel.TRAILING) {{ setLabelFor(filArquivo); }};
 	private JTextField txtLinhaInicial = new JTextField(10);
 	private JLabel lblLinhaInicial = new JLabel("Linha inicial:", JLabel.TRAILING) {{ setLabelFor(txtLinhaInicial); }};
 	private JTextField txtLinhaFinal = new JTextField(10);
 	private JLabel lblLinhaFinal = new JLabel("Linha final:", JLabel.TRAILING) {{ setLabelFor(txtLinhaFinal); }};
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
-	private JPanel painelDados = new JPanel() {{ setLayout(new SpringLayout()); }};
-	private JButton btnProcessar = new JButton("Processar"); 
+	private JButton btnProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10);
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;
@@ -69,37 +65,25 @@ public class ImportacaoPlanilha extends JInternalFrame {
 		setIconifiable(true);
 		setClosable(true);
 
-		filArquivo.setFileFilter(new FileNameExtensionFilter("Arquivos Excel (xlsx, xls)", "xls", "xlsx"));
+		txtLinhaInicial.setMinimumSize(new Dimension(128, 26));
+		txtLinhaFinal.setMinimumSize(new Dimension(128, 26));
+
+		setLayout(new GridBagLayout());
+		this.add(btnAbrirArquivo, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 0; anchor = GridBagConstraints.LINE_END; fill = GridBagConstraints.HORIZONTAL; }});
+		this.add(lblNomeArquivo, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 1; anchor = GridBagConstraints.LINE_START; fill = GridBagConstraints.HORIZONTAL; }});
+		this.add(lblLinhaInicial, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		this.add(txtLinhaInicial, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		this.add(lblLinhaFinal, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		this.add(txtLinhaFinal, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		this.add(lblAssinante, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 3; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		this.add(cbbAssinante, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 3; gridx = 1; anchor = GridBagConstraints.LINE_START; fill = GridBagConstraints.HORIZONTAL; weightx = 0.5; }});
+		this.add(btnProcessar, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 4; gridx = 0; anchor = GridBagConstraints.LINE_START; fill = GridBagConstraints.HORIZONTAL; }});
+		this.add(areaDeRolagem, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 5; gridx = 0; anchor = GridBagConstraints.FIRST_LINE_START; fill = GridBagConstraints.BOTH; gridwidth = 2; weightx = 1.0; weighty = 1.0; }});
 
 		this.conexao = conexao;
 		despachoServico = new DespachoServico(this.conexao);
 
 		despachoServico.preencherOpcoesAssinante(cbbAssinante, null, false, true);
-
-		JPanel painelArquivo = new JPanel() {{ add(lblArquivo); add(btnAbrirArquivo); }};
-		JPanel painelLinhas = new JPanel() {{ setLayout(new SpringLayout()); add(lblLinhaInicial); add(txtLinhaInicial); add(lblLinhaFinal); add(txtLinhaFinal); add(lblAssinante); add(cbbAssinante); }};
-
-		SpringUtilities.makeCompactGrid(painelLinhas, 3, 2, 6, 6, 6, 6);
-		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
-		
-		if (espacoEmDisco != null) {
-			painelDados.add(new JLabel("<html><font color='red'>" + espacoEmDisco + "</font></html>"));
-			painelDados.add(new JPanel());
-		}
-		painelDados.add(painelArquivo);
-		painelDados.add(lblNomeArquivo);
-		painelDados.add(painelLinhas);
-		painelDados.add(new JPanel());
-		painelDados.add(btnProcessar); 
-		painelDados.add(new JPanel()); 
-
-		SpringUtilities.makeCompactGrid(painelDados,
-	            espacoEmDisco == null ? 3 : 4, 2, //rows, cols
-	            6, 6, //initX, initY
-	            6, 6); //xPad, yPad
-
-		add(painelDados, BorderLayout.NORTH);
-		add(areaDeRolagem, BorderLayout.CENTER);
 
 		btnProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
 			@Override
@@ -305,7 +289,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	
 						// busca uma solicitacao pendente, se existir
 						SolicitacaoResposta resposta = MyUtils.entidade(despachoServico.obterSolicitacaoRespostaPendente(solicitacao));
-						
+
 						if (resposta == null) {
 							resposta = new SolicitacaoResposta();
 						}

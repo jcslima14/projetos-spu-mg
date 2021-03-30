@@ -1,6 +1,8 @@
 package views.robo;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -15,6 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SpringLayout;
+import javax.swing.SwingConstants;
 
 import org.openqa.selenium.WebElement;
 
@@ -23,7 +26,6 @@ import framework.exceptions.MyException;
 import framework.exceptions.MyValidationException;
 import framework.services.SapiensService;
 import framework.utils.MyUtils;
-import framework.utils.SpringUtilities;
 import model.Origem;
 import model.Parametro;
 import model.Solicitacao;
@@ -55,44 +57,36 @@ public class RecepcaoProcessoSapiens extends JInternalFrame {
 
 		// define os objetos da tela
 		JLabel lblUsuario = new JLabel("Usuário:");
-		JTextField txtUsuario = new JTextField(15);
+		JTextField txtUsuario = new JTextField(15) {{ setMinimumSize(new Dimension(192, 26)); }};
 		lblUsuario.setLabelFor(txtUsuario);
 
 		JLabel lblSenha = new JLabel("Senha:");
-		JPasswordField txtSenha = new JPasswordField(15);
+		JPasswordField txtSenha = new JPasswordField(15) {{ setMinimumSize(new Dimension(192, 26)); }};
 		lblSenha.setLabelFor(txtSenha);
 
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
-		JButton botaoProcessar = new JButton("Processar"); 
+		JButton botaoProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
 		JCheckBox chkExibirNavegador = new JCheckBox("Exibir nevagador", true);
+		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 
 		String espacoEmDisco = MyUtils.verificacaoDeEspacoEmDisco(20);
-		
+
 		if (espacoEmDisco != null) {
 			painelDados.add(new JLabel("<html><font color='red'>" + espacoEmDisco + "</font></html>"));
 			painelDados.add(new JPanel());
 		}
 
-		painelDados.add(lblUsuario);
-		painelDados.add(txtUsuario);
-		painelDados.add(lblSenha);
-		painelDados.add(txtSenha);
-		painelDados.add(lblNavegador);
-		painelDados.add(cbbNavegador);
-		painelDados.add(chkExibirNavegador);
-		painelDados.add(new JPanel());
-		painelDados.add(botaoProcessar); 
-		painelDados.add(new JPanel()); 
-
-		SpringUtilities.makeGrid(painelDados,
-                espacoEmDisco == null ? 5 : 6, 2, //rows, cols
-                6, 6, //initX, initY
-                6, 6); //xPad, yPad
-		
-		add(painelDados, BorderLayout.WEST);
-		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
-		add(areaDeRolagem, BorderLayout.SOUTH);
+		setLayout(new GridBagLayout());
+		add(lblUsuario, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(txtUsuario, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 0; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		add(lblSenha, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(txtSenha, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 1; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		add(lblNavegador, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 0; anchor = GridBagConstraints.LINE_END; }});
+		add(cbbNavegador, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 2; gridx = 1; anchor = GridBagConstraints.LINE_START; }});
+		add(chkExibirNavegador, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 3; gridx = 0; anchor = GridBagConstraints.LINE_START; gridwidth = 2; }});
+		add(botaoProcessar, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 4; gridx = 0; anchor = GridBagConstraints.LINE_START; }});
+		add(areaDeRolagem, new GridBagConstraints() {{ insets = new Insets(5, 5, 5, 5); gridy = 5; gridx = 0; anchor = GridBagConstraints.FIRST_LINE_START; gridwidth = 2; fill = GridBagConstraints.BOTH; weightx = 1; weighty = 1; }});
 
 		botaoProcessar.addActionListener(MyUtils.executarProcessoComLog(logArea, new Runnable() {
 			

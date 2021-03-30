@@ -513,7 +513,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		public List<MyTableColumn> getColunas() {
 			if (this.colunas == null) {
 				colunas = new ArrayList<MyTableColumn>();
-				colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+				colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 				colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
 				colunas.add(new MyTableColumn("Tipo Resposta", 300));
 				colunas.add(new MyTableColumn("Observação", 150));
@@ -665,7 +665,7 @@ public class SolicitacaoCadastro extends CadastroController {
 		public List<MyTableColumn> getColunas() {
 			if (this.colunas == null) {
 				colunas = new ArrayList<MyTableColumn>();
-				colunas.add(new MyTableColumn("", 16, false) {{ setRenderCheckbox(true); }});
+				colunas.add(new MyTableColumn("", 20, false) {{ setRenderCheckbox(true); }});
 				colunas.add(new MyTableColumn("Id", 60, JLabel.RIGHT));
 				colunas.add(new MyTableColumn("Data/Hora Movimentação", 150, JLabel.CENTER));
 				colunas.add(new MyTableColumn("Resultado do Download", 400));
