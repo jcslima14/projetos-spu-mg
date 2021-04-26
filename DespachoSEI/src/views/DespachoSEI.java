@@ -6,14 +6,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -52,11 +50,11 @@ import views.robo.ImpressaoDespacho;
 import views.robo.InclusaoDespachoSEI;
 import views.robo.InclusaoOficioFiscalizacao;
 import views.robo.RecepcaoProcessoSapiens;
+import views.robo.RespostaSPUNet;
 import views.robo.RespostaSapiens;
 import views.robo.RestricaoProcessoSEI;
 import views.utils.ExecucaoScript;
 import views.utils.ImportacaoPlanilha;
-import views.robo.RespostaSPUNet;
 
 @SuppressWarnings("serial")
 public class DespachoSEI extends JFrame {
@@ -382,11 +380,7 @@ public class DespachoSEI extends JFrame {
 		DespachoSEI app = new DespachoSEI();
 		app.setSize(1000, 500);
 		app.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-		try {
-			app.setIconImage(ImageIO.read(new File("resources/icons/robot.png")));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		app.setIconImage(MyUtils.obterImagem("/icons/robot.png", 20));
 		app.setVisible(true);
 		app.setExtendedState(app.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	} 

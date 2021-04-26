@@ -48,7 +48,7 @@ import services.DespachoServico;
 public class MunicipioCadastro extends CadastroTemplate {
 
 	private EntityManager conexao;
-	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha", MyUtils.obterIcone("resources/icons/029-list.png"));
+	private MyButton btnImportarPlanilha = new MyButton("Importar Planilha", MyUtils.obterIcone("/icons/029-list.png"));
 
 	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel", "xls", "xlsx");
 	private JButton btnAbrirArquivo = new JButton("Selecionar arquivo");

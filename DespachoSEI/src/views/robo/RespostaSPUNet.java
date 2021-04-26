@@ -62,7 +62,7 @@ public class RespostaSPUNet extends JInternalFrame {
 
 		JPanel painelDados = new JPanel();
 		painelDados.setLayout(new SpringLayout());
-		JButton botaoProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
+		JButton botaoProcessar = MyUtils.obterBotao("Processar", "/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
 		JCheckBox chkExibirNavegador = new JCheckBox("Exibir nevagador", true);
 		JTextPane logArea = MyUtils.obterPainelNotificacoes();
 		JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};

@@ -49,7 +49,7 @@ public class InclusaoDespachoSEI extends JInternalFrame {
 	private JLabel lblUsuario = new JLabel("Usuário:") {{ setLabelFor(txtUsuario); }};
 	private JPasswordField txtSenha = new JPasswordField(15) {{ setMinimumSize(new Dimension(192, 26)); }};
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
-	private JButton btnProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
+	private JButton btnProcessar = MyUtils.obterBotao("Processar", "/icons/011-settings-1.png", SwingConstants.LEFT, 10); 
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();

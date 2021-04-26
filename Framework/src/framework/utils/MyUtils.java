@@ -590,15 +590,19 @@ public class MyUtils {
 	}
 
 	public static Icon obterIcone(String arquivo, int tamanho) {
+		return new ImageIcon(obterImagem(arquivo, tamanho));
+	}
+
+	public static Image obterImagem(String arquivo, int tamanho) {
         Image img = null;
 		try {
-			img = ImageIO.read(new File(arquivo));
+			img = ImageIO.read(Image.class.getResource(arquivo));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 
 		Image newimg = img.getScaledInstance(tamanho, tamanho, Image.SCALE_SMOOTH ) ;  
-		return new ImageIcon(newimg);
+		return newimg;
 	}
 
 	public static void adicionarElemento(Container container, Component componente, int y, int x, int gridWidth, int anchor, int fill, double weightx, double weighty) {

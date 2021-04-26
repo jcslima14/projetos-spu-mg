@@ -45,7 +45,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 
 	private EntityManager conexao;
 	private JFileChooser filArquivo = MyUtils.obterJFileChooser("Planilhas Excel (xlsx, xls)", "xls", "xlsx");
-	private JButton btnAbrirArquivo = MyUtils.obterBotao("Escolher Arquivo", "resources/icons/040-folder.png", SwingConstants.LEFT, null);
+	private JButton btnAbrirArquivo = MyUtils.obterBotao("Escolher Arquivo", "/icons/040-folder.png", SwingConstants.LEFT, null);
 	private JLabel lblNomeArquivo = new JLabel("") {{ setVerticalTextPosition(SwingConstants.TOP); setSize(600, 20); }};
 	private JTextField txtLinhaInicial = new JTextField(10);
 	private JLabel lblLinhaInicial = new JLabel("Linha inicial:", JLabel.TRAILING) {{ setLabelFor(txtLinhaInicial); }};
@@ -53,7 +53,7 @@ public class ImportacaoPlanilha extends JInternalFrame {
 	private JLabel lblLinhaFinal = new JLabel("Linha final:", JLabel.TRAILING) {{ setLabelFor(txtLinhaFinal); }};
 	private MyComboBox cbbAssinante = new MyComboBox();
 	private MyLabel lblAssinante = new MyLabel("Assinado por");
-	private JButton btnProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10);
+	private JButton btnProcessar = MyUtils.obterBotao("Processar", "/icons/011-settings-1.png", SwingConstants.LEFT, 10);
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;

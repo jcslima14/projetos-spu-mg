@@ -43,7 +43,7 @@ public class AssinanteCadastro extends CadastroTemplate {
 	private MyTextField txtPastaArquivoProcesso = new MyTextField() {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private MyLabel lblPastaArquivoProcesso = new MyLabel("Pasta de arquivos para processos individuais") {{ setEnabled(false); setInclusao(true); setEdicao(true); }};
 	private JPanel pnlCamposEditaveis = new JPanel(new GridLayout(8, 2));
-	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão", MyUtils.obterIcone("resources/icons/013-review.png")) {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
+	private MyButton btnTornarPadrao = new MyButton("Tornar este assinante padrão", MyUtils.obterIcone("/icons/013-review.png")) {{ setEnabled(false); setInclusao(false); setEdicao(true); }};
 	private List<MyTableColumn> colunas;
 	private DespachoServico despachoServico;
 

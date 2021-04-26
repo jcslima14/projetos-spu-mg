@@ -46,7 +46,7 @@ public class ImpressaoDespacho extends JInternalFrame {
 	private JLabel lblSenha = new JLabel("Senha:") {{ setLabelFor(txtSenha); }};
 	private JComboBox<String> cbbNavegador = new JComboBox<String>();
 	private JLabel lblNavegador = new JLabel("Navegador:") {{ setLabelFor(cbbNavegador); }};
-	private JButton btnProcessar = MyUtils.obterBotao("Processar", "resources/icons/011-settings-1.png", SwingConstants.LEFT, 10);
+	private JButton btnProcessar = MyUtils.obterBotao("Processar", "/icons/011-settings-1.png", SwingConstants.LEFT, 10);
 	private JTextPane logArea = MyUtils.obterPainelNotificacoes();
 	private JScrollPane areaDeRolagem = new JScrollPane(logArea) {{ getViewport().setPreferredSize(new Dimension(1200, 500)); }};
 	private DespachoServico despachoServico;
