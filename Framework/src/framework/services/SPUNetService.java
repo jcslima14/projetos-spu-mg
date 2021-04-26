@@ -51,6 +51,17 @@ public class SPUNetService extends SeleniumService {
 
         fecharPopup();
 
+        // aceitar formulário inseguro
+        WebElement enviarInformacao = null;
+        try {
+        	enviarInformacao = encontrarElemento(10, 2, By.xpath("//body[@class = 'insecure-form']//button[@id = 'proceed-button']"));
+        } catch (Exception e) {
+        }
+
+        if (enviarInformacao != null) {
+        	enviarInformacao.click();
+        }
+        
         this.janelaPrincipal = driver.getWindowHandle();
 	}
 

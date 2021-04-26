@@ -59,6 +59,9 @@ public class SeleniumService {
 			opcoes.addArguments("--disable-gpu"); // applicable to windows os only
 			opcoes.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
 			opcoes.addArguments("--no-sandbox"); // Bypass OS security model
+			
+			opcoes.addArguments("--ignore-ssl-errors=yes");
+			opcoes.addArguments("--allow-running-insecure-content");
 
 			opcoes.addArguments("--ignore-certificate-errors");
 
